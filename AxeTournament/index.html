@@ -116,8 +116,8 @@ input, textarea, select { font-family: inherit; }
   z-index: 1;
 }
 .login-logo-img {
-  max-width: 450px;
-  max-height: 130px;
+  max-width: 280px;
+  max-height: 90px;
   object-fit: contain;
   display: block;
   margin: 0 auto 8px;
@@ -1235,7 +1235,10 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 
   <!-- TOPBAR -->
   <div class="topbar">
-    <div class="t-logo"><img src="public/dataxe-logo.png" alt="DATAXE" style="max-height:28px;object-fit:contain;filter:brightness(0) invert(1)"></div>
+    <div class="t-logo">
+      <img src="public/dataxe-simple.png" alt="DATAXE" style="height:28px;width:auto;object-fit:contain">
+      <span style="font-family:var(--f-display);font-size:.85rem;font-weight:800;letter-spacing:2px;color:var(--ink);margin-left:8px">DAT<em style="color:var(--accent);font-style:normal">AXE</em></span>
+    </div>
     <div class="t-sep"></div>
     <div class="g-chips">
       <button class="g-chip pro on" id="gc-pro" onclick="switchGroup('pro')">PRO</button>
@@ -3616,4 +3619,3 @@ document.getElementById('scr-login').classList.add('on');
 </script>
 </body>
 </html>
-
