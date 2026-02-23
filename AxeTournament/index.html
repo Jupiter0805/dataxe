@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DATAXE</title>
+<link rel="icon" type="image/png" href="public/dataxe-simple.png">
+<link rel="apple-touch-icon" href="public/dataxe-simple.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ─── TOKENS ─── */
@@ -119,21 +121,11 @@ input, textarea, select { font-family: inherit; }
 
 .login-logo { text-align: center; margin-bottom: 2.25rem; }
 .login-logo-icon {
-  font-size: 2.8rem;
-  display: block;
-  margin-bottom: 0.75rem;
-  filter: drop-shadow(0 2px 4px rgba(44,36,24,0.2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
 }
-.login-logo-name {
-  font-family: var(--f-display);
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--ink);
-  line-height: 1;
-}
-.login-logo-name em { color: var(--accent); font-style: normal; }
 .login-logo-sub {
   font-size: 10px;
   font-weight: 500;
@@ -229,16 +221,8 @@ input, textarea, select { font-family: inherit; }
   box-shadow: 0 1px 4px rgba(44,36,24,0.06);
 }
 
-.t-logo {
-  font-family: var(--f-display);
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--ink);
-}
-.t-logo em { color: var(--accent); font-style: normal; }
+.t-logo { display: flex; align-items: center; }
+.t-logo img { display: block; }
 
 .t-sep { width: 1px; height: 22px; background: var(--line); flex-shrink: 0; }
 
@@ -1197,8 +1181,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 <div class="screen" id="scr-login">
   <div class="login-box">
     <div class="login-logo">
-      <span class="login-logo-icon">🪓</span>
-      <div class="login-logo-name">DAT<em>AXE</em></div>
+      <span class="login-logo-icon"><img src="public/dataxe-logo.png" alt="DATAXE" style="max-width:200px;max-height:60px;object-fit:contain;filter:brightness(0) invert(1)"></span>
       <div class="login-logo-sub">Gestión de Torneos</div>
     </div>
     <div class="l-tabs">
@@ -1228,7 +1211,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 
   <!-- TOPBAR -->
   <div class="topbar">
-    <div class="t-logo">🪓 DAT<em>AXE</em></div>
+    <div class="t-logo"><img src="public/dataxe-logo.png" alt="DATAXE" style="max-height:28px;object-fit:contain;filter:brightness(0) invert(1)"></div>
     <div class="t-sep"></div>
     <div class="g-chips">
       <button class="g-chip pro on" id="gc-pro" onclick="switchGroup('pro')">PRO</button>
@@ -1956,7 +1939,7 @@ async function doRegister() {
     launchApp();
   } catch(e) {
     // Fallback to localStorage
-    console.warn('Register failed, using local fallback:', e);
+    console.warn('Supabase register failed, using local fallback:', e);
     const users = getUsers();
     if (users[u]) { showErr(err, 'Ese usuario ya existe'); return; }
     users[u] = { pass: p, club };
