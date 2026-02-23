@@ -125,10 +125,24 @@ input, textarea, select { font-family: inherit; }
   padding: 12px 24px;
   border-radius: 12px;
 }
+.login-header {
+  background: #2c2418;
+  margin: -2.5rem -2.5rem 1.75rem;
+  border-radius: 14px 14px 0 0;
+  padding: 2rem 2rem 1.5rem;
+  text-align: center;
+}
+.login-logo-img {
+  max-width: 100%;
+  width: 300px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 10px;
+}
 .login-logo-sub {
   font-size: 10px;
   font-weight: 500;
-  color: rgba(255,255,255,0.45);
+  color: rgba(255,255,255,0.4);
   letter-spacing: 3px;
   text-transform: uppercase;
 }
@@ -137,8 +151,8 @@ input, textarea, select { font-family: inherit; }
   background: var(--white);
   border-radius: 18px;
   width: 100%;
-  max-width: 400px;
-  padding: 2.75rem 2.25rem 2.25rem;
+  max-width: 440px;
+  padding: 2.5rem 2.5rem 2.25rem;
   box-shadow: var(--sh3);
   position: relative;
   z-index: 1;
@@ -1188,14 +1202,12 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 
 <!-- ═══ LOGIN ═══ -->
 <div class="screen" id="scr-login">
-
-  <!-- Logo encima del box, sobre fondo oscuro -->
-  <div class="login-header">
-    <img src="public/dataxe-logo.png" alt="DATAXE" class="login-logo-img">
-    <div class="login-logo-sub">Gestión de Torneos</div>
-  </div>
-
   <div class="login-box">
+    <!-- Logo dentro del box -->
+    <div class="login-header">
+      <img src="public/dataxe-logo.png" alt="DATAXE" class="login-logo-img">
+      <div class="login-logo-sub">Gestión de Torneos</div>
+    </div>
     <div class="l-tabs">
       <button class="l-tab on" id="lt-login" onclick="switchLTab('login')">Iniciar sesión</button>
       <button class="l-tab" id="lt-reg" onclick="switchLTab('reg')">Registrarse</button>
