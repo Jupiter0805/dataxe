@@ -85,20 +85,22 @@ input, textarea, select { font-family: inherit; }
   background: linear-gradient(160deg, #2c2418 0%, #3e3025 60%, #2c2418 100%);
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+  gap: 1.75rem;
   padding: 1.5rem;
   position: relative;
   overflow: hidden;
 }
 #scr-login::before {
-  content: '🪓';
+  content: '';
   position: absolute;
-  font-size: 46vw;
-  opacity: 0.035;
-  top: -8vw; right: -12vw;
-  transform: rotate(18deg);
+  inset: 0;
+  background-image: url('public/dataxe-simple.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 70%;
+  opacity: 0.045;
   pointer-events: none;
-  user-select: none;
-  line-height: 1;
 }
 #scr-login::after {
   content: '';
@@ -106,6 +108,26 @@ input, textarea, select { font-family: inherit; }
   inset: 0;
   background: radial-gradient(ellipse at 25% 75%, rgba(196,135,58,0.09) 0%, transparent 55%);
   pointer-events: none;
+}
+
+.login-header {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+.login-logo-img {
+  max-width: 220px;
+  max-height: 64px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 8px;
+}
+.login-logo-sub {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 3px;
+  text-transform: uppercase;
 }
 
 .login-box {
@@ -117,22 +139,6 @@ input, textarea, select { font-family: inherit; }
   box-shadow: var(--sh3);
   position: relative;
   z-index: 1;
-}
-
-.login-logo { text-align: center; margin-bottom: 2.25rem; }
-.login-logo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
-.login-logo-sub {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--ink4);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  margin-top: 6px;
 }
 
 .l-tabs {
@@ -1179,11 +1185,14 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 
 <!-- ═══ LOGIN ═══ -->
 <div class="screen" id="scr-login">
+
+  <!-- Logo encima del box, sobre fondo oscuro -->
+  <div class="login-header">
+    <img src="public/dataxe-logo.png" alt="DATAXE" class="login-logo-img">
+    <div class="login-logo-sub">Gestión de Torneos</div>
+  </div>
+
   <div class="login-box">
-    <div class="login-logo">
-      <span class="login-logo-icon"><img src="public/dataxe-logo.png" alt="DATAXE" style="max-width:200px;max-height:60px;object-fit:contain;filter:brightness(0) invert(1)"></span>
-      <div class="login-logo-sub">Gestión de Torneos</div>
-    </div>
     <div class="l-tabs">
       <button class="l-tab on" id="lt-login" onclick="switchLTab('login')">Iniciar sesión</button>
       <button class="l-tab" id="lt-reg" onclick="switchLTab('reg')">Registrarse</button>
