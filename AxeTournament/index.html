@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DATAXE</title>
+<title>NOVURAXE</title>
 <link rel="icon" type="image/png" href="public/dataxe-simple.png">
 <link rel="apple-touch-icon" href="public/dataxe-simple.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1733,7 +1733,7 @@ let DUEL_CTX  = null;   // { mid }
 let DUEL_PICK = null;   // { r, p(0|1), t }
 let VIEW_HIST = null;
 
-function gk()  { return 'dataxe_' + CUR_USER; }
+function gk()  { return 'novuraxe_' + CUR_USER; }
 function G()   { return ADMIN[CUR_GROUP]; }
 
 // ─────────────────────────────────
@@ -1948,10 +1948,10 @@ async function syncToSupabase() {
 // AUTH
 // ─────────────────────────────────
 function getUsers() {
-  const r = localStorage.getItem('dataxe_users');
+  const r = localStorage.getItem('novuraxe_users');
   return r ? JSON.parse(r) : {};
 }
-function saveUsers(u) { localStorage.setItem('dataxe_users', JSON.stringify(u)); }
+function saveUsers(u) { localStorage.setItem('novuraxe_users', JSON.stringify(u)); }
 
 function switchLTab(t) {
   document.getElementById('lt-login').classList.toggle('on', t === 'login');
@@ -3408,7 +3408,7 @@ function newTournament() {
 // ─────────────────────────────────
 function expPDF(type) {
   const win  = window.open('', '_blank');
-  const club = ADMIN.club || 'DATAXE';
+  const club = ADMIN.club || 'NOVURAXE';
   const tn   = ADMIN.tName || 'Torneo';
   const td   = ADMIN.tDate || '';
   const logo = ADMIN.logo;
@@ -3509,7 +3509,7 @@ function expPDF(type) {
 
 function expPDFCompleto() {
   const win  = window.open('', '_blank');
-  const club = ADMIN.club || 'DATAXE';
+  const club = ADMIN.club || 'NOVURAXE';
   const tn   = ADMIN.tName || 'Torneo';
   const td   = ADMIN.tDate || '';
   const logo = ADMIN.logo;
@@ -3617,7 +3617,7 @@ function expPDFCompleto() {
 function expHistPDF() {
   const t = VIEW_HIST; if (!t) return;
   const win  = window.open('', '_blank');
-  const club = ADMIN.club || 'DATAXE';
+  const club = ADMIN.club || 'NOVURAXE';
   const logo = ADMIN.logo;
   const logoHtml = logo ? `<img src="${logo}" style="max-height:56px;max-width:140px;object-fit:contain;flex-shrink:0">` : '';
   const g = t.data;
@@ -3685,8 +3685,8 @@ function uid() { return 'u' + Date.now().toString(36) + Math.random().toString(3
   // Migrate old axeclash_ keys to dataxe_
   try {
     const oldUsers = localStorage.getItem('axeclash_users');
-    if (oldUsers && !localStorage.getItem('dataxe_users')) {
-      localStorage.setItem('dataxe_users', oldUsers);
+    if (oldUsers && !localStorage.getItem('novuraxe_users')) {
+      localStorage.setItem('novuraxe_users', oldUsers);
     }
     localStorage.removeItem('axeclash_users');
     localStorage.removeItem('axeclash_admin');
