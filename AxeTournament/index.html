@@ -1742,11 +1742,11 @@ const SUPA_URL = 'https://ofdxzysrjswalekwjazl.supabase.co';
 const SUPA_KEY = 'sb_publishable_ec6m8rEqcPSZyMvf7SMYag_-8GMIAc3'; // anon key — segura con RLS activado
 
 // Cliente oficial de Supabase
-const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // Helpers REST — ahora usan el token JWT del usuario logueado
 async function supa(path, method = 'GET', body = null, extra = {}) {
-  const session = (await supabase.auth.getSession()).data.session;
+  const session = (await sb.auth.getSession()).data.session;
   const token   = session?.access_token || SUPA_KEY;
 
   const opts = {
@@ -1979,7 +1979,7 @@ async function doLogin() {
   try {
     // Usamos "username@novuraxe.app" como email interno de auth
     const email = u + '@novuraxe.app';
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password: p });
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: p });
 
     if (error) { showErr(err, 'Usuario o contraseña incorrectos'); return; }
 
@@ -2015,7 +2015,7 @@ async function doRegister() {
   // Email interno invisible para el usuario
   const email = u + '@novuraxe.app';
 
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await sb.auth.signUp({
     email,
     password: p,
     options: {
@@ -2049,7 +2049,7 @@ function launchApp() {
 
 async function doLogout() {
   save();
-  await supabase.auth.signOut();
+  await sb.auth.signOut();
   CUR_USER = null; ADMIN = null;
   document.getElementById('scr-app').classList.remove('on');
   document.getElementById('scr-login').classList.add('on');
@@ -2057,7 +2057,7 @@ async function doLogout() {
 
 // Restaurar sesión al recargar la página
 (async function restoreSession() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
 
   const { data: profile } = await supabase
@@ -3375,7 +3375,7 @@ async function handleLogo(evt) {
     const arrayBuf = await file.arrayBuffer();
 
     // Upload via Storage API
-    const session = (await supabase.auth.getSession()).data.session;
+    const session = (await sb.auth.getSession()).data.session;
     const token   = session?.access_token || SUPA_KEY;
     const upRes = await fetch(`${SUPA_URL}/storage/v1/object/logos/${DB_USER_ID}.${ext}`, {
       method: 'POST',
