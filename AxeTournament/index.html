@@ -116,6 +116,20 @@ nav.scrolled {
   font-size: 13px;
 }
 
+.t-logo {
+  background: white;
+  padding: 8px 14px;       
+  border-radius: 12px;  
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-img {
+  height: 40px;  
+  width: auto;
+  object-fit: contain;
+}
 .nav-links {
   display: flex;
   align-items: center;
@@ -1055,10 +1069,11 @@ footer {
 
 <!-- NAV -->
 <nav id="nav">
-  <a href="#" class="nav-logo">
-    <div class="nav-logo-icon">🪓</div>
-    NOVUR<span>AXE</span>
-  </a>
+  <div class="t-logo">
+  <img src="public/novuraxe-logo.png" 
+       alt="NOVURAXE"
+       class="logo-img">
+</div>
   <ul class="nav-links">
     <li><a href="#features">Funciones</a></li>
     <li><a href="#how">Como funciona</a></li>
