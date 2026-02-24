@@ -1316,7 +1316,13 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     </div>
     <div class="t-right">
       <span class="t-club" id="t-club-name"></span>
-      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Salir</button>
+      <button class="btn btn-ghost btn-sm" onclick="logoutAndRedirect()">Salir</button>
+      <script>
+          function logoutAndRedirect() {
+            doLogout(); 
+            window.location.href = "index.html";
+        }
+      </script>
     </div>
   </div>
 
@@ -3767,4 +3773,5 @@ function uid() { return 'u' + Date.now().toString(36) + Math.random().toString(3
 document.getElementById('scr-login').classList.add('on');
 </script>
 </body>
+
 </html>
