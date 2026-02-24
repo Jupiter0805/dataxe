@@ -1246,8 +1246,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 </style>
 </head>
 <body>
-<!-- Supabase publishable key — pega aquí tu clave del proyecto -->
-<span id="supa-key" style="display:none">sb_publishable_ec6m8rEqcPSZyMvf7SMYag_-8GMIAc3</span>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <!-- ═══ LOGIN ═══ -->
 <div class="screen" id="scr-login">
@@ -1740,14 +1739,21 @@ function G()   { return ADMIN[CUR_GROUP]; }
 // SUPABASE CONFIG
 // ─────────────────────────────────
 const SUPA_URL = 'https://ofdxzysrjswalekwjazl.supabase.co';
-const SUPA_KEY = document.getElementById('supa-key')?.textContent?.trim() || '';
+const SUPA_KEY = 'sb_publishable_ec6m8rEqcPSZyMvf7SMYag_-8GMIAc3'; // anon key — segura con RLS activado
 
+// Cliente oficial de Supabase
+const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// Helpers REST — ahora usan el token JWT del usuario logueado
 async function supa(path, method = 'GET', body = null, extra = {}) {
+  const session = (await supabase.auth.getSession()).data.session;
+  const token   = session?.access_token || SUPA_KEY;
+
   const opts = {
     method,
     headers: {
       'apikey':        SUPA_KEY,
-      'Authorization': 'Bearer ' + SUPA_KEY,
+      'Authorization': 'Bearer ' + token,
       'Content-Type':  'application/json',
       'Prefer':        method === 'POST' ? 'return=representation' : '',
       ...extra
@@ -1947,12 +1953,6 @@ async function syncToSupabase() {
 // ─────────────────────────────────
 // AUTH
 // ─────────────────────────────────
-function getUsers() {
-  const r = localStorage.getItem('novuraxe_users');
-  return r ? JSON.parse(r) : {};
-}
-function saveUsers(u) { localStorage.setItem('novuraxe_users', JSON.stringify(u)); }
-
 function switchLTab(t) {
   document.getElementById('lt-login').classList.toggle('on', t === 'login');
   document.getElementById('lt-reg').classList.toggle('on', t === 'reg');
@@ -1977,36 +1977,30 @@ async function doLogin() {
   if (!u || !p) { showErr(err, 'Completa todos los campos'); return; }
 
   try {
-    // Try Supabase first
-    const rows = await dbGet('users', `username=eq.${encodeURIComponent(u)}&select=id,username,password,club_name,logo_url`);
-    if (!rows?.length) { showErr(err, 'Usuario o contraseña incorrectos'); return; }
-    const dbUser = rows[0];
-    
-    // Compare password (plain text por ahora — luego se migra a bcrypt)
-    if (dbUser.password !== p) { showErr(err, 'Usuario o contraseña incorrectos'); return; }
-    
+    // Usamos "username@novuraxe.app" como email interno de auth
+    const email = u + '@novuraxe.app';
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: p });
+
+    if (error) { showErr(err, 'Usuario o contraseña incorrectos'); return; }
+
+    // Obtener perfil
+    const { data: profile } = await supabase
+      .from('users')
+      .select('id, username, club_name, logo_url')
+      .eq('id', data.user.id)
+      .single();
+
     err.style.display = 'none';
-    CUR_USER   = u;
-    DB_USER_ID = dbUser.id;
-    ADMIN      = loadAdmin();  // load from local cache
-    if (dbUser.club_name) ADMIN.club = dbUser.club_name;
-    if (dbUser.logo_url)  ADMIN.logo = dbUser.logo_url;
-    
-    // Also keep local users cache in sync
-    const users = getUsers();
-    users[u] = { pass: p, club: dbUser.club_name || '' };
-    saveUsers(users);
-    
+    CUR_USER   = profile?.username || u;
+    DB_USER_ID = data.user.id;
+    ADMIN      = loadAdmin();
+    if (profile?.club_name) ADMIN.club = profile.club_name;
+    if (profile?.logo_url)  ADMIN.logo = profile.logo_url;
     launchApp();
+
   } catch(e) {
-    // Fallback to localStorage if Supabase is unreachable
-    console.warn('Supabase login failed, using local fallback:', e);
-    const users = getUsers();
-    if (!users[u] || users[u].pass !== p) { showErr(err, 'Usuario o contraseña incorrectos'); return; }
-    err.style.display = 'none';
-    CUR_USER = u; ADMIN = loadAdmin();
-    if (!ADMIN.club && users[u].club) ADMIN.club = users[u].club;
-    launchApp();
+    console.error('Login error:', e);
+    showErr(err, 'Error al iniciar sesión');
   }
 }
 
@@ -2016,40 +2010,30 @@ async function doRegister() {
   const p    = document.getElementById('r-pass').value;
   const err  = document.getElementById('r-err');
   if (!club || !u || !p) { showErr(err, 'Completa todos los campos'); return; }
+  if (p.length < 6) { showErr(err, 'La contraseña debe tener al menos 6 caracteres'); return; }
 
-  try {
-    // Check if username already exists in Supabase
-    const existing = await dbGet('users', `username=eq.${encodeURIComponent(u)}&select=id`);
-    if (existing?.length) { showErr(err, 'Ese usuario ya existe'); return; }
+  // Email interno invisible para el usuario
+  const email = u + '@novuraxe.app';
 
-    // Create user in Supabase
-    const newUser = await dbInsert('users', {
-      username:  u,
-      password:  p,  // plain text por ahora — migrar a bcrypt con un backend
-      club_name: club
-    });
-    DB_USER_ID = newUser?.[0]?.id;
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password: p,
+    options: {
+      data: { username: u, club_name: club }
+    }
+  });
 
-    // Also save locally
-    const users = getUsers();
-    users[u] = { pass: p, club };
-    saveUsers(users);
-
-    CUR_USER = u;
-    ADMIN = defAdmin();
-    ADMIN.club = club;
-    save();
-    launchApp();
-  } catch(e) {
-    // Fallback to localStorage
-    console.warn('Supabase register failed, using local fallback:', e);
-    const users = getUsers();
-    if (users[u]) { showErr(err, 'Ese usuario ya existe'); return; }
-    users[u] = { pass: p, club };
-    saveUsers(users);
-    CUR_USER = u; ADMIN = defAdmin(); ADMIN.club = club; save();
-    launchApp();
+  if (error) {
+    showErr(err, error.message.includes('already registered') ? 'Ese usuario ya existe' : error.message);
+    return;
   }
+
+  DB_USER_ID = data.user.id;
+  CUR_USER   = u;
+  ADMIN      = defAdmin();
+  ADMIN.club = club;
+  save();
+  launchApp();
 }
 
 function showErr(el, msg) { el.textContent = msg; el.style.display = 'block'; }
@@ -2063,12 +2047,34 @@ function launchApp() {
   toast('Bienvenido, ' + (ADMIN.club || CUR_USER), 'green');
 }
 
-function doLogout() {
+async function doLogout() {
   save();
+  await supabase.auth.signOut();
   CUR_USER = null; ADMIN = null;
   document.getElementById('scr-app').classList.remove('on');
   document.getElementById('scr-login').classList.add('on');
 }
+
+// Restaurar sesión al recargar la página
+(async function restoreSession() {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+
+  const { data: profile } = await supabase
+    .from('users')
+    .select('id, username, club_name, logo_url')
+    .eq('id', session.user.id)
+    .single();
+
+  if (!profile) return;
+
+  CUR_USER   = profile.username;
+  DB_USER_ID = session.user.id;
+  ADMIN      = loadAdmin();
+  if (profile.club_name) ADMIN.club = profile.club_name;
+  if (profile.logo_url)  ADMIN.logo = profile.logo_url;
+  launchApp();
+})();
 
 // ─────────────────────────────────
 // NAV
@@ -3369,11 +3375,13 @@ async function handleLogo(evt) {
     const arrayBuf = await file.arrayBuffer();
 
     // Upload via Storage API
+    const session = (await supabase.auth.getSession()).data.session;
+    const token   = session?.access_token || SUPA_KEY;
     const upRes = await fetch(`${SUPA_URL}/storage/v1/object/logos/${DB_USER_ID}.${ext}`, {
       method: 'POST',
       headers: {
         'apikey':        SUPA_KEY,
-        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Authorization': 'Bearer ' + token,
         'Content-Type':  file.type,
         'x-upsert':      'true'
       },
@@ -3697,4 +3705,3 @@ document.getElementById('scr-login').classList.add('on');
 </script>
 </body>
 </html>
-
