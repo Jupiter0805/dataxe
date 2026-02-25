@@ -1328,8 +1328,8 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       <span class="t-club" id="t-club-name"></span>
       <button class="btn btn-ghost btn-sm" onclick="logoutAndRedirect()">Salir</button>
       <script>
-          function logoutAndRedirect() {
-            doLogout(); 
+          async function logoutAndRedirect() {
+            await doLogout();
             window.location.href = "index.html";
         }
       </script>
