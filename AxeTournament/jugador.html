@@ -598,31 +598,83 @@ input, textarea, select { font-family: inherit; }
 ══════════════════════════════ */
 .stats-layout { display: grid; grid-template-columns: 300px 1fr; gap: 1.5rem; }
 
+/* Profile card */
 .profile-card {
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: var(--r2); padding: 1.5rem;
-  text-align: center;
+  border-radius: var(--r2); overflow: hidden;
+}
+.profile-cover {
+  height: 80px;
+  background: linear-gradient(135deg, rgba(196,135,58,0.3) 0%, rgba(196,135,58,0.05) 100%);
+}
+.profile-avatar-wrap {
+  padding: 0 1.25rem;
+  margin-top: -36px;
+  margin-bottom: 0.75rem;
+  display: flex; align-items: flex-end; justify-content: space-between;
 }
 .profile-avatar {
   width: 72px; height: 72px; border-radius: 50%;
-  background: var(--bg3); border: 2px solid rgba(196,135,58,0.3);
+  background: var(--bg2); border: 3px solid var(--bg2);
   display: flex; align-items: center; justify-content: center;
-  font-size: 2rem; margin: 0 auto 1rem;
+  font-size: 2rem; overflow: hidden; flex-shrink: 0;
+  position: relative; cursor: pointer;
 }
-.profile-name { font-size: 1.1rem; font-weight: 800; color: var(--ink); }
-.profile-username { font-size: 11px; color: var(--accent); margin-top: 3px; letter-spacing: 0.5px; }
-.profile-since { font-size: 10px; color: var(--ink4); margin-top: 6px; }
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.profile-avatar-overlay {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s;
+  font-size: 1.2rem;
+}
+.profile-avatar:hover .profile-avatar-overlay { opacity: 1; }
+.profile-avatar input {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; border-radius: 50%;
+}
+.profile-info { padding: 0 1.25rem 1.25rem; }
+.profile-name { font-size: 18px; font-weight: 800; color: #ffffff; line-height: 1.2; }
+.profile-username { font-size: 13px; color: var(--accent); margin-top: 4px; letter-spacing: 0.5px; }
+.profile-since { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 6px; }
+.profile-upload-hint {
+  font-size: 11px; color: rgba(255,255,255,0.3);
+  margin-top: 8px; display: flex; align-items: center; gap: 5px;
+}
 
-.profile-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.25rem; }
+.profile-stats { display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid rgba(255,255,255,0.07); }
 .profile-stat {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
-  border-radius: var(--r); padding: 0.75rem;
-  text-align: center;
+  padding: 1rem 0.5rem; text-align: center;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer; transition: background 0.15s;
 }
-.profile-stat-n { font-size: 1.4rem; font-weight: 800; color: var(--accent); line-height: 1; }
-.profile-stat-l { font-size: 9px; color: var(--ink4); letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; }
+.profile-stat:hover { background: rgba(255,255,255,0.04); }
+.profile-stat:nth-child(even) { border-right: none; }
+.profile-stat-n { font-size: 1.5rem; font-weight: 800; color: var(--accent); line-height: 1; }
+.profile-stat-n.g { color: var(--green); }
+.profile-stat-n.s { color: var(--sand); }
+.profile-stat-l { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+
+/* Stats table */
+.stats-table { width: 100%; border-collapse: collapse; }
+.stats-table th {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.4);
+  text-align: left; padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+.stats-table td {
+  padding: 13px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  font-size: 14px; color: #ffffff;
+}
+.stats-table tr:last-child td { border-bottom: none; }
+.stats-table tr:hover td { background: rgba(196,135,58,0.04); }
+.stats-table .name-cell { font-weight: 700; color: #ffffff; font-size: 15px; }
+.stats-table .pts-cell { font-weight: 800; color: var(--accent); font-size: 15px; }
+.stats-table .win-cell { color: var(--green); font-weight: 700; }
 
 /* ══════════════════════════════
    HISTORIAL PAGE
@@ -1144,7 +1196,7 @@ async function launchApp(user) {
   CUR_USER = user;
 
   // Load or create profile
-  const rows = await dbGet(`users?id=eq.${user.id}&select=*`);
+  const rows = await dbGet(`users?id=eq.${user.id}&select=id,username,club_name,avatar_url,created_at`);
   if (rows.length) {
     PROFILE = rows[0];
   } else {
@@ -1248,7 +1300,11 @@ async function renderSidebar() {
   el.innerHTML = `
     <div class="sidebar-cover"></div>
     <div class="sidebar-avatar-wrap">
-      <div class="sidebar-avatar">🎯</div>
+      <div class="sidebar-avatar">
+        ${PROFILE?.avatar_url
+          ? `<img src="${PROFILE.avatar_url}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+          : '🎯'}
+      </div>
     </div>
     <div class="sidebar-info">
       <div class="sidebar-name">${PROFILE?.club_name || PROFILE?.username || '—'}</div>
@@ -1581,46 +1637,57 @@ async function renderStats() {
   container.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando...</div>';
   if (!CUR_USER) return;
 
-  // Check if there are global_stats linked to this user
   const stats = await dbGet(`global_stats?user_id=eq.${CUR_USER.id}&select=*&order=total_qpts.desc`);
-
   const totalTournaments = stats.reduce((a,s) => a + (s.tournaments || 0), 0);
   const totalWins        = stats.reduce((a,s) => a + (s.wins || 0), 0);
   const totalPts         = stats.reduce((a,s) => a + (s.total_qpts || 0), 0);
   const since            = PROFILE?.created_at ? fmtDate(PROFILE.created_at) : '—';
+  const avatarHtml       = PROFILE?.avatar_url
+    ? `<img src="${PROFILE.avatar_url}" alt="avatar">`
+    : `<span>🎯</span>`;
 
   container.innerHTML = `
     <div>
       <div class="profile-card">
-        <div class="profile-avatar">🎯</div>
-        <div class="profile-name">${PROFILE?.club_name || PROFILE?.username || '—'}</div>
-        <div class="profile-username">@${PROFILE?.username || '—'}</div>
-        <div class="profile-since">Miembro desde ${since}</div>
+        <div class="profile-cover"></div>
+        <div class="profile-avatar-wrap">
+          <div class="profile-avatar" title="Cambiar foto">
+            ${avatarHtml}
+            <div class="profile-avatar-overlay">📷</div>
+            <input type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadAvatar(event)">
+          </div>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name">${PROFILE?.club_name || PROFILE?.username || '—'}</div>
+          <div class="profile-username">@${PROFILE?.username || '—'}</div>
+          <div class="profile-since">Miembro desde ${since}</div>
+          <div class="profile-upload-hint">📷 Haz clic en la foto para cambiarla</div>
+        </div>
         <div class="profile-stats">
           <div class="profile-stat">
             <div class="profile-stat-n">${totalTournaments}</div>
             <div class="profile-stat-l">Torneos</div>
           </div>
           <div class="profile-stat">
-            <div class="profile-stat-n" style="color:var(--green)">${totalWins}</div>
+            <div class="profile-stat-n g">${totalWins}</div>
             <div class="profile-stat-l">Victorias</div>
           </div>
           <div class="profile-stat">
-            <div class="profile-stat-n" style="color:var(--sand)">${totalPts}</div>
-            <div class="profile-stat-l">Puntos totales</div>
+            <div class="profile-stat-n s">${totalPts}</div>
+            <div class="profile-stat-l">Puntos</div>
           </div>
           <div class="profile-stat">
             <div class="profile-stat-n">${FOLLOWS.size}</div>
-            <div class="profile-stat-l">Siguiendo</div>
+            <div class="profile-stat-l">Clubs</div>
           </div>
         </div>
       </div>
     </div>
     <div>
-      <div class="card" style="margin-bottom:1rem">
-        <div class="card-title">Estadísticas por nombre</div>
+      <div class="card">
+        <div class="card-title" style="color:#ffffff;font-size:13px;margin-bottom:1rem">Estadísticas por torneo</div>
         ${stats.length ? `
-          <table class="hist-table">
+          <table class="stats-table">
             <thead><tr>
               <th>Nombre en torneo</th>
               <th>Torneos</th>
@@ -1630,22 +1697,75 @@ async function renderStats() {
             <tbody>
               ${stats.map(s => `
                 <tr>
-                  <td class="hist-name">${s.player_name}</td>
+                  <td class="name-cell">${s.player_name}</td>
                   <td>${s.tournaments || 0}</td>
-                  <td style="color:var(--green)">${s.wins || 0}</td>
-                  <td style="color:var(--accent);font-weight:700">${s.total_qpts || 0}</td>
+                  <td class="win-cell">${s.wins || 0}</td>
+                  <td class="pts-cell">${s.total_qpts || 0}</td>
                 </tr>`).join('')}
             </tbody>
           </table>
         ` : `
-          <div class="empty" style="padding:2rem">
+          <div class="empty" style="padding:2.5rem">
             <div class="empty-icon">🎯</div>
-            <div class="empty-title">Sin estadísticas aún</div>
-            <p style="font-size:12px;margin-top:4px">Tus stats aparecerán aquí cuando los organizadores vinculen tu cuenta</p>
+            <div class="empty-title" style="color:#ffffff;font-size:15px">Sin estadísticas aún</div>
+            <p style="font-size:13px;margin-top:6px;color:rgba(255,255,255,0.5)">Tus stats aparecerán aquí cuando los organizadores vinculen tu nombre de jugador a tu cuenta</p>
           </div>`}
       </div>
     </div>
   `;
+}
+
+async function uploadAvatar(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  if (file.size > 1024 * 1024) { toast('La imagen supera 1MB'); return; }
+
+  // Compress with canvas
+  const compressed = await new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 400;
+        let w = img.width, h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => resolve(new File([blob], 'avatar.jpg', { type: 'image/jpeg' })), 'image/jpeg', 0.85);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  toast('Subiendo foto...');
+
+  // Delete old avatar if exists
+  if (PROFILE?.avatar_url) {
+    const oldPath = PROFILE.avatar_url.split('/avatars/')[1];
+    if (oldPath) await sb.storage.from('avatars').remove([oldPath]);
+  }
+
+  const path = `${CUR_USER.id}/avatar.jpg`;
+  const { error } = await sb.storage.from('avatars').upload(path, compressed, {
+    contentType: 'image/jpeg', upsert: true
+  });
+  if (error) { toast('Error al subir la foto'); return; }
+
+  const { data } = sb.storage.from('avatars').getPublicUrl(path);
+  const avatarUrl = data.publicUrl + '?t=' + Date.now(); // cache bust
+
+  // Update users table
+  await dbUpdate('users', `id=eq.${CUR_USER.id}`, { avatar_url: avatarUrl });
+
+  // Update PROFILE in memory
+  PROFILE.avatar_url = avatarUrl;
+
+  toast('✓ Foto actualizada');
+  renderStats();
+  renderSidebar(); // update sidebar avatar too
 }
 
 // ══════════════════════════════
