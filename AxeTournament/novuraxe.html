@@ -1549,15 +1549,53 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
         </div>
         <div class="card">
           <div class="card-title">Agregar jugadores</div>
-          <div class="f-group">
-            <label class="f-label">Pegar lista (uno por línea)</label>
-            <textarea class="f-input" id="bulk-inp" placeholder="Juan García&#10;María López&#10;Carlos Ruiz&#10;Ana Torres..."></textarea>
+
+          <!-- Live user search -->
+          <div class="f-group" style="margin-bottom:0.75rem">
+            <label class="f-label">Buscar usuario registrado</label>
+            <div style="position:relative">
+              <input class="f-input" type="text" id="qs-search"
+                placeholder="🔍  Buscar por username..."
+                oninput="qsSearchUsers(this.value)"
+                autocomplete="off">
+              <div id="qs-results" style="
+                display:none; position:absolute; left:0; right:0; top:calc(100% + 4px);
+                background:var(--bg2); border:1px solid var(--line); border-radius:var(--r);
+                max-height:200px; overflow-y:auto; z-index:50; box-shadow:var(--sh2)">
+              </div>
+            </div>
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-red btn-sm" onclick="bulkAdd()">📋 Importar</button>
-            <button class="btn btn-ghost btn-sm" onclick="openModal('m-add-player')">+ Agregar uno</button>
-            <button class="btn btn-ghost btn-sm" onclick="clearPlayers()">Limpiar todo</button>
+
+          <!-- Divider -->
+          <div style="display:flex;align-items:center;gap:10px;margin:0.75rem 0;color:var(--ink4);font-size:11px">
+            <div style="flex:1;height:1px;background:var(--line)"></div>
+            o añadir nombres sin cuenta (uno por línea)
+            <div style="flex:1;height:1px;background:var(--line)"></div>
           </div>
+
+          <!-- Quick name input -->
+          <div style="display:flex;gap:8px;margin-bottom:0.75rem">
+            <input class="f-input" type="text" id="quick-name"
+              placeholder="Nombre del jugador..."
+              onkeydown="if(event.key==='Enter')quickAddPlayer()"
+              style="flex:1">
+            <button class="btn btn-red btn-sm" style="white-space:nowrap" onclick="quickAddPlayer()">+ Añadir</button>
+          </div>
+
+          <!-- Bulk paste -->
+          <details style="margin-bottom:0.75rem">
+            <summary style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+              color:var(--ink4);cursor:pointer;padding:6px 0;user-select:none">
+              📋 Pegar lista múltiple
+            </summary>
+            <div class="f-group" style="margin-top:0.5rem;margin-bottom:0.5rem">
+              <textarea class="f-input" id="bulk-inp" rows="4"
+                placeholder="Juan García&#10;María López&#10;Carlos Ruiz&#10;Ana Torres..."></textarea>
+            </div>
+            <button class="btn btn-red btn-sm" onclick="bulkAdd()">📋 Importar lista</button>
+          </details>
+
+          <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px" onclick="clearPlayers()">🗑 Limpiar todos los jugadores</button>
         </div>
       </div>
 
@@ -2570,6 +2608,72 @@ function bulkAdd() {
   save(); renderQEntryList();
   toast(`${added} jugadores importados`, 'green');
 }
+
+// ── QUALIFY PAGE: inline player search & quick add ──
+let QS_SELECTED = null; // { user_id, username, display }
+
+async function qsSearchUsers(q) {
+  const res = document.getElementById('qs-results');
+  if (!q || q.length < 2) { res.style.display = 'none'; QS_SELECTED = null; return; }
+  const rows = await dbGet(`users?username=ilike.*${encodeURIComponent(q)}*&select=id,username,club_name&limit=8`) || [];
+  if (!rows.length) {
+    res.style.display = 'block';
+    res.innerHTML = `<div style="padding:12px 14px;font-size:12px;color:var(--ink4)">Sin resultados — puedes añadirlo como nombre libre abajo</div>`;
+    return;
+  }
+  res.style.display = 'block';
+  res.innerHTML = rows.map(u => `
+    <div onclick="qsSelectUser('${u.id}','${u.username}','${(u.club_name||'').replace(/'/g,"\'")}' )"
+      style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;
+        border-bottom:1px solid var(--line);transition:background 0.15s"
+      onmouseover="this.style.background='rgba(196,135,58,0.08)'"
+      onmouseout="this.style.background=''">
+      <div style="width:34px;height:34px;border-radius:50%;background:var(--bg3);
+        display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">🎯</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--ink)">@${u.username}</div>
+        ${u.club_name ? `<div style="font-size:11px;color:var(--ink4)">${u.club_name}</div>` : ''}
+      </div>
+      <button class="btn btn-amber btn-xs" style="pointer-events:none">+ Añadir</button>
+    </div>`).join('');
+}
+
+function qsSelectUser(userId, username, clubName) {
+  const displayName = clubName || username;
+  // Check duplicate
+  if (G().players.find(p => p.name.toLowerCase() === displayName.toLowerCase())) {
+    toast('Jugador ya existe', 'red');
+    document.getElementById('qs-search').value = '';
+    document.getElementById('qs-results').style.display = 'none';
+    return;
+  }
+  G().players.push({ id: uid(), name: displayName, user_id: userId, username });
+  save(); renderQEntryList();
+  toast(`@${username} añadido ✓`, 'green');
+  document.getElementById('qs-search').value = '';
+  document.getElementById('qs-results').style.display = 'none';
+}
+
+function quickAddPlayer() {
+  const inp  = document.getElementById('quick-name');
+  const name = inp.value.trim();
+  if (!name) return;
+  if (G().players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+    toast('Jugador ya existe', 'red'); return;
+  }
+  G().players.push({ id: uid(), name });
+  inp.value = '';
+  save(); renderQEntryList();
+  toast(name + ' añadido', 'green');
+}
+
+// Close search dropdown when clicking outside
+document.addEventListener('click', e => {
+  const res = document.getElementById('qs-results');
+  if (res && !res.contains(e.target) && e.target.id !== 'qs-search') {
+    res.style.display = 'none';
+  }
+});
 
 let AP_SELECTED_USER = null; // { username, user_id, display }
 
