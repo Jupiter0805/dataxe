@@ -382,7 +382,7 @@ input, textarea, select { font-family: inherit; }
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--ink4);
+  color: rgba(255,255,255,0.55);
   margin-bottom: 1rem;
 }
 
@@ -1552,7 +1552,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 
           <!-- Live user search -->
           <div class="f-group" style="margin-bottom:0.75rem">
-            <label class="f-label">Buscar usuario registrado</label>
+            <label class="f-label" style="color:#ffffff">Buscar usuario registrado</label>
             <div style="position:relative">
               <input class="f-input" type="text" id="qs-search"
                 placeholder="🔍  Buscar por username..."
@@ -1569,7 +1569,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
           <!-- Divider -->
           <div style="display:flex;align-items:center;gap:10px;margin:0.75rem 0;color:var(--ink4);font-size:11px">
             <div style="flex:1;height:1px;background:var(--line)"></div>
-            o añadir nombres sin cuenta (uno por línea)
+            <span style="color:rgba(255,255,255,0.5)">o añadir nombres sin cuenta (uno por línea)</span>
             <div style="flex:1;height:1px;background:var(--line)"></div>
           </div>
 
@@ -1585,7 +1585,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
           <!-- Bulk paste -->
           <details style="margin-bottom:0.75rem">
             <summary style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
-              color:var(--ink4);cursor:pointer;padding:6px 0;user-select:none">
+              color:rgba(255,255,255,0.6);cursor:pointer;padding:6px 0;user-select:none">
               📋 Pegar lista múltiple
             </summary>
             <div class="f-group" style="margin-top:0.5rem;margin-bottom:0.5rem">
@@ -1595,7 +1595,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
             <button class="btn btn-red btn-sm" onclick="bulkAdd()">📋 Importar lista</button>
           </details>
 
-          <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px" onclick="clearPlayers()">🗑 Limpiar todos los jugadores</button>
+          <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px;color:#fff;border-color:rgba(255,255,255,0.15)" onclick="clearPlayers()">🗑 Limpiar todos los jugadores</button>
         </div>
       </div>
 
@@ -2615,10 +2615,10 @@ let QS_SELECTED = null; // { user_id, username, display }
 async function qsSearchUsers(q) {
   const res = document.getElementById('qs-results');
   if (!q || q.length < 2) { res.style.display = 'none'; QS_SELECTED = null; return; }
-  const rows = await dbGet(`users?username=ilike.*${encodeURIComponent(q)}*&select=id,username,club_name&limit=8`) || [];
+  const rows = await dbGet(`users?username=ilike.*${encodeURIComponent(q)}*&role=not.eq.organizer&select=id,username,club_name&limit=8`) || [];
   if (!rows.length) {
     res.style.display = 'block';
-    res.innerHTML = `<div style="padding:12px 14px;font-size:12px;color:var(--ink4)">Sin resultados — puedes añadirlo como nombre libre abajo</div>`;
+    res.innerHTML = `<div style="padding:12px 14px;font-size:12px;color:rgba(255,255,255,0.5)">Sin resultados — puedes añadirlo como nombre libre abajo</div>`;
     return;
   }
   res.style.display = 'block';
@@ -2680,7 +2680,7 @@ let AP_SELECTED_USER = null; // { username, user_id, display }
 async function searchUsers(q) {
   const res = document.getElementById('ap-results');
   if (!q || q.length < 2) { res.style.display = 'none'; return; }
-  const rows = await dbGet(`users?username=ilike.*${encodeURIComponent(q)}*&select=id,username,club_name&limit=8`) || [];
+  const rows = await dbGet(`users?username=ilike.*${encodeURIComponent(q)}*&role=not.eq.organizer&select=id,username,club_name&limit=8`) || [];
   if (!rows.length) { res.style.display = 'none'; return; }
   res.style.display = 'block';
   res.innerHTML = rows.map(u => `
