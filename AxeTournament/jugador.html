@@ -1638,11 +1638,26 @@ async function renderStats() {
   if (!CUR_USER) return;
 
   const stats = await dbGet(`global_stats?user_id=eq.${CUR_USER.id}&select=*&order=total_qpts.desc`);
-  const totalTournaments = stats.reduce((a,s) => a + (s.tournaments || 0), 0);
-  const totalWins        = stats.reduce((a,s) => a + (s.wins || 0), 0);
-  const totalPts         = stats.reduce((a,s) => a + (s.total_qpts || 0), 0);
-  const since            = PROFILE?.created_at ? fmtDate(PROFILE.created_at) : '—';
-  const avatarHtml       = PROFILE?.avatar_url
+
+  // Aggregate totals
+  const totT   = stats.reduce((a,s) => a + (s.tournaments    || 0), 0);
+  const totW   = stats.reduce((a,s) => a + (s.wins           || 0), 0);
+  const totL   = stats.reduce((a,s) => a + (s.losses         || 0), 0);
+  const totPts = stats.reduce((a,s) => a + (s.total_qpts     || 0), 0);
+  const totKS  = stats.reduce((a,s) => a + (s.total_ks       || 0), 0);
+  const totBS  = stats.reduce((a,s) => a + (s.total_bs       || 0), 0);
+  const totQTh = stats.reduce((a,s) => a + (s.qualify_throws || 0), 0);
+  const totQ6  = stats.reduce((a,s) => a + (s.qualify_sixes  || 0), 0);
+  const totETh = stats.reduce((a,s) => a + (s.elim_throws    || 0), 0);
+  const totEB  = stats.reduce((a,s) => a + (s.elim_bulls     || 0), 0);
+
+  // Precision %
+  const wlPct     = totT > 0 ? Math.round((totW / totT) * 100) : 0;
+  const qPrecPct  = totQTh > 0 ? Math.round((totQ6 / totQTh) * 100) : 0;
+  const bullPct   = totETh > 0 ? Math.round((totEB / totETh) * 100) : 0;
+
+  const since     = PROFILE?.created_at ? fmtDate(PROFILE.created_at) : '—';
+  const avatarHtml = PROFILE?.avatar_url
     ? `<img src="${PROFILE.avatar_url}" alt="avatar">`
     : `<span>🎯</span>`;
 
@@ -1665,52 +1680,106 @@ async function renderStats() {
         </div>
         <div class="profile-stats">
           <div class="profile-stat">
-            <div class="profile-stat-n">${totalTournaments}</div>
+            <div class="profile-stat-n">${totT}</div>
             <div class="profile-stat-l">Torneos</div>
           </div>
           <div class="profile-stat">
-            <div class="profile-stat-n g">${totalWins}</div>
+            <div class="profile-stat-n g">${totW}</div>
             <div class="profile-stat-l">Victorias</div>
           </div>
           <div class="profile-stat">
-            <div class="profile-stat-n s">${totalPts}</div>
-            <div class="profile-stat-l">Puntos</div>
+            <div class="profile-stat-n" style="color:var(--red)">${totL}</div>
+            <div class="profile-stat-l">Derrotas</div>
           </div>
           <div class="profile-stat">
-            <div class="profile-stat-n">${FOLLOWS.size}</div>
-            <div class="profile-stat-l">Clubs</div>
+            <div class="profile-stat-n s">${wlPct}%</div>
+            <div class="profile-stat-l">Win rate</div>
+          </div>
+          <div class="profile-stat">
+            <div class="profile-stat-n" style="color:#c084fc">${totKS}</div>
+            <div class="profile-stat-l">Killshots</div>
+          </div>
+          <div class="profile-stat">
+            <div class="profile-stat-n" style="color:#60a5fa">${totBS}</div>
+            <div class="profile-stat-l">Bull's eye</div>
+          </div>
+          <div class="profile-stat">
+            <div class="profile-stat-n">${qPrecPct}%</div>
+            <div class="profile-stat-l">Precisión 6s</div>
+          </div>
+          <div class="profile-stat">
+            <div class="profile-stat-n" style="color:#60a5fa">${bullPct}%</div>
+            <div class="profile-stat-l">% Bull duelo</div>
           </div>
         </div>
       </div>
     </div>
     <div>
-      <div class="card">
-        <div class="card-title" style="color:#ffffff;font-size:13px;margin-bottom:1rem">Estadísticas por torneo</div>
-        ${stats.length ? `
-          <table class="stats-table">
-            <thead><tr>
-              <th>Nombre en torneo</th>
-              <th>Torneos</th>
-              <th>Victorias</th>
-              <th>Puntos</th>
-            </tr></thead>
-            <tbody>
-              ${stats.map(s => `
-                <tr>
-                  <td class="name-cell">${s.player_name}</td>
-                  <td>${s.tournaments || 0}</td>
-                  <td class="win-cell">${s.wins || 0}</td>
-                  <td class="pts-cell">${s.total_qpts || 0}</td>
-                </tr>`).join('')}
-            </tbody>
-          </table>
-        ` : `
-          <div class="empty" style="padding:2.5rem">
-            <div class="empty-icon">🎯</div>
-            <div class="empty-title" style="color:#ffffff;font-size:15px">Sin estadísticas aún</div>
-            <p style="font-size:13px;margin-top:6px;color:rgba(255,255,255,0.5)">Tus stats aparecerán aquí cuando los organizadores vinculen tu nombre de jugador a tu cuenta</p>
-          </div>`}
-      </div>
+      ${stats.length ? `
+        <!-- Summary precision cards -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.875rem;margin-bottom:1.25rem">
+          <div class="stat-card" style="text-align:center">
+            <div style="font-size:2rem;margin-bottom:4px">🪓</div>
+            <div style="font-size:1.8rem;font-weight:800;color:#c084fc;line-height:1">${totKS}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Total Killshots</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px">${totQTh > 0 ? Math.round((totKS/totQTh)*100) : 0}% de tiros en clasif.</div>
+          </div>
+          <div class="stat-card" style="text-align:center">
+            <div style="font-size:2rem;margin-bottom:4px">🎯</div>
+            <div style="font-size:1.8rem;font-weight:800;color:var(--accent);line-height:1">${qPrecPct}%</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Precisión 6 (clasif.)</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px">${totQ6} de ${totQTh} tiros</div>
+          </div>
+          <div class="stat-card" style="text-align:center">
+            <div style="font-size:2rem;margin-bottom:4px">🔵</div>
+            <div style="font-size:1.8rem;font-weight:800;color:#60a5fa;line-height:1">${bullPct}%</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin-top:4px">Bull's eye (duelo)</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:2px">${totEB} de ${totETh} tiros</div>
+          </div>
+        </div>
+
+        <!-- Per-name table -->
+        <div class="card">
+          <div class="card-title" style="color:#ffffff;font-size:13px;margin-bottom:1rem">Detalle por nombre de torneo</div>
+          <div style="overflow-x:auto">
+            <table class="stats-table" style="min-width:600px">
+              <thead><tr>
+                <th>Nombre</th>
+                <th>T</th>
+                <th style="color:var(--green)">V</th>
+                <th style="color:var(--red)">D</th>
+                <th>Pts</th>
+                <th style="color:#c084fc">🪓 KS</th>
+                <th style="color:#60a5fa">🔵 BS</th>
+                <th>% 6s</th>
+                <th>% Bull</th>
+              </tr></thead>
+              <tbody>
+                ${stats.map(s => {
+                  const qp = (s.qualify_throws||0) > 0 ? Math.round(((s.qualify_sixes||0)/(s.qualify_throws||1))*100) : 0;
+                  const bp = (s.elim_throws||0) > 0 ? Math.round(((s.elim_bulls||0)/(s.elim_throws||1))*100) : 0;
+                  return `<tr>
+                    <td class="name-cell">${s.player_name}</td>
+                    <td>${s.tournaments||0}</td>
+                    <td class="win-cell">${s.wins||0}</td>
+                    <td style="color:var(--red)">${s.losses||0}</td>
+                    <td class="pts-cell">${s.total_qpts||0}</td>
+                    <td style="color:#c084fc;font-weight:700">${s.total_ks||0}</td>
+                    <td style="color:#60a5fa;font-weight:700">${s.total_bs||0}</td>
+                    <td style="color:var(--accent)">${qp}%</td>
+                    <td style="color:#60a5fa">${bp}%</td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ` : `
+        <div class="empty" style="padding:3rem">
+          <div class="empty-icon">🎯</div>
+          <div class="empty-title" style="color:#ffffff;font-size:15px">Sin estadísticas aún</div>
+          <p style="font-size:13px;margin-top:6px;color:rgba(255,255,255,0.5)">Tus stats aparecerán aquí cuando los organizadores vinculen tu nombre de jugador a tu cuenta</p>
+        </div>`}
     </div>
   `;
 }
