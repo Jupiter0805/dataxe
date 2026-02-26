@@ -291,7 +291,7 @@ input, textarea, select { font-family: inherit; }
   letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;
 }
 
-/* ── FEED LAYOUT — LinkedIn style ── */
+/* ── FEED LAYOUT ── */
 .content {
   max-width: 100% !important;
   padding: 1.25rem 2rem !important;
@@ -299,13 +299,28 @@ input, textarea, select { font-family: inherit; }
 .feed-layout {
   display: grid;
   grid-template-columns: 220px 1fr;
-  gap: 1.25rem;
+  gap: 1.5rem;
   align-items: start;
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
 }
-.feed-sidebar { position: sticky; top: 80px; }
-.feed-main { min-width: 0; }
+.feed-sidebar {
+  position: sticky;
+  top: 80px;
+  width: 220px;
+  flex-shrink: 0;
+}
+.feed-main {
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+}
+#feed-list { width: 100%; }
+.event-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important;
+  gap: 1rem !important;
+  width: 100% !important;
+}
 
 /* Sidebar card */
 .sidebar-profile {
@@ -343,8 +358,6 @@ input, textarea, select { font-family: inherit; }
 .sidebar-stat-n.s { color: var(--sand); }
 .sidebar-stat-n.w { color: #fff; }
 .sidebar-stat-l { font-size: 9px; color: rgba(255,255,255,0.3); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
-
-/* Following list */
 .sidebar-following { padding: 0.75rem 1rem; }
 .sidebar-section-title {
   font-size: 9px; font-weight: 700; letter-spacing: 2px;
@@ -354,7 +367,6 @@ input, textarea, select { font-family: inherit; }
 .sidebar-org-row {
   display: flex; align-items: center; gap: 8px;
   padding: 5px 0; cursor: pointer; transition: all 0.15s;
-  border-radius: 6px;
 }
 .sidebar-org-row:hover .sidebar-org-name { color: var(--accent); }
 .sidebar-org-mini {
@@ -366,18 +378,30 @@ input, textarea, select { font-family: inherit; }
 .sidebar-org-mini img { width: 100%; height: 100%; object-fit: contain; }
 .sidebar-org-name { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* Feed cards — improved readability */
-.event-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.875rem !important; }
+/* Feed cards — ALL text white, +3px */
 .event-card { border-radius: 12px !important; }
-.event-card-title { font-size: 15px !important; font-weight: 700 !important; color: #ffffff !important; line-height: 1.3 !important; }
-.event-card-club { font-size: 12px !important; color: rgba(255,255,255,0.45) !important; margin-top: 3px !important; }
-.event-meta-item { font-size: 12px !important; color: rgba(255,255,255,0.7) !important; }
-.event-meta-item span { color: rgba(255,255,255,0.5) !important; }
+.event-card-title {
+  font-size: 18px !important; font-weight: 700 !important;
+  color: #ffffff !important; line-height: 1.3 !important;
+}
+.event-card-club {
+  font-size: 15px !important;
+  color: #ffffff !important;
+  margin-top: 3px !important;
+}
+.event-card-body,
+.event-card-body * {
+  color: #ffffff !important;
+}
+.event-meta-item {
+  font-size: 15px !important;
+  color: #ffffff !important;
+}
+.event-meta-item span { color: rgba(255,255,255,0.8) !important; }
 .event-card-footer { background: rgba(255,255,255,0.02) !important; }
-.event-spots { font-size: 12px !important; color: rgba(255,255,255,0.4) !important; }
-.event-spots strong { color: rgba(255,255,255,0.65) !important; }
-/* Post card text in feed */
-.event-card-body > div[style*="font-size:12px"] { color: rgba(255,255,255,0.55) !important; }
+.event-spots { font-size: 15px !important; color: rgba(255,255,255,0.8) !important; }
+.event-spots strong { color: #ffffff !important; }
+.badge { font-size: 11px !important; }
 
 @media (max-width: 1100px) {
   .event-grid { grid-template-columns: 1fr !important; }
