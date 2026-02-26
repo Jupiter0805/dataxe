@@ -1249,10 +1249,102 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   .pg-title { font-size: 1.4rem; }
   .duel-round-grid { grid-template-columns: 1fr; }
   .duel-totals { grid-template-columns: 1fr; }
-  .content { padding-bottom: 80px; } /* space for bottom nav */
+  .content { padding-bottom: 80px; }
   .topbar { padding: 0 1rem; }
-  .g-chips .g-chip:not(.on) { display: none; } /* hide inactive group chip on mobile */
+  .g-chips .g-chip:not(.on) { display: none; }
 }
+
+/* ── POSTS FEED ── */
+.posts-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;
+}
+.posts-feed {
+  max-width: 580px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.post-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
+}
+.post-card:hover { border-color: rgba(196,135,58,0.25); background: rgba(255,255,255,0.055); }
+.post-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px 0;
+}
+.post-avatar {
+  width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+  background: var(--bg3); border: 1.5px solid rgba(196,135,58,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; overflow: hidden;
+}
+.post-avatar img { width: 100%; height: 100%; object-fit: contain; }
+.post-author-name { font-size: 13px; font-weight: 700; color: #fff; line-height: 1; }
+.post-author-date { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 3px; }
+.post-kebab {
+  margin-left: auto; background: none; border: none;
+  color: rgba(255,255,255,0.3); font-size: 18px; line-height: 1;
+  padding: 4px 8px; border-radius: 6px; cursor: pointer;
+  transition: all 0.15s;
+}
+.post-kebab:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.post-body { padding: 10px 16px 4px; }
+.post-title { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 5px; line-height: 1.35; }
+.post-desc { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.65; }
+.post-img-wrap {
+  margin: 10px 16px;
+  border-radius: 10px; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: var(--bg3);
+  max-height: 300px;
+}
+.post-img-wrap img {
+  width: 100%; height: 300px;
+  object-fit: cover; display: block;
+}
+.post-tags {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 6px 16px 10px;
+}
+.post-tag {
+  font-size: 11px; color: var(--accent);
+  background: rgba(196,135,58,0.1);
+  border: 1px solid rgba(196,135,58,0.2);
+  padding: 3px 10px; border-radius: 20px;
+  display: flex; align-items: center; gap: 4px;
+}
+.post-footer {
+  display: flex; gap: 6px; align-items: center;
+  padding: 8px 12px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.post-action-btn {
+  font-size: 11px; font-weight: 600;
+  padding: 5px 13px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent; color: rgba(255,255,255,0.45);
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; gap: 5px;
+}
+.post-action-btn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.2); }
+.post-action-btn.danger:hover { background: rgba(212,99,90,0.12); color: #d4635a; border-color: rgba(212,99,90,0.3); }
+
+/* Upload zone */
+.img-upload-zone {
+  border: 2px dashed rgba(255,255,255,0.12);
+  border-radius: var(--r); padding: 1.5rem;
+  text-align: center; cursor: pointer;
+  transition: all 0.2s; position: relative;
+  background: rgba(255,255,255,0.03);
+}
+.img-upload-zone:hover { border-color: var(--accent); background: rgba(196,135,58,0.05); }
+.img-upload-zone img { max-height: 160px; max-width: 100%; object-fit: contain; border-radius: var(--r); display: none; }
+.img-upload-hint { font-size: 12px; color: var(--ink4); margin-top: 8px; }
+.img-upload-icon { font-size: 2rem; opacity: 0.4; }
+.img-upload-progress { height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; margin-top: 0.75rem; display: none; }
+.img-upload-progress-bar { height: 100%; background: var(--accent); border-radius: 2px; width: 0%; transition: width 0.3s; }
 </style>
 </head>
 <body>
@@ -3923,35 +4015,45 @@ async function renderPosts() {
     return;
   }
 
-  container.innerHTML = '<div class="posts-grid">' + POSTS_DATA.map(postCard).join('') + '</div>';
+  container.innerHTML = '<div class="posts-feed">' + POSTS_DATA.map(postCard).join('') + '</div>';
 }
 
 function postCard(p) {
   const dateLabel = p.date
     ? new Date(p.date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })
     : null;
+  const createdLabel = new Date(p.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' });
+  const avatarHtml = ADMIN.logo
+    ? `<img src="${ADMIN.logo}" alt="">`
+    : `<span>🏟</span>`;
 
   return `
   <div class="post-card">
-    ${p.image_url
-      ? `<img class="post-img" src="${p.image_url}" alt="${p.title}" loading="lazy">`
-      : `<div class="post-img-placeholder">📢</div>`
-    }
+    <div class="post-header">
+      <div class="post-avatar">${avatarHtml}</div>
+      <div>
+        <div class="post-author-name">${ADMIN.club || CUR_USER}</div>
+        <div class="post-author-date">${createdLabel}</div>
+      </div>
+      <button class="post-kebab" onclick="editPost(${p.id})" title="Editar">⋯</button>
+    </div>
     <div class="post-body">
       <div class="post-title">${p.title}</div>
       ${p.description ? `<div class="post-desc">${p.description}</div>` : ''}
-      <div class="post-meta">
-        ${dateLabel ? `<div class="post-meta-item">📅 ${dateLabel}${p.time ? ' · ' + p.time.slice(0,5) : ''}</div>` : ''}
-        ${p.location ? `<div class="post-meta-item">📍 ${p.location}</div>` : ''}
-        <div class="post-meta-item" style="margin-left:auto;color:var(--ink4);font-size:10px">
-          ${new Date(p.created_at).toLocaleDateString('es-ES')}
-        </div>
-      </div>
     </div>
-    <div class="post-actions">
-      <button class="btn btn-ghost btn-xs" onclick="editPost(${p.id})">✏️ Editar</button>
-      <button class="btn btn-ghost btn-xs" onclick="viewPost(${p.id})">👁 Ver</button>
-      <button class="btn btn-xs" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-ln);margin-left:auto" onclick="deletePost(${p.id})">🗑 Borrar</button>
+    ${p.image_url ? `
+    <div class="post-img-wrap">
+      <img src="${p.image_url}" alt="${p.title}" loading="lazy">
+    </div>` : ''}
+    ${(dateLabel || p.location) ? `
+    <div class="post-tags">
+      ${dateLabel ? `<span class="post-tag">📅 ${dateLabel}${p.time ? ' · ' + p.time.slice(0,5) : ''}</span>` : ''}
+      ${p.location ? `<span class="post-tag">📍 ${p.location}</span>` : ''}
+    </div>` : ''}
+    <div class="post-footer">
+      <button class="post-action-btn" onclick="editPost(${p.id})">✏️ Editar</button>
+      <button class="post-action-btn" onclick="viewPost(${p.id})">👁 Ver</button>
+      <button class="post-action-btn danger" onclick="deletePost(${p.id})" style="margin-left:auto">🗑 Borrar</button>
     </div>
   </div>`;
 }
