@@ -2242,10 +2242,12 @@ async function syncToSupabase() {
   }
 
   // Upsert global stats — use linked user_id if available
-  // Build map: username -> user_id for linked players
+  // Build map from BOTH groups
   const playerUserMap = {};
-  (G().players || []).forEach(p => {
-    if (p.user_id) playerUserMap[p.username || p.name] = p.user_id;
+  ['pro','semi'].forEach(gt => {
+    (ADMIN[gt]?.players || []).forEach(p => {
+      if (p.user_id) playerUserMap[p.username || p.name] = p.user_id;
+    });
   });
 
   for (const [name, s] of Object.entries(ADMIN.global || {})) {
@@ -3739,7 +3741,14 @@ function saveTournament() {
     if (g.champion && g.champion !== p.name) gs.losses++;
   });
 
-  save(); renderHistory(); toast('Torneo guardado', 'green');
+  save(); renderHistory();
+  toast('Guardando stats...', 'green');
+  syncToSupabase().then(() => {
+    toast('✓ Torneo y stats guardados', 'green');
+  }).catch(e => {
+    console.error('syncToSupabase error:', e);
+    toast('Torneo guardado localmente (error sync: ' + e.message + ')', 'red');
+  });
 }
 
 function renderHistory() {
