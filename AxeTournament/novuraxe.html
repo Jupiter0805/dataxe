@@ -2250,22 +2250,28 @@ async function syncToSupabase() {
       }
     }
 
-    // Upsert matches — use match id as key
+    // Upsert matches — store db_id on match object to avoid duplicate lookups
     for (let mi = 0; mi < (g.matches || []).length; mi++) {
       const m = g.matches[mi];
-      const matchIdx = m.idx ?? mi;
-      const mRows = await dbGet('matches', `group_id=eq.${gid}&round_index=eq.${m.round}&match_index=eq.${matchIdx}&select=id`);
-      let mid = mRows?.[0]?.id;
+      const matchIdx = mi; // always use positional index
       const mData = {
         group_id: gid, round_index: m.round, match_index: matchIdx,
         player1: m.p1 || null, player2: m.p2 || null, is_bye: !!m.bye,
         winner: m.winner || null, score1: m.score1 ?? null, score2: m.score2 ?? null
       };
-      if (!mid) {
-        const mr = await dbInsert('matches', mData);
-        mid = mr?.[0]?.id;
+      // Use cached db id if we already saved this match before
+      if (m._db_id) {
+        await dbUpdate('matches', `id=eq.${m._db_id}`, mData);
       } else {
-        await dbUpdate('matches', `id=eq.${mid}`, mData);
+        // Try to find existing by group+round+index
+        const mRows = await dbGet('matches', `group_id=eq.${gid}&round_index=eq.${m.round}&match_index=eq.${matchIdx}&select=id`);
+        if (mRows?.[0]?.id) {
+          m._db_id = mRows[0].id;
+          await dbUpdate('matches', `id=eq.${m._db_id}`, mData);
+        } else {
+          const mr = await dbInsert('matches', mData);
+          if (mr?.[0]?.id) m._db_id = mr[0].id;
+        }
       }
     }
   }
