@@ -488,13 +488,13 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 .score-grid { display: flex; flex-wrap: wrap; gap: 6px; }
 
 .sc-btn {
-  min-width: 48px; height: 48px; padding: 0 12px;
+  min-width: 68px; height: 68px; padding: 0 16px;
   border-radius: var(--r);
   border: 1.5px solid rgba(255,255,255,0.1);
   background: rgba(255,255,255,0.05);
   color: var(--ink2);
   font-family: var(--f-display);
-  font-size: 1.15rem;
+  font-size: 1.6rem;
   font-weight: 800;
   transition: all 0.12s;
   display: flex; align-items: center; justify-content: center; gap: 5px;
@@ -511,14 +511,15 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 /* Killshot button */
 .sc-btn.ks {
   font-family: var(--f-body);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.5px;
   background: var(--accent-bg);
   border-color: var(--accent-ln);
   color: var(--accent);
-  padding: 0 14px;
+  padding: 0 18px;
   min-width: auto;
+  height: 68px;
 }
 .sc-btn.ks:hover, .sc-btn.ks.on {
   background: var(--accent);
@@ -529,14 +530,15 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 /* Bullseye button */
 .sc-btn.bull {
   font-family: var(--f-body);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.5px;
   background: var(--sand-bg);
   border-color: var(--sand-ln);
   color: var(--sand);
-  padding: 0 14px;
+  padding: 0 18px;
   min-width: auto;
+  height: 68px;
 }
 .sc-btn.bull:hover, .sc-btn.bull.on {
   background: var(--sand);
@@ -547,13 +549,14 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 /* Clear button */
 .sc-btn.clr {
   font-family: var(--f-body);
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
   background: var(--red-bg);
   border-color: var(--red-ln);
   color: var(--red);
-  padding: 0 12px;
+  padding: 0 16px;
   min-width: auto;
+  height: 68px;
 }
 /* Zero button */
 .sc-btn.sc-btn-zero {
@@ -1607,7 +1610,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
             <div><div class="cfg-k">Bulls eye máx. por duelo</div><div class="cfg-d">Valor: 7 pts</div></div>
             <div class="stepper">
               <button class="step-btn" onclick="adjECfg('bullMax',-1)">−</button>
-              <div class="step-val" id="ecfg-bull">5</div>
+              <div class="step-val" id="ecfg-bull">10</div>
               <button class="step-btn" onclick="adjECfg('bullMax',1)">+</button>
             </div>
           </div>
@@ -1751,6 +1754,27 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       <div class="pg-title">Publi<em>caciones</em></div>
       <div class="pg-sub">Anuncia torneos y novedades a tus seguidores</div>
 
+      <!-- Followers banner -->
+      <div id="posts-followers-banner" style="
+        background: linear-gradient(135deg, rgba(196,135,58,0.12) 0%, rgba(196,135,58,0.04) 100%);
+        border: 1px solid rgba(196,135,58,0.2);
+        border-radius: var(--r2); padding: 1.25rem 1.5rem;
+        display: flex; align-items: center; gap: 1.5rem;
+        margin-bottom: 1.5rem; flex-wrap: wrap;
+      ">
+        <div style="display:flex;align-items:center;gap:12px;flex:1">
+          <div style="font-size:2.5rem;line-height:1">👥</div>
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:2px">Tus seguidores</div>
+            <div id="posts-followers-count" style="font-size:2rem;font-weight:800;color:var(--accent);line-height:1">—</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:4px">Jugadores que te siguen y verán tus publicaciones</div>
+          <div id="posts-followers-names" style="font-size:12px;color:rgba(255,255,255,0.5)">Cargando...</div>
+        </div>
+      </div>
+
       <div class="posts-toolbar">
         <div style="font-size:12px;color:var(--ink4)" id="posts-count">—</div>
         <button class="btn btn-amber" onclick="openNewPost()">+ Nueva publicación</button>
@@ -1837,11 +1861,42 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 
 <!-- Add player -->
 <div class="modal-bg" id="m-add-player">
-  <div class="modal">
+  <div class="modal" style="max-width:500px">
     <div class="modal-title">Agregar <em>jugador</em></div>
-    <div class="f-group"><label class="f-label">Nombre</label><input class="f-input" type="text" id="ap-name" placeholder="Nombre completo" onkeydown="if(event.key==='Enter')confirmAddPlayer()"></div>
+
+    <!-- Search registered users -->
+    <div class="f-group">
+      <label class="f-label">Buscar usuario registrado</label>
+      <input class="f-input" type="text" id="ap-search"
+        placeholder="🔍 Buscar por username..."
+        oninput="searchUsers(this.value)">
+      <div id="ap-results" style="margin-top:6px;display:none;
+        background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);
+        max-height:180px;overflow-y:auto"></div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin:0.875rem 0;color:var(--ink4);font-size:11px">
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+      o añadir sin cuenta
+      <div style="flex:1;height:1px;background:var(--line)"></div>
+    </div>
+
+    <!-- Unregistered player -->
+    <div class="f-group">
+      <label class="f-label">Nombre (jugador sin cuenta)</label>
+      <input class="f-input" type="text" id="ap-name"
+        placeholder="Nombre tal como aparecerá en el torneo"
+        onkeydown="if(event.key==='Enter')confirmAddPlayer()">
+    </div>
+
+    <div id="ap-selected" style="display:none;margin-top:0.5rem;
+      padding:10px 12px;background:rgba(196,135,58,0.1);
+      border:1px solid rgba(196,135,58,0.25);border-radius:var(--r);
+      font-size:13px;color:var(--accent);display:flex;align-items:center;gap:8px">
+    </div>
+
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('m-add-player')">Cancelar</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-add-player');clearAddPlayer()">Cancelar</button>
       <button class="btn btn-red" onclick="confirmAddPlayer()">Agregar</button>
     </div>
   </div>
@@ -2006,7 +2061,7 @@ function defGroup() {
     qualScores: {},
     elimCfg: {
       ksMax: 2,
-      bullMax: 5,
+      bullMax: 10,
       scores: [0, 1, 2, 3, 4, 5],     // active diana values in duel
     },
     matches: [], rounds: [],
@@ -2148,10 +2203,14 @@ async function syncToSupabase() {
     }
   }
 
-  // Upsert global stats
+  // Upsert global stats — use linked user_id if available
+  const playerUserMap = {};
+  (G().players || []).forEach(p => { if (p.user_id) playerUserMap[p.name] = p.user_id; });
+
   for (const [name, s] of Object.entries(ADMIN.global || {})) {
+    const targetUserId = playerUserMap[name] || null; // linked player's own user_id
     await dbUpsert('global_stats', {
-      user_id: DB_USER_ID, player_name: name,
+      user_id: targetUserId || DB_USER_ID, player_name: name,
       tournaments:      s.tournaments   || 0,
       wins:             s.wins          || 0,
       losses:           s.losses        || 0,
@@ -2489,7 +2548,7 @@ function toggleEScore(v) {
 function adjECfg(key, d) {
   const g = G();
   if (key === 'ksMax')   g.elimCfg.ksMax   = Math.max(1, Math.min(10, g.elimCfg.ksMax + d));
-  if (key === 'bullMax') g.elimCfg.bullMax  = Math.max(1, Math.min(5, g.elimCfg.bullMax + d));
+  if (key === 'bullMax') g.elimCfg.bullMax  = Math.max(1, Math.min(20, g.elimCfg.bullMax + d));
   document.getElementById('ecfg-ks').textContent   = g.elimCfg.ksMax;
   document.getElementById('ecfg-bull').textContent = g.elimCfg.bullMax;
   save();
@@ -2512,15 +2571,63 @@ function bulkAdd() {
   toast(`${added} jugadores importados`, 'green');
 }
 
+let AP_SELECTED_USER = null; // { username, user_id, display }
+
+async function searchUsers(q) {
+  const res = document.getElementById('ap-results');
+  if (!q || q.length < 2) { res.style.display = 'none'; return; }
+  const rows = await dbGet(`users?username=ilike.*${encodeURIComponent(q)}*&select=id,username,club_name&limit=8`) || [];
+  if (!rows.length) { res.style.display = 'none'; return; }
+  res.style.display = 'block';
+  res.innerHTML = rows.map(u => `
+    <div onclick="selectUser('${u.id}','${u.username}','${(u.club_name||'').replace(/'/g,"\'")}' )"
+      style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;
+      border-bottom:1px solid var(--line);transition:background 0.15s"
+      onmouseover="this.style.background='rgba(196,135,58,0.08)'"
+      onmouseout="this.style.background=''">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--bg3);
+        display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">🎯</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--ink)">@${u.username}</div>
+        ${u.club_name ? `<div style="font-size:11px;color:var(--ink4)">${u.club_name}</div>` : ''}
+      </div>
+      <span style="margin-left:auto;font-size:11px;color:var(--accent);font-weight:600">Seleccionar</span>
+    </div>`).join('');
+}
+
+function selectUser(userId, username, clubName) {
+  AP_SELECTED_USER = { user_id: userId, username, display: clubName || username };
+  document.getElementById('ap-results').style.display = 'none';
+  document.getElementById('ap-search').value = '@' + username;
+  document.getElementById('ap-name').value = clubName || username;
+  // Show selected badge
+  const sel = document.getElementById('ap-selected');
+  sel.style.display = 'flex';
+  sel.innerHTML = `✓ Vinculado a <strong>@${username}</strong> — las stats se guardarán en su perfil
+    <button onclick="clearAddPlayer()" style="margin-left:auto;background:none;border:none;color:var(--red);cursor:pointer;font-size:14px">✕</button>`;
+}
+
+function clearAddPlayer() {
+  AP_SELECTED_USER = null;
+  const s = document.getElementById('ap-search'); if (s) s.value = '';
+  const r = document.getElementById('ap-results'); if (r) r.style.display = 'none';
+  const sel = document.getElementById('ap-selected'); if (sel) sel.style.display = 'none';
+}
+
 function confirmAddPlayer() {
   const name = document.getElementById('ap-name').value.trim();
   if (!name) return;
   if (G().players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
     toast('Jugador ya existe', 'red'); return;
   }
-  G().players.push({ id: uid(), name });
-  save(); closeModal('m-add-player'); renderQEntryList();
-  toast(name + ' añadido', 'green');
+  const player = { id: uid(), name };
+  if (AP_SELECTED_USER) {
+    player.user_id  = AP_SELECTED_USER.user_id;
+    player.username = AP_SELECTED_USER.username;
+  }
+  G().players.push(player);
+  save(); closeModal('m-add-player'); clearAddPlayer(); renderQEntryList();
+  toast(name + (AP_SELECTED_USER ? ' → @' + AP_SELECTED_USER.username : '') + ' añadido', 'green');
 }
 
 function removePlayer(pid) {
@@ -4049,10 +4156,34 @@ let EDIT_POST_ID = null;
 let POST_IMG_FILE = null;
 let POST_IMG_URL  = null;
 
+async function loadFollowersBanner() {
+  const countEl = document.getElementById('posts-followers-count');
+  const namesEl = document.getElementById('posts-followers-names');
+  if (!countEl || !DB_USER_ID) return;
+
+  // follows table: organizer_id = DB_USER_ID
+  const follows = await dbGet('follows', `organizer_id=eq.${DB_USER_ID}&select=user_id`) || [];
+  countEl.textContent = follows.length;
+
+  if (!follows.length) {
+    namesEl.textContent = 'Aún nadie te sigue — comparte tu perfil';
+    return;
+  }
+
+  // Load usernames of first 5 followers
+  const ids = follows.slice(0, 5).map(f => f.user_id).join(',');
+  const users = await dbGet(`users?id=in.(${ids})&select=username`) || [];
+  const names = users.map(u => '@' + u.username).join(', ');
+  namesEl.textContent = names + (follows.length > 5 ? ` y ${follows.length - 5} más` : '');
+}
+
 async function renderPosts() {
   const container = document.getElementById('posts-grid-container');
   const countEl   = document.getElementById('posts-count');
   container.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--ink4)"><div style="font-size:1.5rem;margin-bottom:0.5rem">⏳</div>Cargando...</div>';
+
+  // Load followers count in parallel
+  loadFollowersBanner();
 
   POSTS_DATA = await dbGet('posts', `user_id=eq.${DB_USER_ID}&order=created_at.desc&select=*`) || [];
 
