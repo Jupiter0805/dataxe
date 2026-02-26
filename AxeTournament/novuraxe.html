@@ -2177,23 +2177,43 @@ async function syncToSupabase() {
     }
     if (!gid) continue;
 
-    // Upsert qualify_config
-    await dbUpsert('qualify_config', {
-      group_id: gid,
-      rounds: g.qualCfg.rounds,
-      throws_per_round: g.qualCfg.throws,
-      ks_enabled: g.qualCfg.ksEnabled !== false,
-      ks_value: 8,
-      allowed_scores: g.qualCfg.scores || [0,1,2,3,4,5,6]
-    });
+    // Upsert qualify_config — update if exists, insert if not
+    const qcRows = await dbGet('qualify_config', `group_id=eq.${gid}&select=id`);
+    if (qcRows?.[0]?.id) {
+      await dbUpdate('qualify_config', `group_id=eq.${gid}`, {
+        rounds: g.qualCfg.rounds,
+        throws_per_round: g.qualCfg.throws,
+        ks_enabled: g.qualCfg.ksEnabled !== false,
+        ks_value: 8,
+        allowed_scores: g.qualCfg.scores || [0,1,2,3,4,5,6]
+      });
+    } else {
+      await dbInsert('qualify_config', {
+        group_id: gid,
+        rounds: g.qualCfg.rounds,
+        throws_per_round: g.qualCfg.throws,
+        ks_enabled: g.qualCfg.ksEnabled !== false,
+        ks_value: 8,
+        allowed_scores: g.qualCfg.scores || [0,1,2,3,4,5,6]
+      });
+    }
 
-    // Upsert elim_config
-    await dbUpsert('elim_config', {
-      group_id: gid,
-      ks_max: g.elimCfg.ksMax,
-      bull_max: g.elimCfg.bullMax,
-      allowed_scores: g.elimCfg.scores || [0,1,2,3,4,5]
-    });
+    // Upsert elim_config — update if exists, insert if not
+    const ecRows = await dbGet('elim_config', `group_id=eq.${gid}&select=id`);
+    if (ecRows?.[0]?.id) {
+      await dbUpdate('elim_config', `group_id=eq.${gid}`, {
+        ks_max: g.elimCfg.ksMax,
+        bull_max: g.elimCfg.bullMax,
+        allowed_scores: g.elimCfg.scores || [0,1,2,3,4,5]
+      });
+    } else {
+      await dbInsert('elim_config', {
+        group_id: gid,
+        ks_max: g.elimCfg.ksMax,
+        bull_max: g.elimCfg.bullMax,
+        allowed_scores: g.elimCfg.scores || [0,1,2,3,4,5]
+      });
+    }
 
     // Upsert players
     for (const pl of g.players) {
@@ -2251,9 +2271,9 @@ async function syncToSupabase() {
   });
 
   for (const [name, s] of Object.entries(ADMIN.global || {})) {
-    const targetUserId = playerUserMap[name] || null; // linked player's own user_id
-    await dbUpsert('global_stats', {
-      user_id: targetUserId || DB_USER_ID, player_name: name,
+    const targetUserId = playerUserMap[name] || null;
+    const uid_to_use   = targetUserId || DB_USER_ID;
+    const gsBody = {
       tournaments:      s.tournaments   || 0,
       wins:             s.wins          || 0,
       losses:           s.losses        || 0,
@@ -2264,7 +2284,14 @@ async function syncToSupabase() {
       qualify_sixes:    s.qualify_sixes || 0,
       elim_throws:      s.elim_throws   || 0,
       elim_bulls:       s.elim_bulls    || 0
-    });
+    };
+    // Check if record exists for this user+name combo
+    const existing = await dbGet('global_stats', `user_id=eq.${uid_to_use}&player_name=eq.${encodeURIComponent(name)}&select=id`);
+    if (existing?.[0]?.id) {
+      await dbUpdate('global_stats', `user_id=eq.${uid_to_use}&player_name=eq.${encodeURIComponent(name)}`, gsBody);
+    } else {
+      await dbInsert('global_stats', { user_id: uid_to_use, player_name: name, ...gsBody });
+    }
   }
 
   // Update user settings
