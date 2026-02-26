@@ -2230,26 +2230,35 @@ async function syncToSupabase() {
       }
       if (!pid) continue;
 
-      // Upsert qualify throws
+      // Upsert qualify throws — update-or-insert
       for (let r = 0; r < g.qualCfg.rounds; r++) {
         const sc = (g.qualScores[pl.id] || {})['r' + r] || [];
         for (let t = 0; t < sc.length; t++) {
           if (sc[t] === null || sc[t] === undefined) continue;
-          await dbUpsert('qualify_throws', {
-            player_id: pid, round: r, throw_num: t,
-            value: sc[t], is_ks: sc[t] === 8
-          });
+          const qtRows = await dbGet('qualify_throws', `player_id=eq.${pid}&round=eq.${r}&throw_num=eq.${t}&select=id`);
+          if (qtRows?.[0]?.id) {
+            await dbUpdate('qualify_throws', `player_id=eq.${pid}&round=eq.${r}&throw_num=eq.${t}`, {
+              value: sc[t], is_ks: sc[t] === 8
+            });
+          } else {
+            await dbInsert('qualify_throws', {
+              player_id: pid, round: r, throw_num: t,
+              value: sc[t], is_ks: sc[t] === 8
+            });
+          }
         }
       }
     }
 
-    // Upsert matches
-    for (const m of (g.matches || [])) {
-      const mRows = await dbGet('matches', `group_id=eq.${gid}&round_index=eq.${m.round}&match_index=eq.${m.idx}&select=id`);
+    // Upsert matches — use match id as key
+    for (let mi = 0; mi < (g.matches || []).length; mi++) {
+      const m = g.matches[mi];
+      const matchIdx = m.idx ?? mi;
+      const mRows = await dbGet('matches', `group_id=eq.${gid}&round_index=eq.${m.round}&match_index=eq.${matchIdx}&select=id`);
       let mid = mRows?.[0]?.id;
       const mData = {
-        group_id: gid, round_index: m.round, match_index: m.idx ?? 0,
-        player1: m.p1, player2: m.p2, is_bye: !!m.bye,
+        group_id: gid, round_index: m.round, match_index: matchIdx,
+        player1: m.p1 || null, player2: m.p2 || null, is_bye: !!m.bye,
         winner: m.winner || null, score1: m.score1 ?? null, score2: m.score2 ?? null
       };
       if (!mid) {
