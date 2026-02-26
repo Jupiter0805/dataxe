@@ -494,34 +494,90 @@ input, textarea, select { font-family: inherit; }
 /* ══════════════════════════════
    ORGANIZADORES PAGE
 ══════════════════════════════ */
-.org-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+/* ── SEARCH BAR ── */
+.orgs-search-bar {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  border-radius: 50px; padding: 0 1.25rem;
+  margin-bottom: 1.75rem;
+  transition: border-color 0.2s;
+  max-width: 560px;
+}
+.orgs-search-bar:focus-within { border-color: var(--accent); }
+.orgs-search-icon { font-size: 16px; opacity: 0.5; flex-shrink: 0; }
+.orgs-search-input {
+  flex: 1; background: none; border: none; outline: none;
+  color: #fff; font-size: 15px; padding: 14px 0;
+  font-family: var(--f);
+}
+.orgs-search-input::placeholder { color: rgba(255,255,255,0.3); }
+
+/* ── ORG GRID ── */
+.org-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
 
 .org-card {
   background: rgba(255,255,255,0.04);
   border: 1px solid rgba(255,255,255,0.08);
-  border-radius: var(--r2); padding: 1.25rem;
-  display: flex; flex-direction: column; gap: 1rem;
+  border-radius: 14px; overflow: hidden;
+  display: flex; flex-direction: column;
   transition: all 0.2s;
 }
-.org-card:hover { border-color: rgba(196,135,58,0.25); }
-.org-card-top { display: flex; gap: 1rem; align-items: center; }
+.org-card:hover {
+  border-color: rgba(196,135,58,0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+/* Card cover */
+.org-card-cover {
+  height: 64px;
+  background: linear-gradient(135deg, rgba(196,135,58,0.2) 0%, rgba(255,255,255,0.03) 100%);
+  position: relative;
+}
+.org-card-avatar-wrap {
+  position: absolute; bottom: -22px; left: 1.25rem;
+}
 .org-avatar {
-  width: 48px; height: 48px; border-radius: 10px;
-  background: var(--bg3); border: 1px solid rgba(255,255,255,0.1);
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--bg2); border: 3px solid var(--bg2);
   display: flex; align-items: center; justify-content: center;
   font-size: 1.4rem; overflow: hidden; flex-shrink: 0;
 }
 .org-avatar img { width: 100%; height: 100%; object-fit: contain; }
-.org-name { font-size: 14px; font-weight: 700; color: var(--ink); }
-.org-username { font-size: 11px; color: var(--ink4); margin-top: 2px; }
-.org-stats {
-  display: flex; gap: 1rem;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  padding-top: 0.875rem;
+
+.org-card-info {
+  padding: 1.75rem 1.25rem 0.75rem;
 }
-.org-stat { text-align: center; }
-.org-stat-n { font-size: 1.1rem; font-weight: 800; color: var(--accent); }
-.org-stat-l { font-size: 9px; color: var(--ink4); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+.org-name { font-size: 17px; font-weight: 800; color: #ffffff; line-height: 1.2; }
+.org-username { font-size: 13px; color: rgba(255,255,255,0.45); margin-top: 3px; }
+.org-description {
+  font-size: 13px; color: rgba(255,255,255,0.6);
+  line-height: 1.6; margin-top: 0.625rem;
+}
+.org-location {
+  font-size: 13px; color: rgba(255,255,255,0.5);
+  margin-top: 5px; display: flex; align-items: center; gap: 4px;
+}
+
+.org-stats {
+  display: flex; gap: 0;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  margin-top: 0.75rem;
+}
+.org-stat {
+  flex: 1; text-align: center;
+  padding: 0.875rem 0.5rem;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+.org-stat:last-child { border-right: none; }
+.org-stat-n { font-size: 1.4rem; font-weight: 800; color: var(--accent); line-height: 1; }
+.org-stat-l { font-size: 10px; color: rgba(255,255,255,0.35); letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; }
 
 .follow-btn {
   width: 100%; font-size: 11px; font-weight: 700; letter-spacing: 1px;
@@ -836,11 +892,11 @@ input, textarea, select { font-family: inherit; }
       <h1 class="pg-title">Clubs &amp; <em>Organizadores.</em></h1>
       <p class="pg-sub">Sigue a los organizadores para ver sus torneos en tu feed</p>
 
-      <div style="margin-bottom:1.25rem">
-        <input class="f-input" type="text" id="org-search"
-          placeholder="🔍  Buscar por nombre de club..."
-          oninput="filterOrgs(this.value)"
-          style="max-width:360px">
+      <div class="orgs-search-bar">
+        <span class="orgs-search-icon">🔍</span>
+        <input class="orgs-search-input" type="text" id="org-search"
+          placeholder="Buscar por nombre de club, ciudad..."
+          oninput="filterOrgs(this.value)">
       </div>
 
       <div id="orgs-list">
@@ -1455,40 +1511,41 @@ function renderOrgGrid(orgs, container) {
 }
 
 function orgCard(o) {
-  const followId   = o.user_id || o.id;
+  const followId    = o.user_id || o.id;
   const isFollowing = FOLLOWS.has(followId);
   const avatarContent = o.logo_url
     ? `<img src="${o.logo_url}" alt="">`
-    : `<span style="font-size:1.4rem">🏟</span>`;
-  const locationHtml = o.location
-    ? `<div style="font-size:10px;color:var(--ink4);margin-top:3px">📍 ${o.location}</div>`
-    : '';
+    : `🏟`;
 
   return `
   <div class="org-card" id="org-${followId}">
-    <div class="org-card-top">
-      <div class="org-avatar">${avatarContent}</div>
-      <div>
-        <div class="org-name">${o.club_name || o.username}</div>
-        <div class="org-username">@${o.username}</div>
-        ${locationHtml}
+    <div class="org-card-cover">
+      <div class="org-card-avatar-wrap">
+        <div class="org-avatar">${avatarContent}</div>
       </div>
     </div>
-    ${o.description ? `<div style="font-size:11px;color:var(--ink4);line-height:1.5;border-top:1px solid rgba(255,255,255,0.06);padding-top:0.75rem">${o.description}</div>` : ''}
+    <div class="org-card-info">
+      <div class="org-name">${o.club_name || o.username}</div>
+      <div class="org-username">@${o.username}</div>
+      ${o.location ? `<div class="org-location">📍 ${o.location}</div>` : ''}
+      ${o.description ? `<div class="org-description">${o.description}</div>` : ''}
+    </div>
     <div class="org-stats">
       <div class="org-stat">
         <div class="org-stat-n">${o.event_count}</div>
         <div class="org-stat-l">Torneos</div>
       </div>
       <div class="org-stat">
-        <div class="org-stat-n" style="color:${isFollowing ? 'var(--green)' : 'var(--ink4)'}">${isFollowing ? '✓' : '—'}</div>
+        <div class="org-stat-n" style="color:${isFollowing ? 'var(--green)' : 'rgba(255,255,255,0.2)'}">${isFollowing ? '✓' : '—'}</div>
         <div class="org-stat-l">Siguiendo</div>
       </div>
     </div>
-    <button class="follow-btn ${isFollowing ? 'following' : 'not-following'}"
-      onclick="toggleFollow('${followId}', this)">
-      ${isFollowing ? '✓ Siguiendo' : '+ Seguir'}
-    </button>
+    <div style="padding:0.875rem 1.25rem;border-top:1px solid rgba(255,255,255,0.06)">
+      <button class="follow-btn ${isFollowing ? 'following' : 'not-following'}"
+        onclick="toggleFollow('${followId}', this)" style="width:100%">
+        ${isFollowing ? '✓ Siguiendo' : '+ Seguir'}
+      </button>
+    </div>
   </div>`;
 }
 
