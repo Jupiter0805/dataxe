@@ -1979,6 +1979,15 @@ async function syncToSupabase() {
     club_name: ADMIN.club || '',
     logo_url:  ADMIN.logo || null
   });
+
+  // Sync organizer profile
+  await dbUpsert('organizers', {
+    id:        DB_USER_ID,
+    user_id:   DB_USER_ID,
+    club_name: ADMIN.club || '',
+    username:  CUR_USER || '',
+    logo_url:  ADMIN.logo || null
+  });
 }
 
 // ─────────────────────────────────
@@ -2017,12 +2026,18 @@ async function doLogin() {
     const profiles = await dbGet('users', `id=eq.${data.user.id}&select=id,username,club_name,logo_url`);
     const profile = profiles?.[0];
 
+    // Obtener perfil de organizador (club_name autorizado)
+    const orgProfiles = await dbGet('organizers', `id=eq.${data.user.id}&select=id,club_name,username,logo_url`);
+    const orgProfile = orgProfiles?.[0];
+
     err.style.display = 'none';
-    CUR_USER   = profile?.username || u;
+    CUR_USER   = orgProfile?.username || profile?.username || u;
     DB_USER_ID = data.user.id;
     ADMIN      = loadAdmin();
-    if (profile?.club_name) ADMIN.club = profile.club_name;
-    if (profile?.logo_url)  ADMIN.logo = profile.logo_url;
+    if (orgProfile?.club_name) ADMIN.club = orgProfile.club_name;
+    else if (profile?.club_name) ADMIN.club = profile.club_name;
+    if (orgProfile?.logo_url)  ADMIN.logo = orgProfile.logo_url;
+    else if (profile?.logo_url) ADMIN.logo = profile.logo_url;
     launchApp();
 
   } catch(e) {
@@ -2045,7 +2060,7 @@ async function doRegister() {
     email,
     password: p,
     options: {
-      data: { username: u, club_name: club }
+      data: { username: u, club_name: club, role: 'organizer' }
     }
   });
 
@@ -2053,6 +2068,14 @@ async function doRegister() {
     showErr(err, error.message.includes('already registered') ? 'Ese email ya está registrado' : error.message);
     return;
   }
+
+  // Crear entrada en organizers
+  await dbInsert('organizers', {
+    id:        data.user.id,
+    user_id:   data.user.id,
+    club_name: club,
+    username:  u
+  });
 
   DB_USER_ID = data.user.id;
   CUR_USER   = u;
