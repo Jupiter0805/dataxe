@@ -2242,8 +2242,11 @@ async function syncToSupabase() {
   }
 
   // Upsert global stats — use linked user_id if available
+  // Build map: username -> user_id for linked players
   const playerUserMap = {};
-  (G().players || []).forEach(p => { if (p.user_id) playerUserMap[p.name] = p.user_id; });
+  (G().players || []).forEach(p => {
+    if (p.user_id) playerUserMap[p.username || p.name] = p.user_id;
+  });
 
   for (const [name, s] of Object.entries(ADMIN.global || {})) {
     const targetUserId = playerUserMap[name] || null; // linked player's own user_id
@@ -2615,7 +2618,18 @@ let QS_SELECTED = null; // { user_id, username, display }
 async function qsSearchUsers(q) {
   const res = document.getElementById('qs-results');
   if (!q || q.length < 2) { res.style.display = 'none'; QS_SELECTED = null; return; }
-  const rows = await dbGet(`users?username=ilike.*${encodeURIComponent(q)}*&role=eq.player&select=id,username,club_name&limit=8`) || [];
+
+  let rows = [];
+  try {
+    rows = await supa(`users?username=ilike.*${q.trim()}*&role=eq.player&select=id,username,club_name&limit=8`) || [];
+    console.log('[qsSearch] query:', q, '| results:', rows.length, rows);
+  } catch(e) {
+    console.error('[qsSearch] error:', e.message);
+    res.style.display = 'block';
+    res.innerHTML = `<div style="padding:12px 14px;font-size:12px;color:#d4635a">Error: ${e.message}</div>`;
+    return;
+  }
+
   if (!rows.length) {
     res.style.display = 'block';
     res.innerHTML = `<div style="padding:12px 14px;font-size:12px;color:rgba(255,255,255,0.5)">Sin resultados — puedes añadirlo como nombre libre abajo</div>`;
@@ -2623,7 +2637,7 @@ async function qsSearchUsers(q) {
   }
   res.style.display = 'block';
   res.innerHTML = rows.map(u => `
-    <div onclick="qsSelectUser('${u.id}','${u.username}','${(u.club_name||'').replace(/'/g,"\'")}' )"
+    <div onclick="qsSelectUser('${u.id}','${u.username}')"
       style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;
         border-bottom:1px solid var(--line);transition:background 0.15s"
       onmouseover="this.style.background='rgba(196,135,58,0.08)'"
@@ -2631,25 +2645,24 @@ async function qsSearchUsers(q) {
       <div style="width:34px;height:34px;border-radius:50%;background:var(--bg3);
         display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">🎯</div>
       <div style="flex:1">
-        <div style="font-size:13px;font-weight:700;color:var(--ink)">@${u.username}</div>
-        ${u.club_name ? `<div style="font-size:11px;color:var(--ink4)">${u.club_name}</div>` : ''}
+        <div style="font-size:13px;font-weight:700;color:#fff">@${u.username}</div>
+        ${u.club_name ? `<div style="font-size:11px;color:rgba(255,255,255,0.45)">${u.club_name}</div>` : ''}
       </div>
       <button class="btn btn-amber btn-xs" style="pointer-events:none">+ Añadir</button>
     </div>`).join('');
 }
 
-function qsSelectUser(userId, username, clubName) {
-  const displayName = clubName || username;
-  // Check duplicate
-  if (G().players.find(p => p.name.toLowerCase() === displayName.toLowerCase())) {
+function qsSelectUser(userId, username) {
+  // Always use username as the player name so stats link correctly
+  if (G().players.find(p => p.name.toLowerCase() === username.toLowerCase())) {
     toast('Jugador ya existe', 'red');
     document.getElementById('qs-search').value = '';
     document.getElementById('qs-results').style.display = 'none';
     return;
   }
-  G().players.push({ id: uid(), name: displayName, user_id: userId, username });
+  G().players.push({ id: uid(), name: username, user_id: userId, username });
   save(); renderQEntryList();
-  toast(`@${username} añadido ✓`, 'green');
+  toast(`${username} añadido ✓`, 'green');
   document.getElementById('qs-search').value = '';
   document.getElementById('qs-results').style.display = 'none';
 }
@@ -2680,7 +2693,7 @@ let AP_SELECTED_USER = null; // { username, user_id, display }
 async function searchUsers(q) {
   const res = document.getElementById('ap-results');
   if (!q || q.length < 2) { res.style.display = 'none'; return; }
-  const rows = await dbGet(`users?username=ilike.*${encodeURIComponent(q)}*&role=eq.player&select=id,username,club_name&limit=8`) || [];
+  const rows = await supa(`users?username=ilike.*${q.trim()}*&role=eq.player&select=id,username,club_name&limit=8`) || [];
   if (!rows.length) { res.style.display = 'none'; return; }
   res.style.display = 'block';
   res.innerHTML = rows.map(u => `
@@ -4276,7 +4289,7 @@ async function loadFollowersBanner() {
 
   // Load usernames of first 5 followers
   const ids = follows.slice(0, 5).map(f => f.user_id).join(',');
-  const users = await dbGet(`users?id=in.(${ids})&select=username`) || [];
+  const users = await supa(`users?id=in.(${ids})&select=username`) || [];
   const names = users.map(u => '@' + u.username).join(', ');
   namesEl.textContent = names + (follows.length > 5 ? ` y ${follows.length - 5} más` : '');
 }
