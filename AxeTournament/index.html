@@ -1064,7 +1064,7 @@ footer {
   <a href="#how" onclick="toggleMenu()">Como funciona</a>
   <a href="#about" onclick="toggleMenu()">Quienes somos</a>
   <a href="#gear" onclick="toggleMenu()">Equipamiento</a>
-  <a href="novuraxe.html" onclick="toggleMenu()" style="color:var(--accent)">Iniciar sesion →</a>
+  <a href="#" onclick="toggleMenu();openRoleModal(event)" style="color:var(--accent)">Iniciar sesion →</a>
 </div>
 
 <!-- NAV -->
@@ -1079,7 +1079,7 @@ footer {
     <li><a href="#how">Como funciona</a></li>
     <li><a href="#about">Quienes somos</a></li>
     <li><a href="#gear">Equipamiento</a></li>
-    <li><a href="novuraxe.html" class="nav-cta">Iniciar sesion →</a></li>
+    <li><a href="#" class="nav-cta" onclick="openRoleModal(event)">Iniciar sesion →</a></li>
   </ul>
   <button class="nav-mobile-btn" onclick="toggleMenu()">☰</button>
 </nav>
@@ -1105,7 +1105,7 @@ footer {
   </p>
 
   <div class="hero-actions">
-    <a href="novuraxe.html" class="btn-primary">Empezar gratis →</a>
+    <a href="#" class="btn-primary" onclick="openRoleModal(event)">Empezar gratis →</a>
     <a href="#how" class="btn-secondary">Ver cómo funciona</a>
   </div>
 
@@ -1435,8 +1435,8 @@ footer {
     </h2>
     <p class="cta-sub reveal reveal-delay-2">Gratis. Sin instalación. Desde cualquier dispositivo.</p>
     <div class="cta-actions reveal reveal-delay-3">
-      <a href="novuraxe.html" class="btn-primary">Crear cuenta gratis →</a>
-      <a href="novuraxe.html" class="btn-secondary">Ya tengo cuenta</a>
+      <a href="#" class="btn-primary" onclick="openRoleModal(event)">Crear cuenta gratis →</a>
+      <a href="#" class="btn-secondary" onclick="openRoleModal(event)">Ya tengo cuenta</a>
     </div>
   </div>
 </section>
@@ -1511,5 +1511,120 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
   });
 });
 </script>
+
+<!-- ══ MODAL SELECCIÓN DE ROL ══ -->
+<div id="role-modal" style="
+  display:none; position:fixed; inset:0; z-index:9000;
+  background:rgba(0,0,0,0.8); backdrop-filter:blur(8px);
+  align-items:center; justify-content:center; padding:1.5rem;
+">
+  <div style="
+    background:#2c2418; border:1px solid rgba(196,135,58,0.2);
+    border-radius:16px; padding:2.5rem 2rem; width:100%; max-width:480px;
+    position:relative; box-shadow:0 32px 80px rgba(0,0,0,0.6);
+  ">
+    <!-- Close -->
+    <button onclick="closeRoleModal()" style="
+      position:absolute; top:1rem; right:1rem;
+      background:none; border:none; color:rgba(255,255,255,0.3);
+      font-size:18px; cursor:pointer; line-height:1;
+      transition:color 0.2s;
+    " onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.3)'">✕</button>
+
+    <!-- Header -->
+    <div style="text-align:center; margin-bottom:2rem">
+      <div style="
+        font-family:'DM Mono',monospace; font-size:10px; letter-spacing:3px;
+        text-transform:uppercase; color:#c4873a; margin-bottom:0.75rem;
+      ">Acceder como</div>
+      <div style="
+        font-family:'Bebas Neue',sans-serif; font-size:2.2rem;
+        letter-spacing:2px; color:#fdfaf7; line-height:1;
+      ">¿Quién eres?</div>
+    </div>
+
+    <!-- Cards -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+
+      <!-- ORGANIZADOR -->
+      <a href="novuraxe.html" style="text-decoration:none" onclick="closeRoleModal()">
+        <div class="role-card" style="
+          background:rgba(255,255,255,0.04); border:1.5px solid rgba(255,255,255,0.08);
+          border-radius:12px; padding:1.75rem 1.25rem; text-align:center;
+          cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden;
+        "
+        onmouseover="this.style.borderColor='rgba(196,135,58,0.5)';this.style.background='rgba(196,135,58,0.08)';this.style.transform='translateY(-2px)'"
+        onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='rgba(255,255,255,0.04)';this.style.transform='translateY(0)'">
+          <div style="font-size:2.2rem; margin-bottom:0.875rem">🏟</div>
+          <div style="
+            font-family:'Bebas Neue',sans-serif; font-size:1.3rem;
+            letter-spacing:1.5px; color:#fdfaf7; margin-bottom:0.5rem;
+          ">Organizador</div>
+          <div style="
+            font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.5px;
+            color:#8c7d6a; line-height:1.5;
+          ">Gestiona torneos,<br>jugadores y brackets</div>
+          <div style="
+            margin-top:1.25rem; font-family:'DM Mono',monospace; font-size:11px;
+            font-weight:500; letter-spacing:1px; color:#c4873a;
+          ">Entrar →</div>
+        </div>
+      </a>
+
+      <!-- JUGADOR -->
+      <a href="jugador.html" style="text-decoration:none" onclick="closeRoleModal()">
+        <div style="
+          background:rgba(255,255,255,0.04); border:1.5px solid rgba(255,255,255,0.08);
+          border-radius:12px; padding:1.75rem 1.25rem; text-align:center;
+          cursor:pointer; transition:all 0.2s;
+        "
+        onmouseover="this.style.borderColor='rgba(196,135,58,0.5)';this.style.background='rgba(196,135,58,0.08)';this.style.transform='translateY(-2px)'"
+        onmouseout="this.style.borderColor='rgba(255,255,255,0.08)';this.style.background='rgba(196,135,58,0.04)';this.style.transform='translateY(0)'">
+          <div style="font-size:2.2rem; margin-bottom:0.875rem">🪓</div>
+          <div style="
+            font-family:'Bebas Neue',sans-serif; font-size:1.3rem;
+            letter-spacing:1.5px; color:#fdfaf7; margin-bottom:0.5rem;
+          ">Jugador</div>
+          <div style="
+            font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.5px;
+            color:#8c7d6a; line-height:1.5;
+          ">Sigue torneos,<br>ve tus estadísticas</div>
+          <div style="
+            margin-top:1.25rem; font-family:'DM Mono',monospace; font-size:11px;
+            font-weight:500; letter-spacing:1px; color:#c4873a;
+          ">Entrar →</div>
+        </div>
+      </a>
+    </div>
+
+    <div style="
+      text-align:center; margin-top:1.5rem;
+      font-family:'DM Mono',monospace; font-size:10px;
+      color:rgba(255,255,255,0.2); letter-spacing:0.5px;
+    ">Selecciona tu rol para continuar</div>
+  </div>
+</div>
+
+<script>
+function openRoleModal(e) {
+  if (e) e.preventDefault();
+  const m = document.getElementById('role-modal');
+  m.style.display = 'flex';
+  requestAnimationFrame(() => {
+    m.querySelector('div').style.transform = 'scale(1)';
+    m.querySelector('div').style.opacity = '1';
+  });
+}
+function closeRoleModal() {
+  document.getElementById('role-modal').style.display = 'none';
+}
+// Close on backdrop click
+document.getElementById('role-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeRoleModal();
+});
+// Close on Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRoleModal(); });
+</script>
+
 </body>
 </html>
