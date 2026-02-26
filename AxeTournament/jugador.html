@@ -291,6 +291,86 @@ input, textarea, select { font-family: inherit; }
   letter-spacing: 1px; text-transform: uppercase; margin-top: 4px;
 }
 
+/* ── FEED LAYOUT ── */
+.feed-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+.feed-sidebar {
+  position: sticky; top: 88px;
+}
+.feed-main { min-width: 0; }
+
+/* Sidebar profile card */
+.sidebar-profile {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--r2); overflow: hidden;
+}
+.sidebar-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--bg3); border: 2px solid rgba(196,135,58,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; margin: 0 auto 0.75rem;
+}
+.sidebar-name { font-size: 15px; font-weight: 800; color: #fff; text-align: center; }
+.sidebar-username { font-size: 11px; color: var(--accent); text-align: center; margin-top: 3px; letter-spacing: 0.5px; }
+.sidebar-stats {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: rgba(255,255,255,0.06);
+  margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.06);
+}
+.sidebar-stat {
+  background: rgba(255,255,255,0.03);
+  padding: 0.875rem 0.5rem; text-align: center;
+}
+.sidebar-stat-n { font-size: 1.4rem; font-weight: 800; color: var(--accent); line-height: 1; }
+.sidebar-stat-l { font-size: 9px; color: rgba(255,255,255,0.35); letter-spacing: 1px; text-transform: uppercase; margin-top: 3px; }
+.sidebar-following {
+  padding: 0.875rem 1rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.sidebar-following-title {
+  font-size: 9px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,0.3);
+  margin-bottom: 0.625rem;
+}
+.sidebar-org-chip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; transition: all 0.15s;
+}
+.sidebar-org-chip:last-child { border-bottom: none; }
+.sidebar-org-chip:hover .sidebar-org-name { color: var(--accent); }
+.sidebar-org-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; flex-shrink: 0; overflow: hidden;
+}
+.sidebar-org-avatar img { width: 100%; height: 100%; object-fit: contain; }
+.sidebar-org-name { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.7); }
+
+/* Feed post cards — better text visibility */
+.event-card-title { font-size: 15px !important; font-weight: 700 !important; color: #ffffff !important; line-height: 1.3; }
+.event-card-club { font-size: 12px !important; color: rgba(255,255,255,0.5) !important; margin-top: 4px; }
+.event-card-body p,
+.event-card-body div { color: rgba(255,255,255,0.65); }
+.event-meta-item { font-size: 12px !important; color: rgba(255,255,255,0.75) !important; }
+.event-meta-item span { color: rgba(255,255,255,0.55) !important; }
+.event-card-footer { background: rgba(255,255,255,0.025) !important; }
+.event-spots { font-size: 12px !important; color: rgba(255,255,255,0.45) !important; }
+.event-spots strong { color: rgba(255,255,255,0.7) !important; }
+
+@media (max-width: 900px) {
+  .feed-layout {
+    grid-template-columns: 1fr;
+  }
+  .feed-sidebar { display: none; }
+}
+
 /* BADGE */
 .badge {
   display: inline-flex; align-items: center; gap: 3px;
@@ -679,19 +759,33 @@ input, textarea, select { font-family: inherit; }
 
     <!-- ── FEED ── -->
     <div class="page on" id="pg-feed">
-      <div class="pg-eyebrow">Próximos torneos</div>
-      <h1 class="pg-title">Tu <em>feed.</em></h1>
-      <p class="pg-sub">Torneos de los organizadores que sigues</p>
+      <div class="feed-layout">
 
-      <div class="feed-filters">
-        <button class="filter-btn on" onclick="setFilter('all',this)">Todos</button>
-        <button class="filter-btn" onclick="setFilter('open',this)">Inscripción abierta</button>
-        <button class="filter-btn" onclick="setFilter('soon',this)">Esta semana</button>
-        <button class="filter-btn" onclick="setFilter('following',this)">Solo mis clubs</button>
-      </div>
+        <!-- Sidebar stats (desktop only) -->
+        <aside class="feed-sidebar" id="feed-sidebar">
+          <div class="sidebar-profile" id="sidebar-profile">
+            <div class="loading"><div class="spinner"></div></div>
+          </div>
+        </aside>
 
-      <div id="feed-list">
-        <div class="loading"><div class="spinner"></div> Cargando torneos...</div>
+        <!-- Main feed -->
+        <div class="feed-main">
+          <div class="pg-eyebrow">Próximos torneos</div>
+          <h1 class="pg-title">Tu <em>feed.</em></h1>
+          <p class="pg-sub">Torneos de los organizadores que sigues</p>
+
+          <div class="feed-filters">
+            <button class="filter-btn on" onclick="setFilter('all',this)">Todos</button>
+            <button class="filter-btn" onclick="setFilter('open',this)">Inscripción abierta</button>
+            <button class="filter-btn" onclick="setFilter('soon',this)">Esta semana</button>
+            <button class="filter-btn" onclick="setFilter('following',this)">Solo mis clubs</button>
+          </div>
+
+          <div id="feed-list">
+            <div class="loading"><div class="spinner"></div> Cargando torneos...</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1025,9 +1119,66 @@ function setFilter(f, btn) {
   renderFeed();
 }
 
+async function renderSidebar() {
+  const el = document.getElementById('sidebar-profile');
+  if (!el || !CUR_USER) return;
+
+  // Load followed orgs details
+  let followedOrgs = [];
+  if (FOLLOWS.size > 0) {
+    const ids = [...FOLLOWS].join(',');
+    followedOrgs = await dbGet(`organizers?user_id=in.(${ids})&select=user_id,username,club_name,logo_url&limit=5`) || [];
+  }
+
+  const stats = await dbGet(`global_stats?user_id=eq.${CUR_USER.id}&select=*`) || [];
+  const totalTournaments = stats.reduce((a,s) => a + (s.tournaments||0), 0);
+  const totalWins        = stats.reduce((a,s) => a + (s.wins||0), 0);
+  const totalPts         = stats.reduce((a,s) => a + (s.total_qpts||0), 0);
+
+  const orgsHtml = followedOrgs.length ? `
+    <div class="sidebar-following">
+      <div class="sidebar-following-title">Siguiendo</div>
+      ${followedOrgs.map(o => `
+        <div class="sidebar-org-chip" onclick="showPage('orgs')">
+          <div class="sidebar-org-avatar">
+            ${o.logo_url ? `<img src="${o.logo_url}" alt="">` : '🏟'}
+          </div>
+          <span class="sidebar-org-name">${o.club_name || o.username}</span>
+        </div>`).join('')}
+    </div>` : '';
+
+  el.innerHTML = `
+    <div style="padding:1.25rem 1rem 0">
+      <div class="sidebar-avatar">🎯</div>
+      <div class="sidebar-name">${PROFILE?.club_name || PROFILE?.username || '—'}</div>
+      <div class="sidebar-username">@${PROFILE?.username || '—'}</div>
+    </div>
+    <div class="sidebar-stats">
+      <div class="sidebar-stat">
+        <div class="sidebar-stat-n">${totalTournaments}</div>
+        <div class="sidebar-stat-l">Torneos</div>
+      </div>
+      <div class="sidebar-stat">
+        <div class="sidebar-stat-n" style="color:var(--green)">${totalWins}</div>
+        <div class="sidebar-stat-l">Victorias</div>
+      </div>
+      <div class="sidebar-stat">
+        <div class="sidebar-stat-n" style="color:var(--sand)">${totalPts}</div>
+        <div class="sidebar-stat-l">Puntos</div>
+      </div>
+      <div class="sidebar-stat">
+        <div class="sidebar-stat-n">${FOLLOWS.size}</div>
+        <div class="sidebar-stat-l">Clubs</div>
+      </div>
+    </div>
+    ${orgsHtml}
+  `;
+}
+
 async function renderFeed() {
   const container = document.getElementById('feed-list');
   container.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando feed...</div>';
+  renderSidebar();
 
   // Load events and posts in parallel
   await loadEvents();
