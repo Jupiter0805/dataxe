@@ -2615,7 +2615,7 @@ let QS_SELECTED = null; // { user_id, username, display }
 async function qsSearchUsers(q) {
   const res = document.getElementById('qs-results');
   if (!q || q.length < 2) { res.style.display = 'none'; QS_SELECTED = null; return; }
-  const rows = await dbGet(`users?username=ilike.*${encodeURIComponent(q)}*&role=not.eq.organizer&select=id,username,club_name&limit=8`) || [];
+  const rows = await dbGet(`users?username=ilike.*${encodeURIComponent(q)}*&role=eq.player&select=id,username,club_name&limit=8`) || [];
   if (!rows.length) {
     res.style.display = 'block';
     res.innerHTML = `<div style="padding:12px 14px;font-size:12px;color:rgba(255,255,255,0.5)">Sin resultados — puedes añadirlo como nombre libre abajo</div>`;
@@ -2680,7 +2680,7 @@ let AP_SELECTED_USER = null; // { username, user_id, display }
 async function searchUsers(q) {
   const res = document.getElementById('ap-results');
   if (!q || q.length < 2) { res.style.display = 'none'; return; }
-  const rows = await dbGet(`users?username=ilike.*${encodeURIComponent(q)}*&role=not.eq.organizer&select=id,username,club_name&limit=8`) || [];
+  const rows = await dbGet(`users?username=ilike.*${encodeURIComponent(q)}*&role=eq.player&select=id,username,club_name&limit=8`) || [];
   if (!rows.length) { res.style.display = 'none'; return; }
   res.style.display = 'block';
   res.innerHTML = rows.map(u => `
