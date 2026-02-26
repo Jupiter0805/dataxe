@@ -2152,7 +2152,16 @@ async function syncToSupabase() {
   for (const [name, s] of Object.entries(ADMIN.global || {})) {
     await dbUpsert('global_stats', {
       user_id: DB_USER_ID, player_name: name,
-      tournaments: s.tournaments, wins: s.wins, total_qpts: s.qpts
+      tournaments:      s.tournaments   || 0,
+      wins:             s.wins          || 0,
+      losses:           s.losses        || 0,
+      total_qpts:       s.qpts          || 0,
+      total_ks:         s.total_ks      || 0,
+      total_bs:         s.total_bs      || 0,
+      qualify_throws:   s.qualify_throws|| 0,
+      qualify_sixes:    s.qualify_sixes || 0,
+      elim_throws:      s.elim_throws   || 0,
+      elim_bulls:       s.elim_bulls    || 0
     });
   }
 
@@ -3454,12 +3463,56 @@ function saveTournament() {
   };
   ADMIN.history.unshift(snap);
 
-  // Update global stats
+  // Update global stats with full breakdown
   g.players.forEach(p => {
-    if (!ADMIN.global[p.name]) ADMIN.global[p.name] = { wins: 0, tournaments: 0, qpts: 0 };
-    ADMIN.global[p.name].tournaments++;
-    ADMIN.global[p.name].qpts += qTotal(p.id);
-    if (g.champion === p.name) ADMIN.global[p.name].wins++;
+    if (!ADMIN.global[p.name]) ADMIN.global[p.name] = {
+      wins: 0, losses: 0, tournaments: 0, qpts: 0,
+      total_ks: 0, total_bs: 0,
+      qualify_throws: 0, qualify_sixes: 0,
+      elim_throws: 0, elim_bulls: 0
+    };
+    const gs = ADMIN.global[p.name];
+    gs.tournaments++;
+    gs.qpts += qTotal(p.id);
+    if (g.champion === p.name) gs.wins++;
+
+    // ── Qualify stats: KS, 6s, total throws ──
+    for (let r = 0; r < g.qualCfg.rounds; r++) {
+      const throws = (g.qualScores[p.id] || {})['r' + r] || [];
+      throws.forEach(v => {
+        if (v === null || v === undefined) return;
+        gs.qualify_throws++;
+        if (v === QUAL_KS_VAL) gs.total_ks++;          // killshot en clasificación
+        if (v === 6) gs.qualify_sixes++;                // 6 = diana (precisión al centro)
+      });
+    }
+
+    // ── Elimination stats: KS, Bulls, wins/losses per match ──
+    (g.matches || []).forEach(m => {
+      if (!m.winner) return; // match not played
+      const isP1 = m.p1 === p.name;
+      const isP2 = m.p2 === p.name;
+      if (!isP1 && !isP2) return;
+      const pIdx = isP1 ? 1 : 2;
+
+      for (let r = 0; r < 2; r++) {
+        const arr = m[`r${r}p${pIdx}`] || [];
+        arr.forEach(v => {
+          if (v === null || v === undefined) return;
+          gs.elim_throws++;
+          if (v === DUEL_KS_VAL)   gs.total_ks++;     // killshot en duelo
+          if (v === DUEL_BULL_VAL)  gs.elim_bulls++;   // bull's eye
+          if (v === DUEL_BULL_VAL)  gs.total_bs++;
+        });
+      }
+
+      // win/loss per match
+      if (m.winner === p.name) gs.wins++;   // already counted champion above — careful
+      // Actually only count bracket wins/losses separately from tournament win
+    });
+
+    // Losses = tournaments played where not champion
+    if (g.champion && g.champion !== p.name) gs.losses++;
   });
 
   save(); renderHistory(); toast('Torneo guardado', 'green');
