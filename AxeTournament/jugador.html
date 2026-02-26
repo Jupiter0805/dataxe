@@ -974,6 +974,9 @@ async function launchApp(user) {
   const followRows = await dbGet(`follows?follower_id=eq.${user.id}&select=following_id`);
   FOLLOWS = new Set(followRows.map(f => f.following_id));
 
+  // Also load organizers table to verify follow targets exist
+  // (follows.following_id references organizers.user_id)
+
   document.getElementById('t-username').textContent = PROFILE.username || user.email;
   document.getElementById('scr-login').classList.remove('on');
   document.getElementById('scr-app').classList.add('on');
@@ -1012,7 +1015,7 @@ function renderPage(p) {
 // ══════════════════════════════
 async function loadEvents() {
   // Load all public events
-  ALL_EVENTS = await dbGet('tournament_events?select=*,users(username,club_name,logo_url)&order=date.asc');
+  ALL_EVENTS = await dbGet('tournament_events?select=*,organizers(username,club_name,logo_url)&order=date.asc');
 }
 
 function setFilter(f, btn) {
@@ -1061,7 +1064,7 @@ async function renderFeed() {
 }
 
 function eventCard(e) {
-  const club = e.users?.club_name || e.users?.username || 'Organizador';
+  const club = e.organizers?.club_name || e.organizers?.username || 'Organizador';
   const days = daysUntil(e.date);
   const daysLabel = days === null ? '' : days === 0 ? '¡Hoy!' : days === 1 ? 'Mañana' : days > 0 ? `En ${days} días` : 'Pasado';
   const isFollowing = FOLLOWS.has(e.user_id);
@@ -1097,7 +1100,7 @@ async function openEvent(id) {
   ACTIVE_EVENT = ALL_EVENTS.find(e => e.id === id);
   if (!ACTIVE_EVENT) return;
   const e = ACTIVE_EVENT;
-  const club = e.users?.club_name || e.users?.username || 'Organizador';
+  const club = e.organizers?.club_name || e.organizers?.username || 'Organizador';
 
   document.getElementById('m-event-title').textContent = e.title;
   document.getElementById('m-event-body').innerHTML = `
@@ -1149,16 +1152,16 @@ async function renderOrgs() {
   const container = document.getElementById('orgs-list');
   container.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando organizadores...</div>';
 
-  // Load all orgs with their event count
-  ALL_ORGS = await dbGet('users?select=id,username,club_name,logo_url,created_at');
+  // Load all organizers from dedicated table
+  ALL_ORGS = await dbGet('organizers?select=id,user_id,username,club_name,logo_url,description,location,created_at&order=club_name.asc');
 
   // Load event counts per organizer
   const events = await dbGet('tournament_events?select=user_id');
   const eventCounts = {};
   events.forEach(e => { eventCounts[e.user_id] = (eventCounts[e.user_id] || 0) + 1; });
 
-  ALL_ORGS = ALL_ORGS.map(o => ({ ...o, event_count: eventCounts[o.id] || 0 }))
-    .filter(o => o.id !== CUR_USER?.id); // exclude self
+  ALL_ORGS = ALL_ORGS.map(o => ({ ...o, event_count: eventCounts[o.user_id] || 0 }))
+    .filter(o => o.user_id !== CUR_USER?.id); // exclude self
 
   renderOrgGrid(ALL_ORGS, container);
 }
@@ -1167,8 +1170,10 @@ function filterOrgs(q) {
   const container = document.getElementById('orgs-list');
   const filtered = q
     ? ALL_ORGS.filter(o =>
-        (o.club_name || '').toLowerCase().includes(q.toLowerCase()) ||
-        (o.username  || '').toLowerCase().includes(q.toLowerCase()))
+        (o.club_name   || '').toLowerCase().includes(q.toLowerCase()) ||
+        (o.username    || '').toLowerCase().includes(q.toLowerCase()) ||
+        (o.location    || '').toLowerCase().includes(q.toLowerCase()) ||
+        (o.description || '').toLowerCase().includes(q.toLowerCase()))
     : ALL_ORGS;
   renderOrgGrid(filtered, container);
 }
@@ -1182,20 +1187,26 @@ function renderOrgGrid(orgs, container) {
 }
 
 function orgCard(o) {
-  const isFollowing = FOLLOWS.has(o.id);
+  const followId   = o.user_id || o.id;
+  const isFollowing = FOLLOWS.has(followId);
   const avatarContent = o.logo_url
     ? `<img src="${o.logo_url}" alt="">`
     : `<span style="font-size:1.4rem">🏟</span>`;
+  const locationHtml = o.location
+    ? `<div style="font-size:10px;color:var(--ink4);margin-top:3px">📍 ${o.location}</div>`
+    : '';
 
   return `
-  <div class="org-card" id="org-${o.id}">
+  <div class="org-card" id="org-${followId}">
     <div class="org-card-top">
       <div class="org-avatar">${avatarContent}</div>
       <div>
         <div class="org-name">${o.club_name || o.username}</div>
         <div class="org-username">@${o.username}</div>
+        ${locationHtml}
       </div>
     </div>
+    ${o.description ? `<div style="font-size:11px;color:var(--ink4);line-height:1.5;border-top:1px solid rgba(255,255,255,0.06);padding-top:0.75rem">${o.description}</div>` : ''}
     <div class="org-stats">
       <div class="org-stat">
         <div class="org-stat-n">${o.event_count}</div>
@@ -1207,7 +1218,7 @@ function orgCard(o) {
       </div>
     </div>
     <button class="follow-btn ${isFollowing ? 'following' : 'not-following'}"
-      onclick="toggleFollow('${o.id}', this)">
+      onclick="toggleFollow('${followId}', this)">
       ${isFollowing ? '✓ Siguiendo' : '+ Seguir'}
     </button>
   </div>`;
