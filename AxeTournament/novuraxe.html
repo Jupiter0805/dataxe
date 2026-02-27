@@ -1491,9 +1491,9 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
             <div style="display:flex;align-items:center;gap:8px">
               <span style="font-size:11px;color:var(--ink3);font-weight:600">Mostrar</span>
               <div class="stepper" style="gap:6px">
-                <button class="step-btn" onclick="adjDashN(-5)">−</button>
-                <div class="step-val" id="ds-n" style="min-width:32px">10</div>
-                <button class="step-btn" onclick="adjDashN(5)">+</button>
+                <button class="step-btn" onclick="adjDashN(-2)">−</button>
+                <div class="step-val" id="ds-n" style="min-width:32px">16</div>
+                <button class="step-btn" onclick="adjDashN(2)">+</button>
               </div>
             </div>
           </div>
@@ -1592,7 +1592,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
               <textarea class="f-input" id="bulk-inp" rows="4"
                 placeholder="Juan García&#10;María López&#10;Carlos Ruiz&#10;Ana Torres..."></textarea>
             </div>
-            <button class="btn btn-red btn-sm" onclick="bulkAdd()">📋 Importar lista</button>
+            <button class="btn btn-red btn-sm" onclick="bulkAdd()">📋 Añadir jugadores</button>
           </details>
 
           <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px;color:#fff;border-color:rgba(255,255,255,0.15)" onclick="clearPlayers()">🗑 Limpiar todos los jugadores</button>
@@ -1607,7 +1607,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
         <div id="q-entry-list">
           <div class="card" style="color:var(--ink3);text-align:center;padding:3rem">
             <div style="font-size:2rem;margin-bottom:8px">🪓</div>
-            Importa jugadores para comenzar
+            Añade jugadores para comenzar
           </div>
         </div>
       </div>
@@ -4706,3 +4706,4 @@ function toast(msg) {
 </script>
 </body>
 </html>
+
