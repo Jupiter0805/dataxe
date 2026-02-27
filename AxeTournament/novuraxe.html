@@ -570,6 +570,25 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   color: #fff;
 }
 
+/* ─── LEVEL BUTTONS ─── */
+.lvl-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.5);
+  font-weight: 700; font-size: 13px;
+  transition: all 0.15s;
+}
+.lvl-btn-on.lvl-pro-active {
+  background: rgba(196,135,58,0.18);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.lvl-btn-on.lvl-semi-active {
+  background: rgba(124,184,82,0.15);
+  border-color: #7cb852;
+  color: #7cb852;
+}
+
 /* ─── PLAYER ROWS ─── */
 .player-row {
   background: rgba(255,255,255,0.04);
@@ -709,6 +728,8 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 .badge-champ  { background: var(--accent-bg); color: var(--accent); }
 .badge-pend   { background: var(--bg2); color: var(--ink3); border: 1px solid var(--line); }
 .badge-dq     { background: #1a1916; color: #fff; letter-spacing: 1px; }
+.badge-pro    { background: rgba(196,135,58,0.15); color: var(--accent); border-color: rgba(196,135,58,0.3) !important; font-size: 9px; letter-spacing: 1px; }
+.badge-semi   { background: rgba(124,184,82,0.12); color: #7cb852; border-color: rgba(124,184,82,0.3) !important; font-size: 9px; letter-spacing: 1px; }
 
 /* ─── TABS ─── */
 .tab-bar {
@@ -1550,6 +1571,17 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
         <div class="card">
           <div class="card-title">Agregar jugadores</div>
 
+          <!-- Level selector — required -->
+          <div class="f-group" style="margin-bottom:0.875rem">
+            <label class="f-label" style="color:#ffffff">Nivel del jugador</label>
+            <div style="display:flex;gap:8px">
+              <button id="lvl-pro" class="btn btn-sm lvl-btn lvl-btn-on"
+                onclick="setAddLevel('pro')" style="flex:1">⚡ PRO</button>
+              <button id="lvl-semi" class="btn btn-sm lvl-btn"
+                onclick="setAddLevel('semi')" style="flex:1">🎯 SEMI PRO</button>
+            </div>
+          </div>
+
           <!-- Live user search -->
           <div class="f-group" style="margin-bottom:0.75rem">
             <label class="f-label" style="color:#ffffff">Buscar usuario registrado</label>
@@ -1674,6 +1706,12 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
             <button class="btn btn-ghost btn-sm" onclick="resetBracket()">↩ Reiniciar</button>
           </div>
         </div>
+      </div>
+
+      <!-- Bracket level tabs -->
+      <div class="tab-bar" style="margin-bottom:1rem">
+        <div class="tab-item on" id="bt-pro" onclick="switchBracketTab('pro')">⚡ PRO</div>
+        <div class="tab-item" id="bt-semi" onclick="switchBracketTab('semi')">🎯 SEMI PRO</div>
       </div>
 
       <div id="bracket-area">
@@ -2658,7 +2696,17 @@ function bulkAdd() {
 }
 
 // ── QUALIFY PAGE: inline player search & quick add ──
-let QS_SELECTED = null; // { user_id, username, display }
+let QS_SELECTED   = null;
+let ADD_LEVEL     = 'pro'; // current selected level for new players
+
+function setAddLevel(lvl) {
+  ADD_LEVEL = lvl;
+  const proBt  = document.getElementById('lvl-pro');
+  const semiBt = document.getElementById('lvl-semi');
+  if (!proBt) return;
+  proBt.className  = 'btn btn-sm lvl-btn' + (lvl === 'pro'  ? ' lvl-btn-on lvl-pro-active'  : '');
+  semiBt.className = 'btn btn-sm lvl-btn' + (lvl === 'semi' ? ' lvl-btn-on lvl-semi-active' : '');
+}
 
 async function qsSearchUsers(q) {
   const res = document.getElementById('qs-results');
@@ -2698,16 +2746,16 @@ async function qsSearchUsers(q) {
 }
 
 function qsSelectUser(userId, username) {
-  // Always use username as the player name so stats link correctly
   if (G().players.find(p => p.name.toLowerCase() === username.toLowerCase())) {
     toast('Jugador ya existe', 'red');
     document.getElementById('qs-search').value = '';
     document.getElementById('qs-results').style.display = 'none';
     return;
   }
-  G().players.push({ id: uid(), name: username, user_id: userId, username });
+  G().players.push({ id: uid(), name: username, user_id: userId, username, level: ADD_LEVEL });
   save(); renderQEntryList();
-  toast(`${username} añadido ✓`, 'green');
+  const lvlLabel = ADD_LEVEL === 'pro' ? 'PRO' : 'SEMI PRO';
+  toast(username + ' [' + lvlLabel + '] añadido ✓', 'green');
   document.getElementById('qs-search').value = '';
   document.getElementById('qs-results').style.display = 'none';
 }
@@ -2719,10 +2767,11 @@ function quickAddPlayer() {
   if (G().players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
     toast('Jugador ya existe', 'red'); return;
   }
-  G().players.push({ id: uid(), name });
+  G().players.push({ id: uid(), name, level: ADD_LEVEL });
   inp.value = '';
   save(); renderQEntryList();
-  toast(name + ' añadido', 'green');
+  const lvlLabel = ADD_LEVEL === 'pro' ? 'PRO' : 'SEMI PRO';
+  toast(name + ' [' + lvlLabel + '] añadido', 'green');
 }
 
 // Close search dropdown when clicking outside
@@ -2798,6 +2847,14 @@ function removePlayer(pid) {
   save(); renderQEntryList();
 }
 
+function togglePlayerLevel(pid) {
+  const pl = G().players.find(p => p.id === pid);
+  if (!pl) return;
+  pl.level = (pl.level === 'pro' || !pl.level) ? 'semi' : 'pro';
+  save(); renderQEntryList();
+  toast(pl.name + ' → ' + (pl.level === 'pro' ? 'PRO' : 'SEMI PRO'), 'green');
+}
+
 function clearPlayers() {
   if (!confirm('¿Eliminar todos los jugadores?')) return;
   G().players = []; G().qualScores = {};
@@ -2827,12 +2884,16 @@ function renderQEntryList() {
   }
 
   c.innerHTML = g.players.map(pl => {
-    const total = qTotal(pl.id);
-    const isDQ  = !!pl.disqualified;
+    const total  = qTotal(pl.id);
+    const isDQ   = !!pl.disqualified;
+    const lvl    = pl.level || 'pro';
+    const lvlBadge = lvl === 'pro'
+      ? `<span class="badge badge-pro" onclick="togglePlayerLevel('${pl.id}')" title="Cambiar nivel" style="cursor:pointer">PRO</span>`
+      : `<span class="badge badge-semi" onclick="togglePlayerLevel('${pl.id}')" title="Cambiar nivel" style="cursor:pointer">SEMI</span>`;
     let html = `<div class="player-row${isDQ ? ' player-row-dq' : ''}">
       <div class="pr-header">
         <div style="display:flex;align-items:center;gap:8px">
-          ${isDQ ? `<span class="badge badge-dq">DQ</span>` : ''}
+          ${isDQ ? `<span class="badge badge-dq">DQ</span>` : lvlBadge}
           <span class="pr-name">${pl.name}</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
@@ -2951,19 +3012,31 @@ function renderQResults() {
       return { tot: sc.reduce((s, v) => s + (v || 0), 0), ks: sc.filter(v => v === QUAL_KS_VAL).length };
     });
     return { ...p, rData, total: p.disqualified ? 0 : rData.reduce((s, r) => s + r.tot, 0) };
-  }).sort((a, b) => a.disqualified - b.disqualified || b.total - a.total);
+  }).sort((a, b) => {
+    // Group by level first (pro first), then by score descending
+    const la = (a.level || 'pro'), lb = (b.level || 'pro');
+    if (!a.disqualified && !b.disqualified && la !== lb) return la === 'pro' ? -1 : 1;
+    return a.disqualified - b.disqualified || b.total - a.total;
+  });
 
   let rHdrs = '';
   for (let r = 0; r < g.qualCfg.rounds; r++) rHdrs += `<th>Ronda ${r+1}</th>`;
 
-  // Calculate cutline
+  // Calculate cutline per level group
   const activePlayers = ranked.filter(p => !p.disqualified);
-  const advancing = calcAdvancingCount(activePlayers.length);
+  const proPlayers    = activePlayers.filter(p => (p.level||'pro') === 'pro');
+  const semiPlayers   = activePlayers.filter(p => p.level === 'semi');
+  const advPros       = calcAdvancingCount(proPlayers.length);
+  const advSemis      = calcAdvancingCount(semiPlayers.length);
+  const advancing     = advPros + advSemis; // for legacy banner compat
 
   let rows = ranked.map((p, i) => {
-    const activeIdx  = activePlayers.indexOf(p);
-    const isElimLine = !p.disqualified && activeIdx === advancing; // first eliminated
-    const isElim     = !p.disqualified && activeIdx >= advancing;
+    const isProPlayer   = (p.level||'pro') === 'pro';
+    const groupPlayers  = isProPlayer ? proPlayers : semiPlayers;
+    const groupAdv      = isProPlayer ? advPros : advSemis;
+    const activeIdx     = groupPlayers.indexOf(p);
+    const isElimLine    = !p.disqualified && activeIdx === groupAdv;
+    const isElim        = !p.disqualified && activeIdx >= groupAdv;
     const cls        = !p.disqualified && i < 3 ? `rank-${i+1}` : '';
     const dqCls    = p.disqualified ? 'style="opacity:0.45"' : '';
     const rCells   = p.rData.map(rd =>
@@ -2972,10 +3045,19 @@ function renderQResults() {
     const totalKS  = p.rData.reduce((s, rd) => s + rd.ks, 0);
     const nameCls  = p.disqualified ? `<span class="badge badge-dq" style="margin-right:6px">DQ</span>`
                    : isElim ? `<span style="font-size:10px;color:rgba(255,255,255,0.3);margin-right:6px">ELIM</span>` : '';
+    const groupLabel  = (p.level||'pro') === 'pro' ? '⚡ PRO' : '🎯 SEMI PRO';
+    const groupAdv2   = (p.level||'pro') === 'pro' ? advPros : advSemis;
+    const groupTotal  = (p.level||'pro') === 'pro' ? proPlayers.length : semiPlayers.length;
     const cutlineRow = isElimLine
-      ? '<tr><td colspan="99" style="padding:0"><div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(212,80,80,0.08);border-top:2px dashed rgba(212,80,80,0.4)"><span style="font-size:11px;font-weight:700;color:rgba(212,80,80,0.8);letter-spacing:1px;text-transform:uppercase">✂ Línea de corte — avanzan ' + advancing + ' de ' + activePlayers.length + '</span></div></td></tr>'
+      ? '<tr><td colspan="99" style="padding:0"><div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(212,80,80,0.08);border-top:2px dashed rgba(212,80,80,0.4)"><span style="font-size:11px;font-weight:700;color:rgba(212,80,80,0.8);letter-spacing:1px;text-transform:uppercase">✂ Corte ' + groupLabel + ' — avanzan ' + groupAdv2 + ' de ' + groupTotal + '</span></div></td></tr>'
       : '';
-    return `<tr class="${cls}" ${dqCls}>
+    const isProPlayer2  = (p.level||'pro') === 'pro';
+    const groupPlayers2 = isProPlayer2 ? proPlayers : semiPlayers;
+    const groupHeader   = (!p.disqualified && groupPlayers2.indexOf(p) === 0)
+      ? '<tr><td colspan="99" style="padding:0"><div style="padding:8px 12px;background:rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.06)"><span style="font-size:11px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:' + (isProPlayer2 ? 'var(--accent)' : '#7cb852') + '">'
+        + (isProPlayer2 ? '⚡ PRO' : '🎯 SEMI PRO') + '</span></div></td></tr>'
+      : '';
+    return groupHeader + cutlineRow + `<tr class="${cls}" ${dqCls} style="${isElim ? 'opacity:0.45' : ''}">
       <td><span class="rank-n">${p.disqualified ? '—' : i+1}</span></td>
       <td class="p-name-cell">${nameCls}${p.name}</td>
       ${rCells}
@@ -2984,26 +3066,32 @@ function renderQResults() {
     </tr>`;
   }).join('');
 
-  // Populate cutline info banner
+  // Populate cutline info banner — split by PRO / SEMI PRO
   const infoEl = document.getElementById('qualify-cutline-info');
   if (infoEl && activePlayers.length > 0) {
-    const total_p   = activePlayers.length;
-    const adv_p     = calcAdvancingCount(total_p);
-    const elim_p    = total_p - adv_p;
-    const bSize     = Math.pow(2, Math.ceil(Math.log2(Math.max(adv_p, 2))));
-    const byes_p    = bSize - adv_p;
-    infoEl.innerHTML = `
-      <div style="background:rgba(196,135,58,0.08);border:1px solid rgba(196,135,58,0.2);
-        border-radius:10px;padding:12px 16px;display:flex;gap:24px;flex-wrap:wrap;align-items:center;margin-bottom:0.5rem">
-        <div><div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Participantes</div>
-          <div style="font-size:1.3rem;font-weight:800;color:#fff">${total_p}</div></div>
-        <div><div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Avanzan al bracket</div>
-          <div style="font-size:1.3rem;font-weight:800;color:var(--green)">${adv_p}</div></div>
-        ${elim_p > 0 ? `<div><div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Eliminados en clasif.</div>
-          <div style="font-size:1.3rem;font-weight:800;color:var(--red)">${elim_p}</div></div>` : ''}
-        <div><div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Bracket</div>
-          <div style="font-size:1.3rem;font-weight:800;color:var(--accent)">${bSize} cuadro${byes_p > 0 ? ` · ${byes_p} bye${byes_p>1?'s':''}` : ''}</div></div>
-      </div>`;
+    const pros   = activePlayers.filter(p => (p.level||'pro') === 'pro');
+    const semis  = activePlayers.filter(p => p.level === 'semi');
+
+    function groupInfo(players, label, color) {
+      if (!players.length) return '';
+      const adv   = calcAdvancingCount(players.length);
+      const elim  = players.length - adv;
+      const bSize = Math.pow(2, Math.ceil(Math.log2(Math.max(adv, 2))));
+      const byes  = bSize - adv;
+      return '<div style="flex:1;min-width:200px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px">'
+        + '<div style="font-size:11px;font-weight:700;color:' + color + ';letter-spacing:1px;margin-bottom:8px">' + label + '</div>'
+        + '<div style="display:flex;gap:16px">'
+        + '<div><div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Jugadores</div><div style="font-size:1.2rem;font-weight:800;color:#fff">' + players.length + '</div></div>'
+        + '<div><div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Avanzan</div><div style="font-size:1.2rem;font-weight:800;color:var(--green)">' + adv + '</div></div>'
+        + (elim > 0 ? '<div><div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Eliminados</div><div style="font-size:1.2rem;font-weight:800;color:var(--red)">' + elim + '</div></div>' : '')
+        + '<div><div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Bracket</div><div style="font-size:1.2rem;font-weight:800;color:' + color + '">' + bSize + (byes > 0 ? ' · ' + byes + 'b' : '') + '</div></div>'
+        + '</div></div>';
+    }
+
+    infoEl.innerHTML = '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:0.5rem">'
+      + groupInfo(pros,  '⚡ PRO',     'var(--accent)')
+      + groupInfo(semis, '🎯 SEMI PRO','#7cb852')
+      + '</div>';
   }
 
   c.innerHTML = `<div class="card" style="padding:0;overflow:hidden"><table class="tbl">
@@ -3039,72 +3127,109 @@ function calcAdvancingCount(totalPlayers) {
 
 function advToBracket() {
   const ranked = rankedPlayers();
-  const total  = ranked.length;
-  if (total < 2) { toast('Necesitas al menos 2 jugadores', 'red'); return; }
+  if (ranked.length < 2) { toast('Necesitas al menos 2 jugadores', 'red'); return; }
 
-  const advancing = calcAdvancingCount(total);
-  const eliminated = total - advancing;
+  const pros  = ranked.filter(p => (p.level || 'pro') === 'pro');
+  const semis = ranked.filter(p => p.level === 'semi');
 
-  let msg = 'Jugadores clasificados: ' + total + '\nAvanzan al bracket: ' + advancing;
-  if (eliminated > 0) msg += '\nEliminados en clasificación: ' + eliminated;
-  msg += '\n\n¿Generar bracket?';
+  if (pros.length === 0 && semis.length === 0) { toast('Sin jugadores', 'red'); return; }
+
+  const advPro  = calcAdvancingCount(pros.length);
+  const advSemi = calcAdvancingCount(semis.length);
+  const elimPro  = pros.length - advPro;
+  const elimSemi = semis.length - advSemi;
+
+  let msg = 'RESUMEN CLASIFICACIÓN\n';
+  msg += '\n⚡ PRO: ' + pros.length + ' jugadores → ' + advPro + ' avanzan';
+  if (elimPro > 0) msg += ' (' + elimPro + ' eliminados)';
+  msg += '\n🎯 SEMI PRO: ' + semis.length + ' jugadores → ' + advSemi + ' avanzan';
+  if (elimSemi > 0) msg += ' (' + elimSemi + ' eliminados)';
+  msg += '\n\n¿Generar brackets?';
+
   if (!confirm(msg)) return;
   G().phase = 'bracket'; save(); genBracket(); showPage('bracket');
-  toast('Bracket generado', 'green');
+  toast('Brackets PRO y SEMI PRO generados', 'green');
 }
 
-function genBracket() {
-  const g = G();
-  const allRanked = rankedPlayers();
-  if (allRanked.length < 2) { toast('Necesitas al menos 2 jugadores', 'red'); return; }
+// Build a single bracket from a list of ranked players, storing into target group object
+function buildBracketForGroup(gTarget, ranked) {
+  if (ranked.length < 2) return;
 
-  // Apply advancing limit
-  const advCount = calcAdvancingCount(allRanked.length);
-  const advancing = allRanked.slice(0, advCount);
-  const eliminated = allRanked.slice(advCount);
+  const advCount   = calcAdvancingCount(ranked.length);
+  const advancing  = ranked.slice(0, advCount);
+  const eliminated = ranked.slice(advCount);
 
-  // Mark eliminated players
   eliminated.forEach(p => {
-    const pl = g.players.find(x => x.id === p.id);
+    const pl = gTarget.players.find(x => x.id === p.id);
     if (pl) pl.eliminatedInQualify = true;
   });
 
-  g.matches = []; g.rounds = []; g.champion = null; g.log = [];
+  gTarget.matches = []; gTarget.rounds = [];
+  gTarget.champion = null; gTarget.log = [];
 
-  // Pad to next power of 2 — tops get byes
   const seeded = [...advancing];
   const n = pow2(seeded.length);
-  while (seeded.length < n) seeded.push(null); // nulls = byes
+  while (seeded.length < n) seeded.push(null);
 
-  // Seed: 1 vs last, 2 vs second-to-last, etc.
   const half = n / 2;
   const r1 = [];
   for (let i = 0; i < half; i++) {
     const p1 = seeded[i], p2 = seeded[n - 1 - i];
     const m = mkMatch(p1?.name || null, p2?.name || null, 0);
     if (!p1 || !p2) { m.winner = (p1 || p2)?.name || null; m.bye = true; }
-    g.matches.push(m); r1.push(m.id);
+    gTarget.matches.push(m); r1.push(m.id);
   }
-  g.rounds.push(r1);
+  gTarget.rounds.push(r1);
 
   let prev = r1;
   while (prev.length > 1) {
     const next = [];
     for (let i = 0; i < prev.length; i += 2) {
-      const m = mkMatch(null, null, g.rounds.length);
-      g.matches.push(m); next.push(m.id);
+      const m = mkMatch(null, null, gTarget.rounds.length);
+      gTarget.matches.push(m); next.push(m.id);
     }
-    g.rounds.push(next); prev = next;
+    gTarget.rounds.push(next); prev = next;
   }
 
-  propByes(); save(); renderBracket(); renderDash();
-  
-  // Show summary toast
-  const byeCount = n - advancing.length;
-  let msg = `Bracket de ${n} generado`;
-  if (byeCount > 0) msg += ` · ${byeCount} bye${byeCount > 1 ? 's' : ''} para los tops`;
-  if (eliminated.length > 0) msg += ` · ${eliminated.length} eliminados en clasif.`;
-  toast(msg, 'green');
+  // Propagate byes
+  gTarget.rounds.forEach((round, ri) => {
+    if (ri >= gTarget.rounds.length - 1) return;
+    round.forEach((mid, idx) => {
+      const m = gTarget.matches.find(x => x.id === mid);
+      if (!m?.winner) return;
+      const nm = gTarget.matches.find(x => x.id === gTarget.rounds[ri+1][Math.floor(idx/2)]);
+      if (!nm) return;
+      if (idx % 2 === 0) nm.p1 = m.winner; else nm.p2 = m.winner;
+    });
+  });
+}
+
+function genBracket() {
+  const allRanked = rankedPlayers();
+  if (allRanked.length < 2) { toast('Necesitas al menos 2 jugadores', 'red'); return; }
+
+  // Split by level — unleveled players default to 'pro'
+  const proRanked  = allRanked.filter(p => (p.level || 'pro') === 'pro');
+  const semiRanked = allRanked.filter(p => p.level === 'semi');
+
+  // Store qual scores & players into respective groups
+  // Pro bracket → ADMIN.pro, Semi bracket → ADMIN.semi
+  if (proRanked.length >= 2) {
+    ADMIN.pro.players    = proRanked;
+    ADMIN.pro.qualScores = Object.fromEntries(
+      proRanked.map(p => [p.id, G().qualScores[p.id] || {}])
+    );
+    buildBracketForGroup(ADMIN.pro, proRanked);
+  }
+  if (semiRanked.length >= 2) {
+    ADMIN.semi.players    = semiRanked;
+    ADMIN.semi.qualScores = Object.fromEntries(
+      semiRanked.map(p => [p.id, G().qualScores[p.id] || {}])
+    );
+    buildBracketForGroup(ADMIN.semi, semiRanked);
+  }
+
+  save(); renderBracket(); renderDash();
 }
 
 function mkMatch(p1, p2, round) {
@@ -3118,7 +3243,10 @@ function mkMatch(p1, p2, round) {
 }
 
 function pow2(n) { let p = 1; while (p < n) p *= 2; return p; }
-function getM(id) { return G().matches.find(m => m.id === id); }
+function getM(id) {
+  return (ADMIN[CUR_BRACKET] || G()).matches.find(m => m.id === id);
+}
+function GB() { return ADMIN[CUR_BRACKET]; } // current bracket group
 
 function propByes() {
   const g = G();
@@ -3141,15 +3269,25 @@ function rndName(ri, total) {
   return 'Ronda ' + (ri + 1);
 }
 
+let CUR_BRACKET = 'pro'; // which bracket tab is showing
+
+function switchBracketTab(lvl) {
+  CUR_BRACKET = lvl;
+  document.getElementById('bt-pro').classList.toggle('on', lvl === 'pro');
+  document.getElementById('bt-semi').classList.toggle('on', lvl === 'semi');
+  renderBracket();
+}
+
 function renderBracket() {
-  const g   = G();
+  const g   = ADMIN[CUR_BRACKET]; // always render the selected bracket level
   const a   = document.getElementById('bracket-area');
-  document.getElementById('ecfg-ks').textContent   = g.elimCfg.ksMax;
-  document.getElementById('ecfg-bull').textContent = g.elimCfg.bullMax;
+  document.getElementById('ecfg-ks').textContent   = ADMIN[CUR_GROUP].elimCfg.ksMax;
+  document.getElementById('ecfg-bull').textContent = ADMIN[CUR_GROUP].elimCfg.bullMax;
   renderEScoreCfg();
 
   if (!g.rounds?.length) {
-    a.innerHTML = `<div class="card" style="color:var(--ink3);text-align:center;padding:3rem"><div style="font-size:2rem;margin-bottom:8px">🪓</div>Genera el bracket desde clasificación</div>`;
+    const lvlName = CUR_BRACKET === 'pro' ? 'PRO' : 'SEMI PRO';
+    a.innerHTML = `<div class="card" style="color:var(--ink3);text-align:center;padding:3rem"><div style="font-size:2rem;margin-bottom:8px">🪓</div>Sin bracket ${lvlName} generado aún</div>`;
     return;
   }
 
@@ -3354,23 +3492,23 @@ function confirmDuel() {
   m.score1 = t1; m.score2 = t2;
   m.winner = t1 > t2 ? m.p1 : m.p2;
 
-  G().log.unshift({
-    text: `${m.p1} ${t1} — ${t2} ${m.p2}`,
+  GB().log.unshift({
+    text: m.p1 + ' ' + t1 + ' — ' + t2 + ' ' + m.p2,
     winner: m.winner,
     time: new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }),
   });
 
   // Propagate
   const ri = m.round;
-  if (ri < G().rounds.length - 1) {
-    const idx  = G().rounds[ri].indexOf(m.id);
-    const nm   = getM(G().rounds[ri+1][Math.floor(idx/2)]);
+  if (ri < GB().rounds.length - 1) {
+    const idx  = GB().rounds[ri].indexOf(m.id);
+    const nm   = getM(GB().rounds[ri+1][Math.floor(idx/2)]);
     if (nm) { if (idx % 2 === 0) nm.p1 = m.winner; else nm.p2 = m.winner; }
   } else {
-    G().champion = m.winner; G().phase = 'done';
+    GB().champion = m.winner; GB().phase = 'done';
     document.getElementById('champ-bar').classList.add('on');
     document.getElementById('champ-name').textContent = m.winner;
-    toast('🏆 Campeón: ' + m.winner, 'amber');
+    toast('🏆 Campeón ' + (CUR_BRACKET === 'pro' ? 'PRO' : 'SEMI PRO') + ': ' + m.winner, 'amber');
   }
 
   save(); closeModal('m-duel'); renderBracket(); renderRanking(); renderDash();
@@ -3378,7 +3516,7 @@ function confirmDuel() {
 
 function resetMatch(mid) {
   const m = getM(mid); if (!m) return;
-  const g = G();
+  const g = GB();
   const ri = m.round;
   if (ri < g.rounds.length - 1) {
     const idx = g.rounds[ri].indexOf(mid);
@@ -3396,8 +3534,8 @@ function resetMatch(mid) {
 }
 
 function resetBracket() {
-  if (!confirm('¿Reiniciar todo el bracket?')) return;
-  const g = G();
+  if (!confirm('¿Reiniciar bracket ' + (CUR_BRACKET === 'pro' ? 'PRO' : 'SEMI PRO') + '?')) return;
+  const g = GB();
   g.matches = []; g.rounds = []; g.champion = null; g.log = []; g.phase = 'qualify';
   document.getElementById('champ-bar').classList.remove('on');
   save(); renderBracket(); renderRanking(); renderDash();
@@ -4706,4 +4844,3 @@ function toast(msg) {
 </script>
 </body>
 </html>
-
