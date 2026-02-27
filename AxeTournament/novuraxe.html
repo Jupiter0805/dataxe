@@ -1613,7 +1613,8 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       </div>
       <div class="tab-panel" id="qp-results">
         <div id="q-results-tbl"></div>
-        <div style="display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap">
+        <div id="qualify-cutline-info" style="margin-top:1rem"></div>
+        <div style="display:flex;gap:8px;margin-top:0.75rem;flex-wrap:wrap">
           <button class="btn btn-red" onclick="advToBracket()">⚡ Avanzar al Bracket</button>
           <button class="btn btn-ghost" onclick="expPDF('classify')">📄 Exportar PDF</button>
         </div>
@@ -2955,14 +2956,25 @@ function renderQResults() {
   let rHdrs = '';
   for (let r = 0; r < g.qualCfg.rounds; r++) rHdrs += `<th>Ronda ${r+1}</th>`;
 
+  // Calculate cutline
+  const activePlayers = ranked.filter(p => !p.disqualified);
+  const advancing = calcAdvancingCount(activePlayers.length);
+
   let rows = ranked.map((p, i) => {
-    const cls      = !p.disqualified && i < 3 ? `rank-${i+1}` : '';
+    const activeIdx  = activePlayers.indexOf(p);
+    const isElimLine = !p.disqualified && activeIdx === advancing; // first eliminated
+    const isElim     = !p.disqualified && activeIdx >= advancing;
+    const cls        = !p.disqualified && i < 3 ? `rank-${i+1}` : '';
     const dqCls    = p.disqualified ? 'style="opacity:0.45"' : '';
     const rCells   = p.rData.map(rd =>
       `<td>${p.disqualified ? '—' : (rd.tot + (rd.ks ? ` <span style="color:var(--accent);font-size:.7em">+${rd.ks}KS</span>` : ''))}</td>`
     ).join('');
     const totalKS  = p.rData.reduce((s, rd) => s + rd.ks, 0);
-    const nameCls  = p.disqualified ? `<span class="badge badge-dq" style="margin-right:6px">DQ</span>` : '';
+    const nameCls  = p.disqualified ? `<span class="badge badge-dq" style="margin-right:6px">DQ</span>`
+                   : isElim ? `<span style="font-size:10px;color:rgba(255,255,255,0.3);margin-right:6px">ELIM</span>` : '';
+    const cutlineRow = isElimLine
+      ? '<tr><td colspan="99" style="padding:0"><div style="display:flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(212,80,80,0.08);border-top:2px dashed rgba(212,80,80,0.4)"><span style="font-size:11px;font-weight:700;color:rgba(212,80,80,0.8);letter-spacing:1px;text-transform:uppercase">✂ Línea de corte — avanzan ' + advancing + ' de ' + activePlayers.length + '</span></div></td></tr>'
+      : '';
     return `<tr class="${cls}" ${dqCls}>
       <td><span class="rank-n">${p.disqualified ? '—' : i+1}</span></td>
       <td class="p-name-cell">${nameCls}${p.name}</td>
@@ -2971,6 +2983,28 @@ function renderQResults() {
       <td style="font-size:11px;color:var(--ink3)">${p.disqualified ? '—' : (totalKS > 0 ? totalKS + ' KS' : '—')}</td>
     </tr>`;
   }).join('');
+
+  // Populate cutline info banner
+  const infoEl = document.getElementById('qualify-cutline-info');
+  if (infoEl && activePlayers.length > 0) {
+    const total_p   = activePlayers.length;
+    const adv_p     = calcAdvancingCount(total_p);
+    const elim_p    = total_p - adv_p;
+    const bSize     = Math.pow(2, Math.ceil(Math.log2(Math.max(adv_p, 2))));
+    const byes_p    = bSize - adv_p;
+    infoEl.innerHTML = `
+      <div style="background:rgba(196,135,58,0.08);border:1px solid rgba(196,135,58,0.2);
+        border-radius:10px;padding:12px 16px;display:flex;gap:24px;flex-wrap:wrap;align-items:center;margin-bottom:0.5rem">
+        <div><div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Participantes</div>
+          <div style="font-size:1.3rem;font-weight:800;color:#fff">${total_p}</div></div>
+        <div><div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Avanzan al bracket</div>
+          <div style="font-size:1.3rem;font-weight:800;color:var(--green)">${adv_p}</div></div>
+        ${elim_p > 0 ? `<div><div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Eliminados en clasif.</div>
+          <div style="font-size:1.3rem;font-weight:800;color:var(--red)">${elim_p}</div></div>` : ''}
+        <div><div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Bracket</div>
+          <div style="font-size:1.3rem;font-weight:800;color:var(--accent)">${bSize} cuadro${byes_p > 0 ? ` · ${byes_p} bye${byes_p>1?'s':''}` : ''}</div></div>
+      </div>`;
+  }
 
   c.innerHTML = `<div class="card" style="padding:0;overflow:hidden"><table class="tbl">
     <thead><tr><th>#</th><th>Jugador</th>${rHdrs}<th>Total</th><th>KS</th></tr></thead>
@@ -2996,22 +3030,53 @@ function rankedPlayers() {
     .sort((a, b) => b.total - a.total);
 }
 
+// Returns how many players advance to bracket based on total participants
+function calcAdvancingCount(totalPlayers) {
+  if (totalPlayers >= 32) return 32;
+  if (totalPlayers >= 16) return 16;
+  return totalPlayers; // all advance, tops get byes
+}
+
 function advToBracket() {
-  if (!confirm('¿Avanzar al bracket? Los puntajes clasificatorios se bloquearán.')) return;
+  const ranked = rankedPlayers();
+  const total  = ranked.length;
+  if (total < 2) { toast('Necesitas al menos 2 jugadores', 'red'); return; }
+
+  const advancing = calcAdvancingCount(total);
+  const eliminated = total - advancing;
+
+  let msg = 'Jugadores clasificados: ' + total + '\nAvanzan al bracket: ' + advancing;
+  if (eliminated > 0) msg += '\nEliminados en clasificación: ' + eliminated;
+  msg += '\n\n¿Generar bracket?';
+  if (!confirm(msg)) return;
   G().phase = 'bracket'; save(); genBracket(); showPage('bracket');
   toast('Bracket generado', 'green');
 }
 
 function genBracket() {
   const g = G();
-  const ranked = rankedPlayers();
-  if (ranked.length < 2) { toast('Necesitas al menos 2 jugadores', 'red'); return; }
+  const allRanked = rankedPlayers();
+  if (allRanked.length < 2) { toast('Necesitas al menos 2 jugadores', 'red'); return; }
+
+  // Apply advancing limit
+  const advCount = calcAdvancingCount(allRanked.length);
+  const advancing = allRanked.slice(0, advCount);
+  const eliminated = allRanked.slice(advCount);
+
+  // Mark eliminated players
+  eliminated.forEach(p => {
+    const pl = g.players.find(x => x.id === p.id);
+    if (pl) pl.eliminatedInQualify = true;
+  });
+
   g.matches = []; g.rounds = []; g.champion = null; g.log = [];
 
-  const seeded = [...ranked];
+  // Pad to next power of 2 — tops get byes
+  const seeded = [...advancing];
   const n = pow2(seeded.length);
-  while (seeded.length < n) seeded.push(null);
+  while (seeded.length < n) seeded.push(null); // nulls = byes
 
+  // Seed: 1 vs last, 2 vs second-to-last, etc.
   const half = n / 2;
   const r1 = [];
   for (let i = 0; i < half; i++) {
@@ -3033,6 +3098,13 @@ function genBracket() {
   }
 
   propByes(); save(); renderBracket(); renderDash();
+  
+  // Show summary toast
+  const byeCount = n - advancing.length;
+  let msg = `Bracket de ${n} generado`;
+  if (byeCount > 0) msg += ` · ${byeCount} bye${byeCount > 1 ? 's' : ''} para los tops`;
+  if (eliminated.length > 0) msg += ` · ${eliminated.length} eliminados en clasif.`;
+  toast(msg, 'green');
 }
 
 function mkMatch(p1, p2, round) {
@@ -4330,7 +4402,7 @@ async function loadFollowersBanner() {
   if (!countEl || !DB_USER_ID) return;
 
   // follows table: organizer_id = DB_USER_ID
-  const follows = await dbGet('follows', `organizer_id=eq.${DB_USER_ID}&select=user_id`) || [];
+  const follows = await supa(`follows?following_id=eq.${DB_USER_ID}&select=follower_id`) || [];
   countEl.textContent = follows.length;
 
   if (!follows.length) {
@@ -4339,7 +4411,7 @@ async function loadFollowersBanner() {
   }
 
   // Load usernames of first 5 followers
-  const ids = follows.slice(0, 5).map(f => f.user_id).join(',');
+  const ids = follows.slice(0, 5).map(f => f.follower_id).join(',');
   const users = await supa(`users?id=in.(${ids})&select=username`) || [];
   const names = users.map(u => '@' + u.username).join(', ');
   namesEl.textContent = names + (follows.length > 5 ? ` y ${follows.length - 5} más` : '');
@@ -4633,5 +4705,4 @@ function toast(msg) {
 
 </script>
 </body>
-
 </html>
