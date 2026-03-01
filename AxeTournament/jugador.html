@@ -925,7 +925,6 @@ input, textarea, select { font-family: inherit; }
 
           <div class="feed-filters">
             <button class="filter-btn on" onclick="setFilter('all',this)">Todos</button>
-            <button class="filter-btn" onclick="setFilter('open',this)">Inscripción abierta</button>
             <button class="filter-btn" onclick="setFilter('soon',this)">Esta semana</button>
             <button class="filter-btn" onclick="setFilter('following',this)">Solo mis clubs</button>
           </div>
@@ -1367,10 +1366,7 @@ async function renderFeed() {
   let events = [...ALL_EVENTS].filter(e => !e.date || new Date(e.date) >= today || e.status === 'open');
 
   // Apply filters
-  if (FILTER === 'open') {
-    events = events.filter(e => e.status === 'open' || e.status === null);
-    posts  = [];  // posts don't have status filter
-  } else if (FILTER === 'soon') {
+  if (FILTER === 'soon') {
     const nextWeek = new Date(today); nextWeek.setDate(nextWeek.getDate() + 7);
     events = events.filter(e => { const d = new Date(e.date); return d >= today && d <= nextWeek; });
     posts  = posts.filter(p => { if (!p.date) return false; const d = new Date(p.date); return d >= today && d <= nextWeek; });
@@ -1831,23 +1827,24 @@ async function uploadAvatar(evt) {
 
   toast('Subiendo foto...');
 
-  // Delete old avatar if exists
-  if (PROFILE?.avatar_url) {
-    const oldPath = PROFILE.avatar_url.split('/avatars/')[1];
-    if (oldPath) await sb.storage.from('avatars').remove([oldPath]);
-  }
-
+  // Always use a clean fixed path (upsert overwrites it)
   const path = `${CUR_USER.id}/avatar.jpg`;
-  const { error } = await sb.storage.from('avatars').upload(path, compressed, {
+
+  // Delete old first to avoid 400 conflict
+  await sb.storage.from('avatars').remove([path]);
+
+  const { error, data: upData } = await sb.storage.from('avatars').upload(path, compressed, {
     contentType: 'image/jpeg', upsert: true
   });
-  if (error) { toast('Error al subir la foto'); return; }
+  if (error) { console.error('Avatar upload error:', error); toast('Error al subir la foto: ' + error.message); return; }
 
   const { data } = sb.storage.from('avatars').getPublicUrl(path);
-  const avatarUrl = data.publicUrl + '?t=' + Date.now(); // cache bust
+  // Add cache-bust as query param only in memory, store clean URL in DB
+  const cleanUrl  = data.publicUrl;
+  const avatarUrl = cleanUrl + '?t=' + Date.now();
 
-  // Update users table
-  await dbUpdate('users', `id=eq.${CUR_USER.id}`, { avatar_url: avatarUrl });
+  // Update users table with clean URL (no cache-bust)
+  await dbUpdate('users', `id=eq.${CUR_USER.id}`, { avatar_url: cleanUrl });
 
   // Update PROFILE in memory
   PROFILE.avatar_url = avatarUrl;
