@@ -1088,6 +1088,21 @@ async function dbPost(table, body) {
   });
 }
 
+async function dbPatch(table, filter, body) {
+  const sess = await sb.auth.getSession();
+  const token = sess.data.session?.access_token;
+  await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(body)
+  });
+}
+
 async function dbDelete(table, filter) {
   const session = (await sb.auth.getSession()).data.session;
   const token = session?.access_token || SUPA_KEY;
@@ -1844,7 +1859,7 @@ async function uploadAvatar(evt) {
   const avatarUrl = cleanUrl + '?t=' + Date.now();
 
   // Update users table with clean URL (no cache-bust)
-  await dbUpdate('users', `id=eq.${CUR_USER.id}`, { avatar_url: cleanUrl });
+  await dbPatch('users', `id=eq.${CUR_USER.id}`, { avatar_url: cleanUrl });
 
   // Update PROFILE in memory
   PROFILE.avatar_url = avatarUrl;
