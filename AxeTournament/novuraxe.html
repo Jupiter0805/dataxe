@@ -1379,9 +1379,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   <div class="login-box">
     <!-- Logo dentro del box -->
     <div class="login-header">
-      <a href="https://www.novuraxe.com">
-      <img src="public/novuraxe-logo.png" alt="NOVURAXE" class="login-logo-img">
-      </a>
+      <img src="public/novuraxe-logo.png" alt="DATAXE" class="login-logo-img">
       <div class="login-logo-sub">Gestión de Torneos</div>
     </div>
     <div class="l-tabs">
@@ -1427,9 +1425,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="t-logo">
-      <a href="https://www.novuraxe.com">
       <img src="public/novuraxe-logo.png" alt="NOVURAXE" style="height:32px;width:auto;object-fit:contain;filter:brightness(0) invert(1);">
-      </a>
     </div>
     <div class="t-sep"></div>
     <div class="t-nav">
@@ -2336,13 +2332,8 @@ async function syncToSupabase() {
       elim_throws:      s.elim_throws   || 0,
       elim_bulls:       s.elim_bulls    || 0
     };
-    // Check if record exists for this user+name combo
-    const existing = await dbGet('global_stats', `user_id=eq.${uid_to_use}&player_name=eq.${encodeURIComponent(name)}&select=id`);
-    if (existing?.[0]?.id) {
-      await dbUpdate('global_stats', `user_id=eq.${uid_to_use}&player_name=eq.${encodeURIComponent(name)}`, gsBody);
-    } else {
-      await dbInsert('global_stats', { user_id: uid_to_use, player_name: name, ...gsBody });
-    }
+    // Upsert — insert or update on conflict (user_id + player_name unique key)
+    await dbUpsert('global_stats', { user_id: uid_to_use, player_name: name, ...gsBody });
   }
 
   // Update user settings
@@ -2731,7 +2722,8 @@ async function qsSearchUsers(q) {
 
   let rows = [];
   try {
-    rows = await supa(`users?username=ilike.*${q.trim()}*&role=eq.player&select=id,username,club_name&limit=8`) || [];
+    const qt = encodeURIComponent(q.trim());
+    rows = await supa(`users?or=(username.ilike.*${q.trim()}*,club_name.ilike.*${q.trim()}*)&role=eq.player&select=id,username,club_name&limit=8`) || [];
     console.log('[qsSearch] query:', q, '| results:', rows.length, rows);
   } catch(e) {
     console.error('[qsSearch] error:', e.message);
@@ -2804,7 +2796,7 @@ let AP_SELECTED_USER = null; // { username, user_id, display }
 async function searchUsers(q) {
   const res = document.getElementById('ap-results');
   if (!q || q.length < 2) { res.style.display = 'none'; return; }
-  const rows = await supa(`users?username=ilike.*${q.trim()}*&role=eq.player&select=id,username,club_name&limit=8`) || [];
+  const rows = await supa(`users?or=(username.ilike.*${q.trim()}*,club_name.ilike.*${q.trim()}*)&role=eq.player&select=id,username,club_name&limit=8`) || [];
   if (!rows.length) { res.style.display = 'none'; return; }
   res.style.display = 'block';
   res.innerHTML = rows.map(u => `
@@ -4963,4 +4955,3 @@ function toast(msg) {
 </script>
 </body>
 </html>
-
