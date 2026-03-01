@@ -1129,6 +1129,15 @@ async function doLogin() {
   if (!email || !pass) return showErr('err-login', 'Rellena todos los campos');
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
   if (error) return showErr('err-login', 'Email o contraseña incorrectos');
+
+  // Verificar que es jugador, no organizador
+  const profiles = await dbGet(`users?id=eq.${data.user.id}&select=role`);
+  const role = profiles?.[0]?.role;
+  if (role && role !== 'player') {
+    await sb.auth.signOut();
+    return showErr('err-login', 'Esta app es solo para jugadores. Los organizadores deben acceder desde su plataforma.');
+  }
+
   await launchApp(data.user);
 }
 
@@ -1147,6 +1156,15 @@ async function doRegister() {
     options: { data: { username: user, full_name: name, role: 'player' } }
   });
   if (error) return showErr('err-reg', error.message);
+
+  // Insertar en tabla users con role=player explícito
+  await dbPost('users', {
+    id:        data.user.id,
+    username:  user,
+    club_name: name,
+    role:      'player'
+  });
+
   await launchApp(data.user);
 }
 
@@ -1200,16 +1218,18 @@ async function launchApp(user) {
   if (rows.length) {
     PROFILE = rows[0];
   } else {
-    // Create profile for new user
+    // Create profile for new user (fallback if not created in doRegister)
     await dbPost('users', {
-      id: user.id,
-      username: user.user_metadata?.username || user.email.split('@')[0],
-      club_name: user.user_metadata?.full_name || ''
+      id:        user.id,
+      username:  user.user_metadata?.username || user.email.split('@')[0],
+      club_name: user.user_metadata?.full_name || '',
+      role:      'player'
     });
     PROFILE = {
-      id: user.id,
-      username: user.user_metadata?.username || user.email.split('@')[0],
-      club_name: user.user_metadata?.full_name || ''
+      id:        user.id,
+      username:  user.user_metadata?.username || user.email.split('@')[0],
+      club_name: user.user_metadata?.full_name || '',
+      role:      'player'
     };
   }
 
@@ -1891,4 +1911,3 @@ async function renderHistory() {
 </script>
 </body>
 </html>
-
