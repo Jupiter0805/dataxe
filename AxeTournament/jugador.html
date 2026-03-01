@@ -235,8 +235,8 @@ input, textarea, select { font-family: inherit; }
 .btn-danger { background: var(--red); color: #fff; }
 
 /* LAYOUT */
-.page { display: none; }
-.page.on { display: block; }
+.page { display: none; width: 100%; }
+.page.on { display: block; width: 100%; }
 
 /* PAGE HEADER */
 .pg-eyebrow {
@@ -302,20 +302,30 @@ input, textarea, select { font-family: inherit; }
   gap: 2rem;
   align-items: start;
   width: 100%;
+  box-sizing: border-box;
 }
 .feed-sidebar {
   position: sticky;
   top: 72px;
-  width: 260px; /* match grid column exactly */
+  /* never let sidebar shrink or grow beyond its column */
+  width: 100%;
   min-width: 0;
+  max-width: 260px;
 }
 .feed-main {
   min-width: 0;
+  /* force column to always occupy its grid cell */
   width: 100%;
+  box-sizing: border-box;
 }
 #feed-list {
   width: 100%;
-  min-height: 200px; /* prevents layout collapse when filtering */
+  /* keeps the column tall enough that grid never recalculates */
+  min-height: 400px;
+}
+/* page wrapper must be block and full width */
+#pg-feed {
+  width: 100%;
 }
 /* Single column — prevents jump when filtering */
 .event-grid {
@@ -1298,10 +1308,24 @@ async function launchApp(user) {
   showPage('feed');
 }
 
-// Restore session
+// Restore session — with role check
 (async function restoreSession() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
+
+  // ROLE CHECK — must be player (or unassigned new user)
+  try {
+    const rows = await dbGet(`users?id=eq.${session.user.id}&select=role`);
+    const role = rows?.[0]?.role;
+    if (role && role !== 'player') {
+      await sb.auth.signOut();
+      showErr('err-login', 'Esta app es solo para jugadores. Los organizadores deben acceder desde su plataforma.');
+      return;
+    }
+  } catch(e) {
+    // If profile doesn't exist yet, let launchApp create it
+  }
+
   await launchApp(session.user);
 })();
 
@@ -1443,12 +1467,11 @@ function renderFeedList() {
     .sort((a, b) => a._sort < b._sort ? -1 : a._sort > b._sort ? 1 : 0);
 
   if (!merged.length) {
-    container.innerHTML = `
-      <div class="empty">
-        <div class="empty-icon">📭</div>
-        <div class="empty-title">No hay contenido</div>
-        <p>Sigue organizadores para ver sus torneos y publicaciones aquí</p>
-      </div>`;
+    container.innerHTML = '<div class="empty" style="min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center">'
+      + '<div class="empty-icon">📭</div>'
+      + '<div class="empty-title">Sin resultados</div>'
+      + '<p>No hay contenido para este filtro</p>'
+      + '</div>';
     return;
   }
 
