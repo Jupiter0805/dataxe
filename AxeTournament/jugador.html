@@ -843,9 +843,7 @@ input, textarea, select { font-family: inherit; }
 <!-- ══ LOGIN ══ -->
 <div class="screen on" id="scr-login">
   <div class="login-logo">
-    <a href="https://www.novuraxe.com">
-      <img src="public/novuraxe-logo.png" alt="NOVURAXE">
-    </a>
+    <img src="public/novuraxe-logo.png" alt="NOVURAXE">
     <div class="login-logo-sub">Gestión de Torneos</div>
     <div class="login-role-tag">Portal del Jugador</div>
   </div>
@@ -922,9 +920,7 @@ input, textarea, select { font-family: inherit; }
   <!-- Topbar -->
   <div class="topbar">
     <div class="t-logo">
-     <a href="https://www.novuraxe.com">
       <img src="public/novuraxe-logo.png" alt="NOVURAXE">
-    </a>
     </div>
     <div class="t-sep"></div>
     <div class="t-role-badge">Jugador</div>
@@ -999,7 +995,7 @@ input, textarea, select { font-family: inherit; }
       <div class="orgs-search-bar">
         <span class="orgs-search-icon">🔍</span>
         <input class="orgs-search-input" type="text" id="org-search"
-          placeholder="Buscar por nombre de club"
+          placeholder="Buscar por nombre de club, ciudad..."
           oninput="filterOrgs(this.value)">
       </div>
 
@@ -1787,7 +1783,7 @@ async function renderStats() {
   const totEB  = stats.reduce((a,s) => a + (s.elim_bulls     || 0), 0);
 
   // Precision %
-  const wlPct     = totT > 0 ? Math.round((totW / totT) * 100) : 0;
+  const wlPct     = (totW + totL) > 0 ? Math.round((totW / (totW + totL)) * 100) : 0;
   const qPrecPct  = totQTh > 0 ? Math.round((totQ6 / totQTh) * 100) : 0;
   const bullPct   = totETh > 0 ? Math.round((totEB / totETh) * 100) : 0;
 
@@ -1879,7 +1875,7 @@ async function renderStats() {
           <div style="overflow-x:auto">
             <table class="stats-table" style="min-width:600px">
               <thead><tr>
-                <th>Nombre</th>
+                <th>Torneo</th>
                 <th>T</th>
                 <th style="color:var(--green)">V</th>
                 <th style="color:var(--red)">D</th>
@@ -1894,7 +1890,7 @@ async function renderStats() {
                   const qp = (s.qualify_throws||0) > 0 ? Math.round(((s.qualify_sixes||0)/(s.qualify_throws||1))*100) : 0;
                   const bp = (s.elim_throws||0) > 0 ? Math.round(((s.elim_bulls||0)/(s.elim_throws||1))*100) : 0;
                   return `<tr>
-                    <td class="name-cell">${s.player_name}</td>
+                    <td class="name-cell">${s.tournament_name || s.player_name || "—"}</td>
                     <td>${s.tournaments||0}</td>
                     <td class="win-cell">${s.wins||0}</td>
                     <td style="color:var(--red)">${s.losses||0}</td>
@@ -2027,5 +2023,3 @@ async function renderHistory() {
 </script>
 </body>
 </html>
-
-
