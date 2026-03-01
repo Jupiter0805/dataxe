@@ -2546,10 +2546,18 @@ async function doLogout() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
 
-  const profiles = await dbGet('users', `id=eq.${session.user.id}&select=id,username,club_name,logo_url`);
+  // ROLE CHECK — must be organizer
+  const profiles = await dbGet('users', `id=eq.${session.user.id}&select=id,username,club_name,logo_url,role`);
   const profile = profiles?.[0];
 
-  if (!profile) return;
+  if (!profile || profile.role !== 'organizer') {
+    await sb.auth.signOut();
+    showErr('err-login', profile
+      ? 'Esta plataforma es solo para organizadores. Accede desde la app de jugadores.'
+      : 'No se encontró tu perfil. Inicia sesión de nuevo.'
+    );
+    return;
+  }
 
   CUR_USER   = profile.username;
   DB_USER_ID = session.user.id;
