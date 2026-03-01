@@ -1428,10 +1428,6 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       <img src="public/novuraxe-logo.png" alt="NOVURAXE" style="height:32px;width:auto;object-fit:contain;filter:brightness(0) invert(1);">
     </div>
     <div class="t-sep"></div>
-    <div class="g-chips">
-      <button class="g-chip pro on" id="gc-pro" onclick="switchGroup('pro')">PRO</button>
-      <button class="g-chip semi" id="gc-semi" onclick="switchGroup('semi')">Semi Pro</button>
-    </div>
     <div class="t-nav">
       <button class="t-nav-btn on" data-page="dashboard" onclick="showPage('dashboard')">Dashboard</button>
       <button class="t-nav-btn" data-page="qualify" onclick="showPage('qualify')">Clasificación</button>
@@ -1505,25 +1501,26 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
         <div class="stat-card"><div class="stat-n blue" id="st-phase">—</div><div class="stat-l">Fase activa</div></div>
       </div>
 
-      <div class="g2">
+      <!-- Clasificación: PRO izquierda, SEMI derecha -->
+      <div class="g2" style="margin-bottom:1.5rem">
         <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
-            <div class="sec-title" style="margin-bottom:0">Clasificación</div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-size:11px;color:var(--ink3);font-weight:600">Mostrar</span>
-              <div class="stepper" style="gap:6px">
-                <button class="step-btn" onclick="adjDashN(-2)">−</button>
-                <div class="step-val" id="ds-n" style="min-width:32px">16</div>
-                <button class="step-btn" onclick="adjDashN(2)">+</button>
-              </div>
-            </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.75rem">
+            <div class="sec-title" style="margin-bottom:0">⚡ Profesionales</div>
+            <span class="badge badge-pro">PRO</span>
           </div>
-          <div id="ds-top5"></div>
+          <div id="ds-pro"></div>
         </div>
         <div>
-          <div class="sec-title">Últimos resultados</div>
-          <div id="ds-recent"><div class="card" style="color:var(--ink3);text-align:center;padding:2rem">Sin resultados</div></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.75rem">
+            <div class="sec-title" style="margin-bottom:0">🎯 Semi Profesionales</div>
+            <span class="badge badge-semi">SEMI</span>
+          </div>
+          <div id="ds-semi"></div>
         </div>
+      </div>
+      <div>
+        <div class="sec-title">Últimos resultados</div>
+        <div id="ds-recent"><div class="card" style="color:var(--ink3);text-align:center;padding:2rem">Sin resultados</div></div>
       </div>
     </div>
 
@@ -1658,7 +1655,14 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       <div class="pg-title">Brack<em>et</em></div>
       <div class="pg-sub">Fase eliminatoria — 2 × 5 lanzamientos por duelo</div>
 
-      <div class="g2" style="margin-bottom:1.25rem">
+      <!-- Collapsible bracket config -->
+      <div style="margin-bottom:1.25rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+          <div class="sec-title" style="margin-bottom:0">Configuración eliminatoria</div>
+          <button class="btn btn-ghost btn-sm" onclick="toggleBracketCfg()" id="btn-toggle-bcfg">▲ Minimizar</button>
+        </div>
+        <div id="bracket-cfg-panel">
+      <div class="g2" style="margin-bottom:0">
         <div class="card">
           <div class="card-title">Configuración eliminatoria</div>
           <div class="cfg-row">
@@ -1708,6 +1712,9 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
         </div>
       </div>
 
+        </div><!-- /bracket-cfg-panel -->
+      </div><!-- /collapsible wrapper -->
+
       <!-- Bracket level tabs -->
       <div class="tab-bar" style="margin-bottom:1rem">
         <div class="tab-item on" id="bt-pro" onclick="switchBracketTab('pro')">⚡ PRO</div>
@@ -1725,37 +1732,20 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     <!-- ──── RANKING ──── -->
     <div class="page" id="pg-ranking">
       <div class="pg-title">Ranki<em>ng</em></div>
-      <div class="pg-sub" id="rk-sub">Mejores jugadores del torneo activo</div>
+      <div class="pg-sub" id="rk-sub">Clasificación del torneo activo</div>
 
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center">
-        <button class="btn btn-amber" onclick="expPDFCompleto()">📄 Informe completo</button>
-        <button class="btn btn-ghost btn-sm" onclick="expPDF('ranking')">📄 Solo Ranking</button>
-        <button class="btn btn-ghost btn-sm" onclick="expPDF('full')">📄 PDF Grupo activo</button>
+        <button class="btn btn-amber" onclick="expPDFRanking()">📄 PDF Completo</button>
       </div>
 
-      <!-- Ambos grupos en dos columnas -->
-      <div class="g2" style="align-items:flex-start">
-        <div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.75rem">
-            <div class="sec-title" style="margin-bottom:0">Grupo PRO</div>
-            <span class="badge" style="background:var(--group-pro-bg);color:var(--group-pro);border:1px solid var(--group-pro-ln)">PRO</span>
-          </div>
-          <div id="rk-pro"></div>
-        </div>
-        <div>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.75rem">
-            <div class="sec-title" style="margin-bottom:0">Grupo Semi Pro</div>
-            <span class="badge" style="background:var(--group-semi-bg);color:var(--group-semi);border:1px solid var(--group-semi-ln)">SEMI</span>
-          </div>
-          <div id="rk-semi"></div>
-        </div>
+      <!-- 3 tabs -->
+      <div class="tab-bar" style="margin-bottom:1.25rem">
+        <div class="tab-item on" id="rkt-all"  onclick="switchRankTab('all')">🌐 Todos</div>
+        <div class="tab-item"     id="rkt-pro"  onclick="switchRankTab('pro')">⚡ PRO</div>
+        <div class="tab-item"     id="rkt-semi" onclick="switchRankTab('semi')">🎯 SEMI PRO</div>
       </div>
 
-      <!-- Detalle del grupo activo (al clicar jugador) -->
-      <div style="margin-top:2rem">
-        <div class="sec-title" id="rk-detail-title" style="display:none">Detalle — Grupo <span id="rk-detail-gn"></span></div>
-        <div id="rk-content"></div>
-      </div>
+      <div id="rk-content"></div>
     </div>
 
     <!-- ──── HISTORIAL ──── -->
@@ -2585,9 +2575,7 @@ function showPage(p) {
 }
 
 function switchGroup(g) {
-  CUR_GROUP = g;
-  document.getElementById('gc-pro').classList.toggle('on', g === 'pro');
-  document.getElementById('gc-semi').classList.toggle('on', g === 'semi');
+  CUR_GROUP = g; // kept for compatibility
   renderPage(CUR_PAGE);
 }
 
@@ -2883,8 +2871,7 @@ function clearPlayers() {
 // ─────────────────────────────────
 function renderQualify() {
   const g = G();
-  const gn = CUR_GROUP === 'pro' ? 'PRO' : 'Semi Pro';
-  document.getElementById('ql-sub').textContent = `Grupo ${gn} — Fase Clasificatoria`;
+  document.getElementById('ql-sub').textContent = 'Clasificación unificada PRO + SEMI PRO';
   document.getElementById('qcfg-rounds').textContent = g.qualCfg.rounds;
   document.getElementById('qcfg-throws').textContent = g.qualCfg.throws;
   renderQScoreCfg();
@@ -3290,6 +3277,15 @@ function rndName(ri, total) {
 }
 
 let CUR_BRACKET = 'pro'; // which bracket tab is showing
+let BRACKET_CFG_OPEN = true;
+
+function toggleBracketCfg() {
+  BRACKET_CFG_OPEN = !BRACKET_CFG_OPEN;
+  const panel = document.getElementById('bracket-cfg-panel');
+  const btn   = document.getElementById('btn-toggle-bcfg');
+  if (panel) panel.style.display = BRACKET_CFG_OPEN ? '' : 'none';
+  if (btn)   btn.textContent = BRACKET_CFG_OPEN ? '▲ Minimizar' : '▼ Expandir';
+}
 
 function switchBracketTab(lvl) {
   CUR_BRACKET = lvl;
@@ -3583,10 +3579,11 @@ function playerStats(pid, name) {
     qRounds.push({ r, pts: rPts, ks: rKS, throws: g.qualCfg.throws, scores: [...sc] });
   }
 
-  // ── Eliminatoria ──
+  // ── Eliminatoria — search in both bracket groups ──
   let wins = 0, losses = 0, elimPts = 0, elimKS = 0, elimBull = 0;
   const duelLog = [];
-  g.matches.forEach(m => {
+  const allBracketMatches = [...(ADMIN.pro?.matches||[]), ...(ADMIN.semi?.matches||[])];
+  allBracketMatches.forEach(m => {
     if (m.bye || !m.winner) return;
     const isP1 = m.p1 === name, isP2 = m.p2 === name;
     if (!isP1 && !isP2) return;
@@ -3612,25 +3609,85 @@ function playerStats(pid, name) {
   });
 
   return { name, qpts, qks, qbull, qRounds, wins, losses, elimPts, elimKS, elimBull, duelLog,
-           isChamp: g.champion === name };
+           isChamp: ADMIN.pro?.champion === name || ADMIN.semi?.champion === name };
+}
+
+let CUR_RANK_TAB = 'all';
+
+function switchRankTab(tab) {
+  CUR_RANK_TAB = tab;
+  ['all','pro','semi'].forEach(t => {
+    const el = document.getElementById('rkt-' + t);
+    if (el) el.classList.toggle('on', t === tab);
+  });
+  renderRanking();
 }
 
 function renderRanking() {
-  const gn = CUR_GROUP === 'pro' ? 'PRO' : 'Semi Pro';
-  document.getElementById('rk-sub').textContent = `Mejores jugadores · clic para ver detalle`;
+  document.getElementById('rk-sub').textContent = 'Clasificación del torneo activo';
+  const g = G();
+  const container = document.getElementById('rk-content');
+  if (!container) return;
 
-  // Render both groups
-  renderRankGroup('pro',  document.getElementById('rk-pro'));
-  renderRankGroup('semi', document.getElementById('rk-semi'));
+  // Get players filtered by tab
+  let players = [...g.players];
+  if (CUR_RANK_TAB === 'pro')  players = players.filter(p => (p.level||'pro') === 'pro');
+  if (CUR_RANK_TAB === 'semi') players = players.filter(p => p.level === 'semi');
 
-  // Also render full detail of current group below
-  const detailTitle = document.getElementById('rk-detail-title');
-  const detailGn    = document.getElementById('rk-detail-gn');
-  if (detailTitle) {
-    detailTitle.style.display = 'block';
-    detailGn.textContent = gn;
+  // Get matches from the correct bracket group for wins/losses
+  const bracketGroup = CUR_RANK_TAB === 'semi' ? ADMIN.semi : (CUR_RANK_TAB === 'pro' ? ADMIN.pro : null);
+
+  const ranked = players.map(p => {
+    const s = playerStats(p.id, p.name);
+    return { ...p, ...s };
+  }).sort((a, b) => {
+    if (!a.disqualified && !b.disqualified) return b.qpts - a.qpts;
+    return a.disqualified - b.disqualified;
+  });
+
+  if (!ranked.length) {
+    container.innerHTML = '<div class="card" style="color:var(--ink3);text-align:center;padding:3rem">Sin jugadores</div>';
+    return;
   }
-  renderRankDetail(document.getElementById('rk-content'));
+
+  const proChamp  = ADMIN.pro?.champion;
+  const semiChamp = ADMIN.semi?.champion;
+
+  const rows = ranked.map((p, i) => {
+    const rank = p.disqualified ? '—' : i + 1 - ranked.slice(0, i).filter(x => x.disqualified).length;
+    const cls  = !p.disqualified && rank <= 3 ? 'rank-' + rank : '';
+    const lvlBadge = (p.level||'pro') === 'pro'
+      ? '<span class="badge badge-pro" style="font-size:8px">PRO</span>'
+      : '<span class="badge badge-semi" style="font-size:8px">SEMI</span>';
+    const isChamp = p.name === proChamp || p.name === semiChamp;
+    const st = p.disqualified
+      ? '<span class="badge badge-dq">DQ</span>'
+      : isChamp
+        ? '<span class="badge badge-champ">🏆</span>'
+        : p.losses > 0
+          ? '<span class="badge badge-elim" style="font-size:9px">Elim.</span>'
+          : '<span class="badge badge-active" style="font-size:9px">Activo</span>';
+    const ksBadge   = p.qks + p.elimKS > 0 ? '<span class="mini-badge ks-badge">🪓 ' + (p.qks + p.elimKS) + '</span>' : '';
+    const bullBadge = p.elimBull > 0 ? '<span class="mini-badge bull-badge">🎯 ' + p.elimBull + '</span>' : '';
+    return '<tr class="' + cls + ' rk-row" onclick="openPlayerStats(\'' + p.id + '\')" '
+      + (p.disqualified ? 'style="opacity:.45"' : '') + '>'
+      + '<td><span class="rank-n">' + rank + '</span></td>'
+      + '<td><div style="display:flex;align-items:center;gap:6px">'
+      + (CUR_RANK_TAB === 'all' ? lvlBadge : '')
+      + '<div><div class="p-name-cell">' + p.name + '</div>'
+      + '<div style="display:flex;gap:3px;margin-top:2px">' + ksBadge + bullBadge + '</div></div>'
+      + '</div></td>'
+      + '<td style="font-family:var(--f-display);color:var(--accent)">' + (p.disqualified ? 'DQ' : p.qpts) + '</td>'
+      + '<td style="font-family:var(--f-display);color:var(--green)">' + p.wins + '</td>'
+      + '<td style="font-family:var(--f-display);color:var(--red)">' + p.losses + '</td>'
+      + '<td>' + st + '</td>'
+      + '</tr>';
+  }).join('');
+
+  container.innerHTML = '<div class="card" style="padding:0;overflow:hidden"><table class="tbl">'
+    + '<thead><tr><th>#</th><th>Jugador</th><th>Clasif.</th><th>V</th><th>D</th><th>Estado</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table></div>';
 }
 
 function renderRankGroup(group, container) {
@@ -3859,21 +3916,67 @@ function adjDashN(d) {
   renderDash();
 }
 
-function renderDash() {
-  const g  = G();
-  const gn = CUR_GROUP === 'pro' ? 'PRO' : 'Semi Pro';
-  document.getElementById('ds-sub').textContent = `Grupo ${gn}`;
-  document.getElementById('st-players').textContent = g.players.length;
-  document.getElementById('st-qual').textContent    = g.players.filter(p => qTotal(p.id) > 0).length;
-  document.getElementById('st-duels').textContent   = (g.matches || []).filter(m => m.winner && !m.bye).length;
-  const phases = { qualify: 'CLASIF.', bracket: 'ELIMIN.', done: '✓ FIN' };
-  document.getElementById('st-phase').textContent   = phases[g.phase] || '—';
-
-  // Check champion in both brackets
+function renderDashGroup(players, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const g = G();
   const proChamp  = ADMIN.pro?.champion;
   const semiChamp = ADMIN.semi?.champion;
-  const anyChamp  = proChamp || semiChamp;
-  if (anyChamp) {
+
+  const ranked = players
+    .filter(p => !p.disqualified)
+    .map(p => {
+      const s = playerStats(p.id, p.name);
+      return { ...p, qpts: s.qpts, wins: s.wins, losses: s.losses, elimKS: s.elimKS, elimBull: s.elimBull };
+    })
+    .sort((a, b) => b.qpts - a.qpts);
+
+  if (!ranked.length) {
+    el.innerHTML = '<div class="card" style="color:var(--ink3);text-align:center;padding:2rem">Sin jugadores</div>';
+    return;
+  }
+
+  const champName = containerId === 'ds-pro' ? proChamp : semiChamp;
+  const rows = ranked.map((p, i) => {
+    const rank = i + 1;
+    const cls  = rank <= 3 ? 'rank-' + rank : '';
+    const isChamp = champName === p.name;
+    const st = isChamp
+      ? '<span class="badge badge-champ" style="font-size:9px">🏆</span>'
+      : p.losses > 0
+        ? '<span class="badge badge-elim" style="font-size:9px">Elim.</span>'
+        : g.phase !== 'qualify'
+          ? '<span class="badge badge-active" style="font-size:9px">Activo</span>'
+          : '';
+    return '<tr class="' + cls + '" style="cursor:pointer" onclick="openPlayerStats(\'' + p.id + '\')" title="Ver stats">'
+      + '<td><span class="rank-n">' + rank + '</span></td>'
+      + '<td class="p-name-cell">' + p.name + '</td>'
+      + '<td style="font-family:var(--f-display);color:var(--accent)">' + p.qpts + '</td>'
+      + '<td style="font-family:var(--f-display);color:var(--green)">' + p.wins + '</td>'
+      + '<td>' + st + '</td>'
+      + '</tr>';
+  }).join('');
+
+  el.innerHTML = '<div class="card" style="padding:0;overflow:hidden"><table class="tbl">'
+    + '<thead><tr><th>#</th><th>Jugador</th><th>Pts</th><th>V</th><th>Estado</th></tr></thead>'
+    + '<tbody>' + rows + '</tbody></table></div>';
+}
+
+function renderDash() {
+  const g = G();
+  document.getElementById('ds-sub').textContent = 'Vista general · ' + (ADMIN.tName || 'Torneo activo');
+  document.getElementById('st-players').textContent = g.players.length;
+  document.getElementById('st-qual').textContent    = g.players.filter(p => qTotal(p.id) > 0).length;
+  // Count duels from both bracket groups
+  const totalDuels = [...(ADMIN.pro?.matches||[]), ...(ADMIN.semi?.matches||[])].filter(m => m.winner && !m.bye).length;
+  document.getElementById('st-duels').textContent = totalDuels;
+  const phases = { qualify: 'CLASIF.', bracket: 'ELIMIN.', done: '✓ FIN' };
+  document.getElementById('st-phase').textContent = phases[g.phase] || '—';
+
+  // Champions
+  const proChamp  = ADMIN.pro?.champion;
+  const semiChamp = ADMIN.semi?.champion;
+  if (proChamp || semiChamp) {
     document.getElementById('champ-bar').classList.add('on');
     let champText = '';
     if (proChamp)  champText += '⚡ ' + proChamp;
@@ -3883,75 +3986,31 @@ function renderDash() {
     document.getElementById('champ-bar').classList.remove('on');
   }
 
-  // Clasificación completa con N configurable
-  const t5  = document.getElementById('ds-top5');
-  const nEl = document.getElementById('ds-n');
-  if (nEl) nEl.textContent = DASH_N;
+  // Split players by level and render each column
+  const proPlayers  = g.players.filter(p => (p.level || 'pro') === 'pro');
+  const semiPlayers = g.players.filter(p => p.level === 'semi');
+  renderDashGroup(proPlayers,  'ds-pro');
+  renderDashGroup(semiPlayers, 'ds-semi');
 
-  const allPlayers = [...g.players]
-    .filter(p => !p.disqualified)
-    .map(p => {
-      const s = playerStats(p.id, p.name);
-      return { ...p, qpts: s.qpts, wins: s.wins, losses: s.losses, elimKS: s.elimKS, elimBull: s.elimBull, isChamp: s.isChamp };
-    })
-    .sort((a, b) => b.wins - a.wins || b.qpts - a.qpts);
+  // Recent results from both brackets
+  const allLog = [
+    ...(ADMIN.pro?.log  || []).map(l => ({ ...l, badge: '⚡' })),
+    ...(ADMIN.semi?.log || []).map(l => ({ ...l, badge: '🎯' })),
+  ];
 
-  const shown = allPlayers.slice(0, DASH_N);
-
-  if (!shown.length) {
-    t5.innerHTML = `<div class="card" style="color:var(--ink3);text-align:center;padding:2rem">Sin jugadores aún</div>`;
-  } else {
-    const rows = shown.map((p, i) => {
-      const rank = i + 1;
-      const cls  = rank <= 3 ? `rank-${rank}` : '';
-      const st   = p.isChamp
-        ? `<span class="badge badge-champ">🏆</span>`
-        : p.losses > 0
-          ? `<span class="badge badge-elim" style="font-size:9px">Elim.</span>`
-          : g.phase !== 'qualify'
-            ? `<span class="badge badge-active" style="font-size:9px">Activo</span>`
-            : '';
-      const ksHtml  = p.elimKS   > 0 ? `<span class="mini-badge ks-badge" style="font-size:8px">${p.elimKS}KS</span>` : '';
-      const bullHtml = p.elimBull > 0 ? `<span class="mini-badge bull-badge" style="font-size:8px">${p.elimBull}B</span>` : '';
-      return `<tr class="${cls}" style="cursor:pointer" onclick="CUR_GROUP='${CUR_GROUP}';openPlayerStats('${p.id}')" title="Ver stats">
-        <td><span class="rank-n">${rank}</span></td>
-        <td>
-          <div class="p-name-cell">${p.name}</div>
-          <div style="display:flex;gap:3px;margin-top:2px">${ksHtml}${bullHtml}</div>
-        </td>
-        <td style="font-family:var(--f-display);color:var(--accent)">${p.qpts}</td>
-        <td style="font-family:var(--f-display);color:var(--green)">${p.wins}</td>
-        <td style="font-family:var(--f-display);color:var(--red)">${p.losses}</td>
-        <td>${st}</td>
-      </tr>`;
-    }).join('');
-
-    const total = allPlayers.length;
-    const footer = total > DASH_N
-      ? `<div style="padding:8px 14px;font-size:11px;color:var(--ink3);text-align:center;border-top:1px solid var(--line)">
-          Mostrando ${DASH_N} de ${total} jugadores · usa los botones + / − para ver más
-         </div>` : '';
-
-    t5.innerHTML = `<div class="card" style="padding:0;overflow:hidden">
-      <table class="tbl">
-        <thead><tr><th>#</th><th>Jugador</th><th title="Pts clasificación">Clasif.</th><th>V</th><th>D</th><th>Estado</th></tr></thead>
-        <tbody>${rows}</tbody>
-      </table>
-      ${footer}
-    </div>`;
-  }
-
-  // Recent duels
+  // Recent results from both brackets combined
   const rc = document.getElementById('ds-recent');
-  const lg = (g.log || []).slice(0, 8);
-  if (!lg.length) {
-    rc.innerHTML = `<div class="card" style="color:var(--ink3);text-align:center;padding:1.5rem">Sin resultados</div>`;
+  if (!allLog.length) {
+    rc.innerHTML = '<div class="card" style="color:var(--ink3);text-align:center;padding:1.5rem">Sin resultados</div>';
   } else {
-    rc.innerHTML = `<div class="card" style="padding:0;overflow:hidden">` +
-      lg.map(r => `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)">
-        <span style="font-size:13px">${r.text} → <strong style="color:var(--accent)">${r.winner}</strong></span>
-        <span style="font-size:11px;color:var(--ink3)">${r.time}</span>
-      </div>`).join('') + `</div>`;
+    rc.innerHTML = '<div class="card" style="padding:0;overflow:hidden">'
+      + allLog.slice(0, 10).map(r =>
+          '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)">'
+          + '<span style="font-size:13px">' + (r.badge||'') + ' ' + r.text + ' → <strong style="color:var(--accent)">' + r.winner + '</strong></span>'
+          + '<span style="font-size:11px;color:var(--ink3)">' + r.time + '</span>'
+          + '</div>'
+        ).join('')
+      + '</div>';
   }
 }
 
@@ -4360,117 +4419,138 @@ function expPDF(type) {
     .champ-box{padding:1.25rem;background:#fdf4e7;border:2px solid #f0d5a8;border-radius:6px;font-size:1.3rem;font-weight:bold;color:#9b7b52;margin-top:1rem;text-align:center}
     .dq-row td{opacity:0.45;text-decoration:line-through}
     @media print{body{padding:1rem}}
-  </style></head><body>${body}<script>window.print();<\/script></body></html>`;
+  </style></head><body>${body}${'<scr'+'ipt>'}window.print();${'</sc'+'ript>'}</body></html>`;
 
   win.document.write(html); win.document.close();
 }
 
-function expPDFCompleto() {
+function expPDFRanking() {
   const win  = window.open('', '_blank');
   const club = ADMIN.club || 'NOVURAXE';
   const tn   = ADMIN.tName || 'Torneo';
   const td   = ADMIN.tDate || '';
   const logo = ADMIN.logo;
-  const logoHtml = logo
-    ? `<img src="${logo}" style="max-height:56px;max-width:140px;object-fit:contain;flex-shrink:0">`
-    : '';
+  const logoHtml = logo ? '<img src="' + logo + '" style="max-height:56px;max-width:140px;object-fit:contain;flex-shrink:0">' : '';
 
-  let body = `<div class="header"><div class="header-inner">${logoHtml}<div class="header-text">
-    <h1>${club}</h1><h2>${tn}</h2><p>${td} · Informe Completo</p>
-  </div></div></div>`;
+  const g = G(); // unified qualify group
+  const proChamp  = ADMIN.pro?.champion  || '—';
+  const semiChamp = ADMIN.semi?.champion || '—';
 
-  // Render both groups
-  const savedGroup = CUR_GROUP;
-  for (const gtype of ['pro', 'semi']) {
-    CUR_GROUP = gtype;
-    const g  = G();
-    const gn = gtype === 'pro' ? 'PRO' : 'Semi Pro';
-    if (!g.players.length) continue;
+  // ── Build player stats ──
+  const allPlayers = g.players.filter(p => !p.disqualified).map(p => {
+    const s = playerStats(p.id, p.name);
+    return { ...p, ...s };
+  });
+  const proPlayers  = allPlayers.filter(p => (p.level||'pro') === 'pro').sort((a,b) => b.qpts - a.qpts);
+  const semiPlayers = allPlayers.filter(p => p.level === 'semi').sort((a,b) => b.qpts - a.qpts);
+  const allSorted   = [...allPlayers].sort((a,b) => b.qpts - a.qpts);
 
-    body += `<div class="sec-group"><h2 class="group-title">Grupo ${gn}</h2>`;
-
-    // Champion
-    if (g.champion) {
-      body += `<div class="champ-box">🏆 Campeón: ${g.champion}</div>`;
-    }
-
-    // Ranking
-    const ranked = g.players.map(p => {
-      const s = playerStats(p.id, p.name);
-      return { ...p, ...s };
-    }).sort((a, b) => b.wins - a.wins || b.qpts - a.qpts);
-
-    body += `<div class="sec"><h3>Ranking — Grupo ${gn}</h3>
-    <table><thead><tr><th>#</th><th>Jugador</th><th>Pts Clasif.</th><th>KS</th><th>Bulls</th><th>V</th><th>D</th><th>Pts Elim.</th><th>Estado</th></tr></thead><tbody>`;
-    ranked.forEach((p, i) => {
-      const st = p.disqualified ? 'DQ' : p.isChamp ? '🏆 Campeón' : p.losses > 0 ? 'Eliminado' : 'Activo';
-      const cls = !p.disqualified && i < 3 ? 'top' : p.disqualified ? 'dq-row' : '';
-      body += `<tr class="${cls}"><td>${p.disqualified ? '—' : i+1}</td><td>${p.name}</td>
-        <td>${p.qpts}</td><td>${p.qks + p.elimKS}</td><td>${p.elimBull}</td>
-        <td>${p.wins}</td><td>${p.losses}</td><td>${p.elimPts}</td><td>${st}</td></tr>`;
-    });
-    body += `</tbody></table></div>`;
-
-    // Clasificación detallada
-    const qRanked = [...g.players]
-      .filter(p => !p.disqualified)
-      .map(p => {
-        const rData = Array.from({ length: g.qualCfg.rounds }, (_, r) => {
-          const sc = (g.qualScores[p.id] || {})['r' + r] || [];
-          return { tot: sc.reduce((s, v) => s + (v || 0), 0), ks: sc.filter(v => v === 8).length };
+  // ── top Bulls (from bracket matches) ──
+  const allMatches = [...(ADMIN.pro?.matches||[]), ...(ADMIN.semi?.matches||[])];
+  const bullMap = {};
+  const ksMap   = {};
+  allMatches.forEach(m => {
+    if (m.bye) return;
+    [m.p1, m.p2].forEach((name, pi) => {
+      if (!name) return;
+      bullMap[name] = bullMap[name] || 0;
+      ksMap[name]   = ksMap[name]   || 0;
+      for (let r = 0; r < 2; r++) {
+        const arr = m['r' + r + 'p' + (pi+1)] || [];
+        arr.forEach(v => {
+          if (v === 7) bullMap[name]++;
+          if (v === 9) ksMap[name]++;
         });
-        return { ...p, rData, total: rData.reduce((s, r) => s + r.tot, 0) };
-      }).sort((a, b) => b.total - a.total);
-
-    let rHdrs = '';
-    for (let r = 0; r < g.qualCfg.rounds; r++) rHdrs += `<th>Ronda ${r+1}</th>`;
-    body += `<div class="sec"><h3>Fase Clasificatoria · ${g.qualCfg.throws} lanzamientos / ronda</h3>
-    <table><thead><tr><th>#</th><th>Jugador</th>${rHdrs}<th>Total</th><th>KS</th></tr></thead><tbody>`;
-    qRanked.forEach((p, i) => {
-      const ksTotal = p.rData.reduce((s, r) => s + r.ks, 0);
-      body += `<tr class="${i < 3 ? 'top' : ''}"><td>${i+1}</td><td>${p.name}</td>`;
-      p.rData.forEach(rd => { body += `<td>${rd.tot}</td>`; });
-      body += `<td><strong>${p.total}</strong></td><td>${ksTotal > 0 ? ksTotal : '—'}</td></tr>`;
+      }
     });
-    body += `</tbody></table></div>`;
-
-    // Bracket results
-    if (g.log?.length) {
-      body += `<div class="sec"><h3>Fase Eliminatoria</h3>
-      <table><thead><tr><th>Duelo</th><th>Ganador</th><th>Hora</th></tr></thead><tbody>`;
-      g.log.forEach(r => { body += `<tr><td>${r.text}</td><td><strong>${r.winner}</strong></td><td>${r.time}</td></tr>`; });
-      body += `</tbody></table></div>`;
+  });
+  // Also count KS from qualify
+  g.players.forEach(p => {
+    ksMap[p.name] = ksMap[p.name] || 0;
+    for (let r = 0; r < g.qualCfg.rounds; r++) {
+      const sc = (g.qualScores[p.id]||{})['r'+r]||[];
+      sc.forEach(v => { if (v === QUAL_KS_VAL) ksMap[p.name]++; });
     }
+  });
 
-    body += `</div>`; // sec-group
+  const topBulls = Object.entries(bullMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const topKS    = Object.entries(ksMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
+
+  function pdfTable(title, headers, rows) {
+    let h = '<div class="sec"><h3>' + title + '</h3><table><thead><tr>';
+    headers.forEach(h2 => { h += '<th>' + h2 + '</th>'; });
+    h += '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+    return h;
   }
-  CUR_GROUP = savedGroup;
 
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:Arial,sans-serif;padding:2rem;color:#2c2418;background:#fff;font-size:13px}
-    .header{margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:3px solid #c4873a}
-    .header-inner{display:flex;align-items:center;gap:1.25rem}.header-text{flex:1}
-    h1{font-size:1.5rem;color:#c4873a;font-weight:800;margin-bottom:3px}
-    h2{font-size:0.95rem;color:#4a3e30;font-weight:600;margin-bottom:3px}
-    p{color:#8c7d6a;font-size:11px}
-    .sec-group{margin-bottom:3rem;padding-bottom:2rem;border-bottom:2px solid #e8e1d6}
-    .sec-group:last-child{border-bottom:none}
-    .group-title{font-size:1.1rem;font-weight:800;color:#4a3e30;margin-bottom:1rem;padding:0.5rem 0;border-bottom:2px solid #c4873a;letter-spacing:1px}
-    .sec{margin-bottom:1.5rem}
-    h3{font-size:9px;text-transform:uppercase;letter-spacing:2px;margin-bottom:0.6rem;color:#c4873a;border-bottom:1px solid #ddd5c8;padding-bottom:5px}
-    table{width:100%;border-collapse:collapse}
-    th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#8c7d6a;padding:6px 10px;text-align:left;background:#f7f3ee;border-bottom:2px solid #ddd5c8}
-    td{padding:7px 10px;border-bottom:1px solid #e8e1d6;font-size:12px}
-    tr.top td{background:#fdf4e7;font-weight:600}
-    tr.dq-row td{opacity:0.4;text-decoration:line-through}
-    .champ-box{padding:1rem;background:#fdf4e7;border:2px solid #f0d5a8;border-radius:6px;font-size:1.1rem;font-weight:bold;color:#9b7b52;margin-bottom:1rem;text-align:center}
-    @media print{body{padding:1rem}.sec-group{page-break-after:always}}
-  </style></head><body>${body}<script>window.print();<\/script></body></html>`;
+  function rankRows(players, champName) {
+    return players.map((p, i) => {
+      const st = p.name === champName ? '🏆' : p.losses > 0 ? 'Elim.' : 'Activo';
+      return '<tr class="' + (i<3?'top':'') + '"><td>' + (i+1) + '</td><td>' + p.name + '</td>'
+        + '<td>' + p.qpts + '</td><td>' + p.wins + '</td><td>' + p.losses + '</td><td>' + st + '</td></tr>';
+    }).join('');
+  }
 
-  win.document.write(html);
-  win.document.close();
+  let body = '<div class="header"><div class="header-inner">' + logoHtml
+    + '<div class="header-text"><h1>' + club + '</h1><h2>' + tn + '</h2>'
+    + '<p>' + td + ' · Informe de Ranking</p></div></div></div>';
+
+  // Champions banner
+  if (proChamp !== '—' || semiChamp !== '—') {
+    body += '<div class="champ-box">🏆 PRO: ' + proChamp + '   ·   🎯 SEMI: ' + semiChamp + '</div>';
+  }
+
+  // ── Table 1: Qualify pts by level ──
+  body += '<div class="level-split">';
+  if (proPlayers.length) {
+    body += pdfTable('⚡ Clasificación PRO',
+      ['#','Jugador','Pts Clasif.','Victorias','Derrotas','Estado'],
+      rankRows(proPlayers, proChamp));
+  }
+  if (semiPlayers.length) {
+    body += pdfTable('🎯 Clasificación SEMI PRO',
+      ['#','Jugador','Pts Clasif.','Victorias','Derrotas','Estado'],
+      rankRows(semiPlayers, semiChamp));
+  }
+  body += '</div>';
+
+  // ── Table 2: Top Bulls ──
+  if (topBulls.length) {
+    const bullRows = topBulls.map(([name, n], i) =>
+      '<tr class="' + (i<3?'top':'') + '"><td>' + (i+1) + '</td><td>' + name + '</td><td><strong>' + n + '</strong></td></tr>'
+    ).join('');
+    body += pdfTable('🎯 Más Bulls Eyes (Eliminatoria)', ['#','Jugador','Bulls'], bullRows);
+  }
+
+  // ── Table 3: Top KS ──
+  if (topKS.length) {
+    const ksRows = topKS.map(([name, n], i) =>
+      '<tr class="' + (i<3?'top':'') + '"><td>' + (i+1) + '</td><td>' + name + '</td><td><strong>' + n + '</strong></td></tr>'
+    ).join('');
+    body += pdfTable('🪓 Más Killshots (Clasif. + Eliminatoria)', ['#','Jugador','KS'], ksRows);
+  }
+
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+    + '*{margin:0;padding:0;box-sizing:border-box}'
+    + 'body{font-family:Arial,sans-serif;padding:2rem;color:#2c2418;background:#fff;font-size:13px}'
+    + '.header{margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:3px solid #c4873a}'
+    + '.header-inner{display:flex;align-items:center;gap:1.25rem}'
+    + '.header-text{flex:1} h1{font-size:1.4rem;color:#c4873a;font-weight:800}'
+    + 'h2{font-size:0.9rem;color:#4a3e30;font-weight:600} p{color:#8c7d6a;font-size:11px}'
+    + '.level-split{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}'
+    + '.sec{margin-bottom:1.5rem}'
+    + 'h3{font-size:10px;text-transform:uppercase;letter-spacing:2px;margin-bottom:0.6rem;color:#c4873a;border-bottom:1px solid #ddd5c8;padding-bottom:5px}'
+    + 'table{width:100%;border-collapse:collapse}'
+    + 'th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#8c7d6a;padding:5px 8px;text-align:left;background:#f7f3ee;border-bottom:2px solid #ddd5c8}'
+    + 'td{padding:7px 8px;border-bottom:1px solid #e8e1d6;font-size:12px}'
+    + 'tr.top td{background:#fdf4e7}'
+    + '.champ-box{padding:1rem;background:#fdf4e7;border:2px solid #f0d5a8;border-radius:6px;font-size:1rem;font-weight:bold;color:#9b7b52;margin-bottom:1.5rem;text-align:center}'
+    + '@media print{body{padding:1rem}.level-split{grid-template-columns:1fr 1fr}}'
+    + '</style></head><body>' + body + '<scr' + 'ipt>window.print();</scr' + 'ipt></body></html>';
+
+  win.document.write(html); win.document.close();
 }
+
 
 function expHistPDF() {
   const t = VIEW_HIST; if (!t) return;
@@ -4504,7 +4584,7 @@ function expHistPDF() {
     td{padding:8px 10px;border-bottom:1px solid #e8e1d6}tr.top td{background:#fdf4e7}
     .dq-row td{opacity:0.4;text-decoration:line-through}
     .champ-box{padding:1rem;background:#fdf4e7;border:2px solid #f0d5a8;border-radius:6px;font-size:1.2rem;font-weight:bold;color:#9b7b52;margin:1rem 0;text-align:center}
-  </style></head><body>${body}<script>window.print();<\/script></body></html>`;
+  </style></head><body>${body}${'<scr'+'ipt>'}window.print();${'</sc'+'ript>'}</body></html>`;
   win.document.write(html); win.document.close();
 }
 
