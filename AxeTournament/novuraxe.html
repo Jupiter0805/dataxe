@@ -2165,191 +2165,159 @@ function save() {
 async function syncToSupabase() {
   if (!DB_USER_ID) return;
 
-  // Upsert active tournament
-  const tRows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id`);
-  let tid = tRows?.[0]?.id;
+  // ── Helpers: upsert wrappers that never throw ──
+  const safe = fn => fn.catch(e => { console.warn('[sync]', e.message); return null; });
 
-  if (!tid) {
-    const t = await dbInsert('tournaments', {
-      user_id: DB_USER_ID,
-      name:    ADMIN.tName || 'Torneo',
-      date:    ADMIN.tDate || new Date().toISOString().split('T')[0],
-      status:  'active'
-    });
-    tid = t?.[0]?.id;
-  } else {
-    await dbUpdate('tournaments', `id=eq.${tid}`, {
-      name: ADMIN.tName || 'Torneo',
-      date: ADMIN.tDate || new Date().toISOString().split('T')[0],
-    });
-  }
+  // ── 1. Tournament ──
+  let tid;
+  try {
+    const tRows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id`);
+    tid = tRows?.[0]?.id;
+    if (!tid) {
+      const t = await dbInsert('tournaments', {
+        user_id: DB_USER_ID,
+        name:    ADMIN.tName || 'Torneo',
+        date:    ADMIN.tDate || new Date().toISOString().split('T')[0],
+        status:  'active'
+      });
+      tid = t?.[0]?.id;
+    } else {
+      await safe(dbUpdate('tournaments', `id=eq.${tid}`, {
+        name: ADMIN.tName || 'Torneo',
+        date: ADMIN.tDate || new Date().toISOString().split('T')[0],
+      }));
+    }
+  } catch(e) { console.warn('[sync] tournament:', e.message); }
+  if (!tid) { console.warn('[sync] no tid, aborting'); return; }
 
-  if (!tid) return;
-
-  // Sync each group
+  // ── 2. Groups ──
   for (const gtype of ['pro', 'semi']) {
-    const g = ADMIN[gtype];
-    
-    // Upsert group
-    const gRows = await dbGet('tournament_groups', `tournament_id=eq.${tid}&group_type=eq.${gtype}&select=id`);
-    let gid = gRows?.[0]?.id;
-    if (!gid) {
-      const gr = await dbInsert('tournament_groups', {
-        tournament_id: tid, group_type: gtype,
-        phase: g.phase || 'qualify', champion: g.champion || null
-      });
-      gid = gr?.[0]?.id;
-    } else {
-      await dbUpdate('tournament_groups', `id=eq.${gid}`, {
-        phase: g.phase || 'qualify', champion: g.champion || null
-      });
-    }
-    if (!gid) continue;
+    try {
+      const g = ADMIN[gtype];
 
-    // Upsert qualify_config — update if exists, insert if not
-    const qcRows = await dbGet('qualify_config', `group_id=eq.${gid}&select=id`);
-    if (qcRows?.[0]?.id) {
-      await dbUpdate('qualify_config', `group_id=eq.${gid}`, {
-        rounds: g.qualCfg.rounds,
-        throws_per_round: g.qualCfg.throws,
-        ks_enabled: g.qualCfg.ksEnabled !== false,
-        ks_value: 8,
-        allowed_scores: g.qualCfg.scores || [0,1,2,3,4,5,6]
-      });
-    } else {
-      await dbInsert('qualify_config', {
-        group_id: gid,
-        rounds: g.qualCfg.rounds,
-        throws_per_round: g.qualCfg.throws,
-        ks_enabled: g.qualCfg.ksEnabled !== false,
-        ks_value: 8,
-        allowed_scores: g.qualCfg.scores || [0,1,2,3,4,5,6]
-      });
-    }
-
-    // Upsert elim_config — update if exists, insert if not
-    const ecRows = await dbGet('elim_config', `group_id=eq.${gid}&select=id`);
-    if (ecRows?.[0]?.id) {
-      await dbUpdate('elim_config', `group_id=eq.${gid}`, {
-        ks_max: g.elimCfg.ksMax,
-        bull_max: g.elimCfg.bullMax,
-        allowed_scores: g.elimCfg.scores || [0,1,2,3,4,5]
-      });
-    } else {
-      await dbInsert('elim_config', {
-        group_id: gid,
-        ks_max: g.elimCfg.ksMax,
-        bull_max: g.elimCfg.bullMax,
-        allowed_scores: g.elimCfg.scores || [0,1,2,3,4,5]
-      });
-    }
-
-    // Upsert players
-    for (const pl of g.players) {
-      const pRows = await dbGet('players', `group_id=eq.${gid}&name=eq.${encodeURIComponent(pl.name)}&select=id`);
-      let pid = pRows?.[0]?.id;
-      if (!pid) {
-        const pr = await dbInsert('players', {
-          group_id: gid, name: pl.name,
-          disqualified: !!pl.disqualified
+      // group row
+      let gid;
+      const gRows = await dbGet('tournament_groups', `tournament_id=eq.${tid}&group_type=eq.${gtype}&select=id`);
+      gid = gRows?.[0]?.id;
+      if (!gid) {
+        const gr = await dbInsert('tournament_groups', {
+          tournament_id: tid, group_type: gtype,
+          phase: g.phase || 'qualify', champion: g.champion || null
         });
-        pid = pr?.[0]?.id;
+        gid = gr?.[0]?.id;
       } else {
-        await dbUpdate('players', `id=eq.${pid}`, { disqualified: !!pl.disqualified });
+        await safe(dbUpdate('tournament_groups', `id=eq.${gid}`, {
+          phase: g.phase || 'qualify', champion: g.champion || null
+        }));
       }
-      if (!pid) continue;
+      if (!gid) continue;
 
-      // Upsert qualify throws — update-or-insert
-      for (let r = 0; r < g.qualCfg.rounds; r++) {
-        const sc = (g.qualScores[pl.id] || {})['r' + r] || [];
-        for (let t = 0; t < sc.length; t++) {
-          if (sc[t] === null || sc[t] === undefined) continue;
-          const qtRows = await dbGet('qualify_throws', `player_id=eq.${pid}&round=eq.${r}&throw_num=eq.${t}&select=id`);
-          if (qtRows?.[0]?.id) {
-            await dbUpdate('qualify_throws', `player_id=eq.${pid}&round=eq.${r}&throw_num=eq.${t}`, {
-              value: sc[t], is_ks: sc[t] === 8
+      // qualify_config — upsert via Prefer header
+      await safe(dbUpsert('qualify_config', {
+        group_id: gid,
+        rounds: g.qualCfg.rounds,
+        throws_per_round: g.qualCfg.throws,
+        ks_enabled: g.qualCfg.ksEnabled !== false,
+        ks_value: 8,
+        allowed_scores: g.qualCfg.scores || [0,1,2,3,4,5,6]
+      }));
+
+      // elim_config — upsert
+      await safe(dbUpsert('elim_config', {
+        group_id: gid,
+        ks_max: g.elimCfg.ksMax,
+        bull_max: g.elimCfg.bullMax,
+        allowed_scores: g.elimCfg.scores || [0,1,2,3,4,5]
+      }));
+
+      // players + their throws
+      for (const pl of g.players) {
+        try {
+          let pid;
+          const pRows = await dbGet('players', `group_id=eq.${gid}&name=eq.${encodeURIComponent(pl.name)}&select=id`);
+          pid = pRows?.[0]?.id;
+          if (!pid) {
+            const pr = await dbInsert('players', {
+              group_id: gid, name: pl.name, disqualified: !!pl.disqualified
             });
+            pid = pr?.[0]?.id;
           } else {
-            await dbInsert('qualify_throws', {
-              player_id: pid, round: r, throw_num: t,
-              value: sc[t], is_ks: sc[t] === 8
-            });
+            await safe(dbUpdate('players', `id=eq.${pid}`, { disqualified: !!pl.disqualified }));
           }
-        }
-      }
-    }
+          if (!pid) continue;
 
-    // Upsert matches — store db_id on match object to avoid duplicate lookups
-    for (let mi = 0; mi < (g.matches || []).length; mi++) {
-      const m = g.matches[mi];
-      const matchIdx = mi; // always use positional index
-      const mData = {
-        group_id: gid, round_index: m.round, match_index: matchIdx,
-        player1: m.p1 || null, player2: m.p2 || null, is_bye: !!m.bye,
-        winner: m.winner || null, score1: m.score1 ?? null, score2: m.score2 ?? null
-      };
-      // Use cached db id if we already saved this match before
-      if (m._db_id) {
-        await dbUpdate('matches', `id=eq.${m._db_id}`, mData);
-      } else {
-        // Try to find existing by group+round+index
-        const mRows = await dbGet('matches', `group_id=eq.${gid}&round_index=eq.${m.round}&match_index=eq.${matchIdx}&select=id`);
-        if (mRows?.[0]?.id) {
-          m._db_id = mRows[0].id;
-          await dbUpdate('matches', `id=eq.${m._db_id}`, mData);
-        } else {
-          const mr = await dbInsert('matches', mData);
-          if (mr?.[0]?.id) m._db_id = mr[0].id;
-        }
+          // qualify throws — batch upsert all throws for this player at once
+          const throwRows = [];
+          for (let r = 0; r < g.qualCfg.rounds; r++) {
+            const sc = (g.qualScores[pl.id] || {})['r' + r] || [];
+            for (let t = 0; t < sc.length; t++) {
+              if (sc[t] === null || sc[t] === undefined) continue;
+              throwRows.push({ player_id: pid, round: r, throw_num: t, value: sc[t], is_ks: sc[t] === 8 });
+            }
+          }
+          if (throwRows.length) await safe(dbUpsert('qualify_throws', throwRows));
+
+        } catch(ep) { console.warn('[sync] player', pl.name, ep.message); }
       }
-    }
+
+      // matches — upsert by cached id or positional lookup
+      for (let mi = 0; mi < (g.matches || []).length; mi++) {
+        try {
+          const m = g.matches[mi];
+          const mData = {
+            group_id: gid, round_index: m.round, match_index: mi,
+            player1: m.p1 || null, player2: m.p2 || null, is_bye: !!m.bye,
+            winner: m.winner || null, score1: m.score1 ?? null, score2: m.score2 ?? null
+          };
+          if (m._db_id) {
+            await safe(dbUpdate('matches', `id=eq.${m._db_id}`, mData));
+          } else {
+            const mRows = await dbGet('matches', `group_id=eq.${gid}&round_index=eq.${m.round}&match_index=eq.${mi}&select=id`);
+            if (mRows?.[0]?.id) {
+              m._db_id = mRows[0].id;
+              await safe(dbUpdate('matches', `id=eq.${m._db_id}`, mData));
+            } else {
+              const mr = await safe(dbInsert('matches', mData));
+              if (mr?.[0]?.id) m._db_id = mr[0].id;
+            }
+          }
+        } catch(em) { console.warn('[sync] match', mi, em.message); }
+      }
+
+    } catch(eg) { console.warn('[sync] group', gtype, eg.message); }
   }
 
-  // Upsert global stats — use linked user_id if available
-  // Build map from all players (qualify group has all of them in mixed mode)
-  const playerUserMap = {};
-  const allGroupPlayers = [
-    ...(ADMIN.pro?.players   || []),
-    ...(ADMIN.semi?.players  || []),
-    ...(G()?.players         || []),
-  ];
-  allGroupPlayers.forEach(p => {
-    if (p.user_id) playerUserMap[p.username || p.name] = p.user_id;
-  });
+  // ── 3. Global stats — batch upsert ──
+  try {
+    const playerUserMap = {};
+    [...(ADMIN.pro?.players||[]), ...(ADMIN.semi?.players||[]), ...(G()?.players||[])]
+      .forEach(p => { if (p.user_id) playerUserMap[p.username || p.name] = p.user_id; });
 
-  for (const [name, s] of Object.entries(ADMIN.global || {})) {
-    const targetUserId = playerUserMap[name] || null;
-    const uid_to_use   = targetUserId || DB_USER_ID;
-    const gsBody = {
-      tournaments:      s.tournaments   || 0,
-      wins:             s.wins          || 0,
-      losses:           s.losses        || 0,
-      total_qpts:       s.qpts          || 0,
-      total_ks:         s.total_ks      || 0,
-      total_bs:         s.total_bs      || 0,
-      qualify_throws:   s.qualify_throws|| 0,
-      qualify_sixes:    s.qualify_sixes || 0,
-      elim_throws:      s.elim_throws   || 0,
-      elim_bulls:       s.elim_bulls    || 0
-    };
-    // Upsert — insert or update on conflict (user_id + player_name unique key)
-    await dbUpsert('global_stats', { user_id: uid_to_use, player_name: name, ...gsBody });
-  }
+    const statsRows = Object.entries(ADMIN.global || {}).map(([name, s]) => ({
+      user_id:        playerUserMap[name] || DB_USER_ID,
+      player_name:    name,
+      tournaments:    s.tournaments    || 0,
+      wins:           s.wins           || 0,
+      losses:         s.losses         || 0,
+      total_qpts:     s.qpts           || 0,
+      total_ks:       s.total_ks       || 0,
+      total_bs:       s.total_bs       || 0,
+      qualify_throws: s.qualify_throws || 0,
+      qualify_sixes:  s.qualify_sixes  || 0,
+      elim_throws:    s.elim_throws    || 0,
+      elim_bulls:     s.elim_bulls     || 0,
+    }));
+    if (statsRows.length) await safe(dbUpsert('global_stats', statsRows));
+  } catch(es) { console.warn('[sync] global_stats:', es.message); }
 
-  // Update user settings
-  await dbUpdate('users', `id=eq.${DB_USER_ID}`, {
-    club_name: ADMIN.club || '',
-    logo_url:  ADMIN.logo || null
-  });
-
-  // Sync organizer profile
-  await dbUpsert('organizers', {
-    id:        DB_USER_ID,
-    user_id:   DB_USER_ID,
-    club_name: ADMIN.club || '',
-    username:  CUR_USER || '',
-    logo_url:  ADMIN.logo || null
-  });
+  // ── 4. Organizer profile ──
+  await safe(dbUpdate('users', `id=eq.${DB_USER_ID}`, {
+    club_name: ADMIN.club || '', logo_url: ADMIN.logo || null
+  }));
+  await safe(dbUpsert('organizers', {
+    id: DB_USER_ID, user_id: DB_USER_ID,
+    club_name: ADMIN.club || '', username: CUR_USER || '', logo_url: ADMIN.logo || null
+  }));
 }
 
 // ─────────────────────────────────
