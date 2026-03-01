@@ -2296,6 +2296,7 @@ async function syncToSupabase() {
     const statsRows = Object.entries(ADMIN.global || {}).map(([name, s]) => ({
       user_id:        playerUserMap[name] || DB_USER_ID,
       player_name:    name,
+      tournament_name: ADMIN.tName || 'Torneo',
       tournaments:    s.tournaments    || 0,
       wins:           s.wins           || 0,
       losses:         s.losses         || 0,
