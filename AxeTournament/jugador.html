@@ -292,38 +292,35 @@ input, textarea, select { font-family: inherit; }
 
 /* ── FEED LAYOUT ── */
 .content {
-  max-width: 1160px !important;
-  margin: 0 auto !important;
-  padding: 2rem 2rem !important;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  box-sizing: border-box;
 }
 .feed-layout {
   display: grid;
-  grid-template-columns: 260px 1fr;
-  gap: 2rem;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 1.75rem;
   align-items: start;
   width: 100%;
-  box-sizing: border-box;
 }
 .feed-sidebar {
   position: sticky;
   top: 72px;
-  /* never let sidebar shrink or grow beyond its column */
-  width: 100%;
-  min-width: 0;
-  max-width: 260px;
+  grid-column: 1;
+  /* Sidebar stays exactly in its column, never wider */
+  overflow: hidden;
 }
 .feed-main {
+  grid-column: 2;
   min-width: 0;
-  /* force column to always occupy its grid cell */
   width: 100%;
-  box-sizing: border-box;
 }
 #feed-list {
   width: 100%;
-  /* keeps the column tall enough that grid never recalculates */
   min-height: 400px;
 }
-/* page wrapper must be block and full width */
 #pg-feed {
   width: 100%;
 }
@@ -342,6 +339,8 @@ input, textarea, select { font-family: inherit; }
   border-radius: var(--r2);
   overflow: visible; /* allow avatar to protrude */
   margin-bottom: 1rem;
+  width: 100%; /* always fills its grid column */
+  box-sizing: border-box;
 }
 .sidebar-cover {
   height: 68px;
@@ -447,10 +446,13 @@ input, textarea, select { font-family: inherit; }
 .event-spots { font-size: 12px !important; color: rgba(255,255,255,0.5) !important; }
 .event-spots strong { color: rgba(255,255,255,0.8) !important; }
 
-@media (max-width: 900px) {
-  .feed-layout { grid-template-columns: 1fr; }
+@media (max-width: 960px) {
+  .feed-layout {
+    grid-template-columns: 1fr;
+  }
   .feed-sidebar { display: none; }
-  .content { padding: 1rem 1rem !important; }
+  .feed-main { grid-column: 1; }
+  .content { padding: 1rem !important; }
 }
 
 /* BADGE */
