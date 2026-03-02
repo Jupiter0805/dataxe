@@ -2293,21 +2293,26 @@ async function syncToSupabase() {
     [...(ADMIN.pro?.players||[]), ...(ADMIN.semi?.players||[]), ...(G()?.players||[])]
       .forEach(p => { if (p.user_id) playerUserMap[p.username || p.name] = p.user_id; });
 
-    const statsRows = Object.entries(ADMIN.global || {}).map(([name, s]) => ({
-      user_id:        playerUserMap[name] || DB_USER_ID,
-      player_name:    name,
-      tournament_name: ADMIN.tName || 'Torneo',
-      tournaments:    s.tournaments    || 0,
-      wins:           s.wins           || 0,
-      losses:         s.losses         || 0,
-      total_qpts:     s.qpts           || 0,
-      total_ks:       s.total_ks       || 0,
-      total_bs:       s.total_bs       || 0,
-      qualify_throws: s.qualify_throws || 0,
-      qualify_sixes:  s.qualify_sixes  || 0,
-      elim_throws:    s.elim_throws    || 0,
-      elim_bulls:     s.elim_bulls     || 0,
-    }));
+    const statsRows = Object.entries(ADMIN.global || {}).map(([key, s]) => {
+      // key is either "tName|||pName" (new) or just "playerName" (legacy)
+      const playerName = s._pName || (key.includes('|||') ? key.split('|||')[1] : key);
+      const tName      = s._tName || (key.includes('|||') ? key.split('|||')[0] : (ADMIN.tName || 'Torneo'));
+      return {
+        user_id:         playerUserMap[playerName] || DB_USER_ID,
+        player_name:     playerName,
+        tournament_name: tName,
+        tournaments:     s.tournaments    || 0,
+        wins:            s.wins           || 0,
+        losses:          s.losses         || 0,
+        total_qpts:      s.qpts           || 0,
+        total_ks:        s.total_ks       || 0,
+        total_bs:        s.total_bs       || 0,
+        qualify_throws:  s.qualify_throws || 0,
+        qualify_sixes:   s.qualify_sixes  || 0,
+        elim_throws:     s.elim_throws    || 0,
+        elim_bulls:      s.elim_bulls     || 0,
+      };
+    });
     if (statsRows.length) await safe(dbUpsert('global_stats', statsRows));
   } catch(es) { console.warn('[sync] global_stats:', es.message); }
 
@@ -4000,56 +4005,58 @@ function saveTournament() {
   };
   ADMIN.history.unshift(snap);
 
-  // Update global stats with full breakdown
+  // Update global stats — keyed by "tournamentName|||playerName" for per-tournament rows
+  const tKey = (ADMIN.tName || 'Torneo').replace(/\|/g, '_');
   g.players.forEach(p => {
-    if (!ADMIN.global[p.name]) ADMIN.global[p.name] = {
+    const key = tKey + '|||' + p.name;
+    if (!ADMIN.global[key]) ADMIN.global[key] = {
       wins: 0, losses: 0, tournaments: 0, qpts: 0,
       total_ks: 0, total_bs: 0,
       qualify_throws: 0, qualify_sixes: 0,
-      elim_throws: 0, elim_bulls: 0
+      elim_throws: 0, elim_bulls: 0,
+      _tName: ADMIN.tName || 'Torneo',
+      _pName: p.name
     };
-    const gs = ADMIN.global[p.name];
-    gs.tournaments++;
-    gs.qpts += qTotal(p.id);
-    if (g.champion === p.name) gs.wins++;
+    const gs = ADMIN.global[key];
+    gs._tName = ADMIN.tName || 'Torneo';
+    gs._pName = p.name;
+    gs.tournaments = 1; // one row = one tournament
+    gs.qpts = qTotal(p.id);
+    gs.wins = (g.champion === p.name) ? 1 : 0;
+    gs.losses = (g.champion && g.champion !== p.name) ? 1 : 0;
 
-    // ── Qualify stats: KS, 6s, total throws ──
+    // Reset and recount — this is a snapshot, not accumulation
+    gs.qualify_throws = 0; gs.qualify_sixes = 0; gs.total_ks = 0;
+    gs.total_bs = 0; gs.elim_throws = 0; gs.elim_bulls = 0;
+
+    // ── Qualify stats ──
     for (let r = 0; r < g.qualCfg.rounds; r++) {
       const throws = (g.qualScores[p.id] || {})['r' + r] || [];
       throws.forEach(v => {
         if (v === null || v === undefined) return;
         gs.qualify_throws++;
-        if (v === QUAL_KS_VAL) gs.total_ks++;          // killshot en clasificación
-        if (v === 6) gs.qualify_sixes++;                // 6 = diana (precisión al centro)
+        if (v === QUAL_KS_VAL) gs.total_ks++;
+        if (v === 6) gs.qualify_sixes++;
       });
     }
 
-    // ── Elimination stats: KS, Bulls, wins/losses per match ──
+    // ── Elimination stats ──
     (g.matches || []).forEach(m => {
-      if (!m.winner) return; // match not played
+      if (!m.winner) return;
       const isP1 = m.p1 === p.name;
       const isP2 = m.p2 === p.name;
       if (!isP1 && !isP2) return;
       const pIdx = isP1 ? 1 : 2;
-
       for (let r = 0; r < 2; r++) {
         const arr = m[`r${r}p${pIdx}`] || [];
         arr.forEach(v => {
           if (v === null || v === undefined) return;
           gs.elim_throws++;
-          if (v === DUEL_KS_VAL)   gs.total_ks++;     // killshot en duelo
-          if (v === DUEL_BULL_VAL)  gs.elim_bulls++;   // bull's eye
-          if (v === DUEL_BULL_VAL)  gs.total_bs++;
+          if (v === DUEL_KS_VAL)  { gs.total_ks++; }
+          if (v === DUEL_BULL_VAL) { gs.elim_bulls++; gs.total_bs++; }
         });
       }
-
-      // win/loss per match
-      if (m.winner === p.name) gs.wins++;   // already counted champion above — careful
-      // Actually only count bracket wins/losses separately from tournament win
     });
-
-    // Losses = tournaments played where not champion
-    if (g.champion && g.champion !== p.name) gs.losses++;
   });
 
   save(); renderHistory();
