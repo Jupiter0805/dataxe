@@ -1854,6 +1854,12 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
         </div>
       </div>
 
+      <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
+        <button class="btn btn-amber" id="fol-apply-btn" onclick="applyFollowerTags()" style="display:none">
+          💾 Aplicar cambios (<span id="fol-pending-count">0</span>)
+        </button>
+      </div>
+
       <div id="fol-list">
         <div class="loading"><div class="spinner"></div> Cargando seguidores...</div>
       </div>
@@ -2749,6 +2755,10 @@ async function renderFollowers() {
   if (!container) return;
   container.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando...</div>';
 
+  // Clear pending on full reload
+  FOL_PENDING = {};
+  updateApplyBtn();
+
   try {
     // Fetch follows
     const follows = await supa(`follows?following_id=eq.${DB_USER_ID}&select=follower_id,player_tag`) || [];
@@ -2878,21 +2888,65 @@ function renderFollowerList() {
     </div>`;
 }
 
-async function setFollowerTag(followerId, tag) {
-  try {
-    await supa(
-      `follows?follower_id=eq.${followerId}&following_id=eq.${DB_USER_ID}`,
-      'PATCH',
-      { player_tag: tag }
-    );
-    // Update cache
-    const row = FOLLOWERS_CACHE.find(f => f.follower_id === followerId);
-    if (row) row.player_tag = tag;
-    renderFollowerList();
-    toast(tag ? `Tag ${tag.toUpperCase()} asignado ✓` : 'Tag eliminado', 'green');
-  } catch(e) {
-    toast('Error: ' + e.message, 'red');
+// Pending changes map: { followerId -> newTag }
+let FOL_PENDING = {};
+
+function setFollowerTag(followerId, tag) {
+  // Mark as pending (null means remove tag)
+  FOL_PENDING[followerId] = tag;
+  // Update cache visually
+  const row = FOLLOWERS_CACHE.find(f => f.follower_id === followerId);
+  if (row) row.player_tag = tag;
+  renderFollowerList();
+  updateApplyBtn();
+}
+
+function updateApplyBtn() {
+  const count = Object.keys(FOL_PENDING).length;
+  const btn   = document.getElementById('fol-apply-btn');
+  const span  = document.getElementById('fol-pending-count');
+  if (!btn) return;
+  if (count > 0) {
+    btn.style.display = 'inline-flex';
+    if (span) span.textContent = count;
+  } else {
+    btn.style.display = 'none';
   }
+}
+
+async function applyFollowerTags() {
+  const entries = Object.entries(FOL_PENDING);
+  if (!entries.length) return;
+
+  const btn = document.getElementById('fol-apply-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Guardando...'; }
+
+  let ok = 0, fail = 0;
+  for (const [followerId, tag] of entries) {
+    try {
+      await supa(
+        `follows?follower_id=eq.${followerId}&following_id=eq.${DB_USER_ID}`,
+        'PATCH',
+        { player_tag: tag }
+      );
+      // Also update FOLLOWER_TAG_MAP for immediate use in player search
+      if (tag) FOLLOWER_TAG_MAP[followerId] = tag;
+      else delete FOLLOWER_TAG_MAP[followerId];
+      ok++;
+    } catch(e) {
+      console.warn('[fol] tag error', followerId, e.message);
+      fail++;
+    }
+  }
+
+  FOL_PENDING = {};
+  if (btn) { btn.disabled = false; btn.style.display = 'none'; }
+  toast(
+    fail === 0
+      ? `✓ ${ok} tag${ok !== 1 ? 's' : ''} guardado${ok !== 1 ? 's' : ''}`
+      : `${ok} guardados, ${fail} con error`,
+    fail === 0 ? 'green' : 'red'
+  );
 }
 
 // ─────────────────────────────────
