@@ -2750,11 +2750,17 @@ async function renderFollowers() {
   container.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando...</div>';
 
   try {
-    // Fetch follows with follower user info
-    const rows = await supa(
-      `follows?following_id=eq.${DB_USER_ID}&select=follower_id,player_tag,users!follower_id(id,username,club_name,avatar_url)`
-    ) || [];
-    FOLLOWERS_CACHE = rows;
+    // Fetch follows
+    const follows = await supa(`follows?following_id=eq.${DB_USER_ID}&select=follower_id,player_tag`) || [];
+    if (!follows.length) { FOLLOWERS_CACHE = []; renderFollowerList(); return; }
+
+    // Fetch user info for each follower
+    const ids = follows.map(f => f.follower_id).join(',');
+    const users = await supa(`users?id=in.(${ids})&select=id,username,club_name,avatar_url`) || [];
+    const userMap = {};
+    users.forEach(u => { userMap[u.id] = u; });
+
+    FOLLOWERS_CACHE = follows.map(f => ({ ...f, users: userMap[f.follower_id] || {} }));
     renderFollowerList();
   } catch(e) {
     container.innerHTML = `<div class="card" style="color:var(--red);padding:2rem;text-align:center">Error: ${e.message}</div>`;
