@@ -2850,39 +2850,59 @@ function renderFollowerList() {
       ${list.map(f => {
         const u = f.users || {};
         const tag = f.player_tag;
+        const isPending = FOL_PENDING.hasOwnProperty(f.follower_id);
+        const editing = FOL_EDITING === f.follower_id;
         const avatar = u.avatar_url
           ? `<img src="${u.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
           : `<span style="font-size:1.1rem">🎯</span>`;
+
         const tagBadge = tag === 'pro'
           ? `<span class="badge badge-pro">⚡ PRO</span>`
           : tag === 'semi'
             ? `<span class="badge badge-semi">🎯 SEMI</span>`
-            : `<span style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:600">Sin tag</span>`;
-        return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06)">
-          <div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">${avatar}</div>
+            : `<span style="font-size:11px;color:rgba(255,255,255,0.25);font-style:italic">Sin tag</span>`;
+
+        const editControls = editing ? `
+          <div style="display:flex;align-items:center;gap:6px">
+            <button onclick="setFollowerTag('${f.follower_id}','pro')"
+              style="padding:5px 12px;border-radius:20px;border:1px solid ${tag==='pro'?'#facc15':'rgba(255,255,255,0.15)'};
+                background:${tag==='pro'?'rgba(250,204,21,0.15)':'transparent'};
+                color:${tag==='pro'?'#facc15':'rgba(255,255,255,0.5)'};
+                font-size:11px;font-weight:700;cursor:pointer">⚡ PRO</button>
+            <button onclick="setFollowerTag('${f.follower_id}','semi')"
+              style="padding:5px 12px;border-radius:20px;border:1px solid ${tag==='semi'?'#34d399':'rgba(255,255,255,0.15)'};
+                background:${tag==='semi'?'rgba(52,211,153,0.15)':'transparent'};
+                color:${tag==='semi'?'#34d399':'rgba(255,255,255,0.5)'};
+                font-size:11px;font-weight:700;cursor:pointer">🎯 SEMI</button>
+            ${tag ? `<button onclick="setFollowerTag('${f.follower_id}',null)"
+              style="padding:5px 10px;border-radius:20px;border:1px solid rgba(255,80,80,0.3);
+                background:transparent;color:rgba(255,80,80,0.6);font-size:11px;cursor:pointer">✕ Quitar</button>` : ''}
+            <button onclick="cancelEdit()" style="padding:5px 10px;border-radius:20px;
+              border:1px solid rgba(255,255,255,0.1);background:transparent;
+              color:rgba(255,255,255,0.3);font-size:11px;cursor:pointer">Cancelar</button>
+          </div>` : `
+          <div style="display:flex;align-items:center;gap:10px">
+            ${tagBadge}
+            ${isPending ? '<span style="font-size:10px;color:var(--accent);font-weight:700">● pendiente</span>' : ''}
+            <button onclick="startEdit('${f.follower_id}')"
+              style="padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);
+                background:transparent;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;
+                transition:all 0.15s" onmouseover="this.style.borderColor='rgba(196,135,58,0.4)';this.style.color='var(--accent)'"
+              onmouseout="this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='rgba(255,255,255,0.5)'">
+              ✏️ Editar</button>
+          </div>`;
+
+        return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;
+            border-bottom:1px solid rgba(255,255,255,0.06);
+            background:${editing ? 'rgba(196,135,58,0.04)' : 'transparent'};
+            transition:background 0.15s">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);
+            display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">${avatar}</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:700;font-size:14px">@${u.username || '—'}</div>
             ${u.club_name ? `<div style="font-size:11px;color:rgba(255,255,255,0.4)">${u.club_name}</div>` : ''}
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            ${tagBadge}
-            <div style="display:flex;gap:4px">
-              <button onclick="setFollowerTag('${f.follower_id}','pro')"
-                style="padding:4px 10px;border-radius:20px;border:1px solid ${tag==='pro'?'#facc15':'rgba(255,255,255,0.15)'};
-                  background:${tag==='pro'?'rgba(250,204,21,0.15)':'transparent'};
-                  color:${tag==='pro'?'#facc15':'rgba(255,255,255,0.4)'};
-                  font-size:10px;font-weight:700;cursor:pointer;transition:all 0.15s">⚡ PRO</button>
-              <button onclick="setFollowerTag('${f.follower_id}','semi')"
-                style="padding:4px 10px;border-radius:20px;border:1px solid ${tag==='semi'?'#34d399':'rgba(255,255,255,0.15)'};
-                  background:${tag==='semi'?'rgba(52,211,153,0.15)':'transparent'};
-                  color:${tag==='semi'?'#34d399':'rgba(255,255,255,0.4)'};
-                  font-size:10px;font-weight:700;cursor:pointer;transition:all 0.15s">🎯 SEMI</button>
-              ${tag ? `<button onclick="setFollowerTag('${f.follower_id}',null)"
-                style="padding:4px 8px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);
-                  background:transparent;color:rgba(255,255,255,0.3);
-                  font-size:10px;cursor:pointer">✕</button>` : ''}
-            </div>
-          </div>
+          ${editControls}
         </div>`;
       }).join('')}
     </div>`;
@@ -2890,6 +2910,17 @@ function renderFollowerList() {
 
 // Pending changes map: { followerId -> newTag }
 let FOL_PENDING = {};
+let FOL_EDITING = null;  // followerId currently being edited
+
+function startEdit(followerId) {
+  FOL_EDITING = followerId;
+  renderFollowerList();
+}
+
+function cancelEdit() {
+  FOL_EDITING = null;
+  renderFollowerList();
+}
 
 function setFollowerTag(followerId, tag) {
   // Mark as pending (null means remove tag)
@@ -2897,6 +2928,7 @@ function setFollowerTag(followerId, tag) {
   // Update cache visually
   const row = FOLLOWERS_CACHE.find(f => f.follower_id === followerId);
   if (row) row.player_tag = tag;
+  FOL_EDITING = null;  // close edit mode after selection
   renderFollowerList();
   updateApplyBtn();
 }
