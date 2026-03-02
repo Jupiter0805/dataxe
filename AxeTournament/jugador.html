@@ -1890,7 +1890,7 @@ async function renderStats() {
                   const qp = (s.qualify_throws||0) > 0 ? Math.round(((s.qualify_sixes||0)/(s.qualify_throws||1))*100) : 0;
                   const bp = (s.elim_throws||0) > 0 ? Math.round(((s.elim_bulls||0)/(s.elim_throws||1))*100) : 0;
                   return `<tr>
-                    <td class="name-cell">${s.tournament_name || "—"}</td>
+                    <td class="name-cell">${s.tournament_name || '—'}</td>
                     <td>${s.tournaments||0}</td>
                     <td class="win-cell">${s.wins||0}</td>
                     <td style="color:var(--red)">${s.losses||0}</td>
