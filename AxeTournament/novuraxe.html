@@ -3943,11 +3943,15 @@ async function renderRanking() {
   container.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando ranking...</div>';
 
   try {
-    // Fetch by organizer_id + fallback to user_id for legacy rows
-    const [byOrg, byUser] = await Promise.all([
+    // Fetch stats + follower tags in parallel
+    const [byOrg, byUser, followTags] = await Promise.all([
       dbGet(`global_stats?organizer_id=eq.${DB_USER_ID}&select=*`).catch(() => []),
       dbGet(`global_stats?user_id=eq.${DB_USER_ID}&select=*`).catch(() => []),
+      dbGet(`follows?following_id=eq.${DB_USER_ID}&select=follower_id,player_tag`).catch(() => []),
     ]);
+    // Build map: user_id -> player_tag
+    window.RK_TAG_MAP = {};
+    (followTags||[]).forEach(f => { if (f.player_tag) window.RK_TAG_MAP[f.follower_id] = f.player_tag; });
     // Merge deduplicating by id
     const seen = new Set();
     RK_CACHE = [...(byOrg||[]), ...(byUser||[])].filter(r => {
@@ -4001,10 +4005,11 @@ function renderRankingFromCache() {
   rows.forEach(r => {
     const name = r.player_name || '—';
     if (!agg[name]) agg[name] = {
-      name, tournaments: 0, wins: 0, losses: 0,
+      name, user_id: r.user_id, tournaments: 0, wins: 0, losses: 0,
       qpts: 0, ks: 0, bs: 0, champs: 0
     };
     const a = agg[name];
+    if (r.user_id && r.user_id !== DB_USER_ID) a.user_id = r.user_id; // prefer player's own user_id
     a.tournaments += r.tournaments    || 0;
     a.wins        += r.wins           || 0;
     a.losses      += r.losses         || 0;
@@ -4016,14 +4021,13 @@ function renderRankingFromCache() {
 
   let players = Object.values(agg);
 
-  // Tab filter — requires level info stored in player data
-  // For now: all tabs show same data (level not stored in global_stats)
-  // We'll mark PRO/SEMI from current active tournament as hint
-  const activePro  = new Set((ADMIN.pro?.players  || []).filter(p => (p.level||'pro')==='pro').map(p=>p.name));
-  const activeSemi = new Set((ADMIN.semi?.players || []).filter(p => p.level==='semi').map(p=>p.name));
+  // Tab filter using follower tags (source of truth)
+  const tagMap = window.RK_TAG_MAP || {};
+  // Assign tag to each player from their user_id
+  players.forEach(p => { p.tag = tagMap[p.user_id] || null; });
 
-  if (CUR_RANK_TAB === 'pro')  players = players.filter(p => activePro.has(p.name)  || (!activeSemi.has(p.name) && !activePro.has(p.name)));
-  if (CUR_RANK_TAB === 'semi') players = players.filter(p => activeSemi.has(p.name));
+  if (CUR_RANK_TAB === 'pro')  players = players.filter(p => p.tag === 'pro');
+  if (CUR_RANK_TAB === 'semi') players = players.filter(p => p.tag === 'semi');
 
   // Sort: wins desc, then qpts desc
   players.sort((a, b) => b.wins - a.wins || b.qpts - a.qpts);
@@ -4044,12 +4048,17 @@ function renderRankingFromCache() {
       ? `<span class="badge badge-champ" style="font-size:8px">🏆 ${p.champs}</span>` : '';
     const ksBadge  = p.ks > 0 ? `<span class="mini-badge ks-badge">🪓 ${p.ks}</span>`  : '';
     const bullBadge= p.bs > 0 ? `<span class="mini-badge bull-badge">🎯 ${p.bs}</span>` : '';
+    const tagBadge = p.tag === 'pro'
+      ? `<span class="badge badge-pro" style="font-size:8px">⚡ PRO</span>`
+      : p.tag === 'semi'
+        ? `<span class="badge badge-semi" style="font-size:8px">🎯 SEMI</span>`
+        : '';
     return `<tr class="${cls}">
       <td><span class="rank-n">${rank}</span></td>
       <td><div style="display:flex;align-items:center;gap:6px">
         <div>
           <div class="p-name-cell" style="display:flex;align-items:center;gap:5px">
-            ${p.name} ${champBadge}
+            ${tagBadge} ${p.name} ${champBadge}
           </div>
           <div style="display:flex;gap:3px;margin-top:2px">${ksBadge}${bullBadge}</div>
         </div>
