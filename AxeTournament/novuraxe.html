@@ -3626,9 +3626,19 @@ async function renderRanking() {
   container.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando ranking...</div>';
 
   try {
-    // Fetch all global_stats for this organizer's players
-    // Fetch all stats for this organizer using organizer_id field
-    RK_CACHE = await dbGet(`global_stats?organizer_id=eq.${DB_USER_ID}&select=*&order=updated_at.desc`) || [];
+    // Fetch by organizer_id + fallback to user_id for legacy rows
+    const [byOrg, byUser] = await Promise.all([
+      dbGet(`global_stats?organizer_id=eq.${DB_USER_ID}&select=*`).catch(() => []),
+      dbGet(`global_stats?user_id=eq.${DB_USER_ID}&select=*`).catch(() => []),
+    ]);
+    // Merge deduplicating by id
+    const seen = new Set();
+    RK_CACHE = [...(byOrg||[]), ...(byUser||[])].filter(r => {
+      if (seen.has(r.id)) return false;
+      seen.add(r.id);
+      return true;
+    });
+    RK_CACHE.sort((a,b) => new Date(b.updated_at||0) - new Date(a.updated_at||0));
 
     // Also fetch stats for linked players (user_id matches a player account)
     // These are stats saved by this organizer (player_name key)
@@ -3662,7 +3672,7 @@ function renderRankingFromCache() {
   // Filter rows by date
   let rows = RK_CACHE.filter(r => {
     if (!filterYear && !filterMonth) return true;
-    const d = r.created_at ? new Date(r.created_at) : null;
+    const d = r.updated_at ? new Date(r.updated_at) : null;
     if (!d) return !filterYear && !filterMonth;
     if (filterYear  && d.getFullYear()  !== parseInt(filterYear))  return false;
     if (filterMonth && (d.getMonth()+1) !== parseInt(filterMonth)) return false;
