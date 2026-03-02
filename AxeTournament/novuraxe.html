@@ -1434,6 +1434,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       <button class="t-nav-btn" data-page="bracket" onclick="showPage('bracket')">Bracket</button>
       <button class="t-nav-btn" data-page="ranking" onclick="showPage('ranking')">Ranking</button>
       <button class="t-nav-btn" data-page="history" onclick="showPage('history')">Historial</button>
+      <button class="t-nav-btn" data-page="followers" onclick="showPage('followers')">👥 Seguidores</button>
       <button class="t-nav-btn" data-page="posts" onclick="showPage('posts')">📢 Publicaciones</button>
       <button class="t-nav-btn" data-page="settings" onclick="showPage('settings')">Config</button>
     </div>
@@ -1833,7 +1834,32 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     </div>
 
 
-    <!-- ══ PUBLICACIONES ══ -->
+    <!-- ══ SEGUIDORES ══ -->
+    <div class="page" id="pg-followers">
+      <div class="pg-title">Segui<em>dores</em></div>
+      <div class="pg-sub">Gestiona y etiqueta a los jugadores que te siguen</div>
+
+      <div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center">
+        <input type="text" id="fol-search" class="f-input" placeholder="🔍 Buscar seguidor..."
+          oninput="filterFollowers(this.value)" style="max-width:280px">
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <button class="btn btn-sm" id="fol-filter-all" onclick="setFollowerFilter('all')"
+            style="background:rgba(196,135,58,0.2);color:var(--accent);border:1px solid rgba(196,135,58,0.3)">Todos</button>
+          <button class="btn btn-sm" id="fol-filter-pro" onclick="setFollowerFilter('pro')"
+            style="background:transparent;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1)">⚡ PRO</button>
+          <button class="btn btn-sm" id="fol-filter-semi" onclick="setFollowerFilter('semi')"
+            style="background:transparent;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1)">🎯 SEMI</button>
+          <button class="btn btn-sm" id="fol-filter-none" onclick="setFollowerFilter('none')"
+            style="background:transparent;color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1)">Sin tag</button>
+        </div>
+      </div>
+
+      <div id="fol-list">
+        <div class="loading"><div class="spinner"></div> Cargando seguidores...</div>
+      </div>
+    </div>
+
+  <!-- ══ PUBLICACIONES ══ -->
     <div class="page" id="pg-posts">
       <div class="pg-title">Publi<em>caciones</em></div>
       <div class="pg-sub">Anuncia torneos y novedades a tus seguidores</div>
@@ -2512,6 +2538,7 @@ async function confirmReset() {
 }
 
 function launchApp() {
+  loadFollowerTags();
   document.getElementById('scr-login').classList.remove('on');
   document.getElementById('scr-app').classList.add('on');
   document.getElementById('t-club-name').textContent = ADMIN.club || CUR_USER;
@@ -2582,6 +2609,7 @@ function renderPage(p) {
   if (p === 'history')   renderHistory();
   if (p === 'settings')  renderSettings();
   if (p === 'posts')     renderPosts();
+  if (p === 'followers') renderFollowers();
 }
 
 function renderAll() {
@@ -2708,6 +2736,173 @@ function setAddLevel(lvl) {
   semiBt.className = 'btn btn-sm lvl-btn' + (lvl === 'semi' ? ' lvl-btn-on lvl-semi-active' : '');
 }
 
+
+// ─────────────────────────────────
+// SEGUIDORES + TAGS
+// ─────────────────────────────────
+let FOLLOWERS_CACHE = [];   // { follower_id, player_tag, users: { username, club_name, avatar_url } }
+let FOL_FILTER = 'all';
+let FOL_SEARCH = '';
+
+async function renderFollowers() {
+  const container = document.getElementById('fol-list');
+  if (!container) return;
+  container.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando...</div>';
+
+  try {
+    // Fetch follows with follower user info
+    const rows = await supa(
+      `follows?following_id=eq.${DB_USER_ID}&select=follower_id,player_tag,users!follower_id(id,username,club_name,avatar_url)`
+    ) || [];
+    FOLLOWERS_CACHE = rows;
+    renderFollowerList();
+  } catch(e) {
+    container.innerHTML = `<div class="card" style="color:var(--red);padding:2rem;text-align:center">Error: ${e.message}</div>`;
+  }
+}
+
+function setFollowerFilter(f) {
+  FOL_FILTER = f;
+  ['all','pro','semi','none'].forEach(k => {
+    const btn = document.getElementById('fol-filter-' + k);
+    if (!btn) return;
+    const active = k === f;
+    btn.style.background    = active ? 'rgba(196,135,58,0.2)' : 'transparent';
+    btn.style.color         = active ? 'var(--accent)' : 'rgba(255,255,255,0.5)';
+    btn.style.borderColor   = active ? 'rgba(196,135,58,0.3)' : 'rgba(255,255,255,0.1)';
+  });
+  renderFollowerList();
+}
+
+function filterFollowers(q) {
+  FOL_SEARCH = q.toLowerCase();
+  renderFollowerList();
+}
+
+function renderFollowerList() {
+  const container = document.getElementById('fol-list');
+  if (!container) return;
+
+  let list = FOLLOWERS_CACHE;
+
+  // Search filter
+  if (FOL_SEARCH) {
+    list = list.filter(f => {
+      const u = f.users || {};
+      return (u.username||'').toLowerCase().includes(FOL_SEARCH)
+          || (u.club_name||'').toLowerCase().includes(FOL_SEARCH);
+    });
+  }
+
+  // Tag filter
+  if (FOL_FILTER === 'pro')  list = list.filter(f => f.player_tag === 'pro');
+  if (FOL_FILTER === 'semi') list = list.filter(f => f.player_tag === 'semi');
+  if (FOL_FILTER === 'none') list = list.filter(f => !f.player_tag);
+
+  if (!list.length) {
+    container.innerHTML = `<div class="card" style="color:var(--ink3);text-align:center;padding:3rem">
+      <div style="font-size:2rem;margin-bottom:8px">👥</div>
+      ${FOLLOWERS_CACHE.length ? 'Sin resultados para este filtro' : 'Aún no tienes seguidores'}
+    </div>`;
+    return;
+  }
+
+  const proCount  = FOLLOWERS_CACHE.filter(f => f.player_tag === 'pro').length;
+  const semiCount = FOLLOWERS_CACHE.filter(f => f.player_tag === 'semi').length;
+  const untagged  = FOLLOWERS_CACHE.filter(f => !f.player_tag).length;
+
+  container.innerHTML = `
+    <div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap">
+      <div class="stat-card" style="flex:1;min-width:100px;text-align:center;padding:0.875rem">
+        <div style="font-size:1.5rem;font-weight:800;color:#fff">${FOLLOWERS_CACHE.length}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Total</div>
+      </div>
+      <div class="stat-card" style="flex:1;min-width:100px;text-align:center;padding:0.875rem">
+        <div style="font-size:1.5rem;font-weight:800;color:#facc15">${proCount}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">⚡ PRO</div>
+      </div>
+      <div class="stat-card" style="flex:1;min-width:100px;text-align:center;padding:0.875rem">
+        <div style="font-size:1.5rem;font-weight:800;color:#34d399">${semiCount}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">🎯 SEMI</div>
+      </div>
+      <div class="stat-card" style="flex:1;min-width:100px;text-align:center;padding:0.875rem">
+        <div style="font-size:1.5rem;font-weight:800;color:rgba(255,255,255,0.3)">${untagged}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px">Sin tag</div>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      ${list.map(f => {
+        const u = f.users || {};
+        const tag = f.player_tag;
+        const avatar = u.avatar_url
+          ? `<img src="${u.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+          : `<span style="font-size:1.1rem">🎯</span>`;
+        const tagBadge = tag === 'pro'
+          ? `<span class="badge badge-pro">⚡ PRO</span>`
+          : tag === 'semi'
+            ? `<span class="badge badge-semi">🎯 SEMI</span>`
+            : `<span style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:600">Sin tag</span>`;
+        return `<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.06)">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">${avatar}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:14px">@${u.username || '—'}</div>
+            ${u.club_name ? `<div style="font-size:11px;color:rgba(255,255,255,0.4)">${u.club_name}</div>` : ''}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            ${tagBadge}
+            <div style="display:flex;gap:4px">
+              <button onclick="setFollowerTag('${f.follower_id}','pro')"
+                style="padding:4px 10px;border-radius:20px;border:1px solid ${tag==='pro'?'#facc15':'rgba(255,255,255,0.15)'};
+                  background:${tag==='pro'?'rgba(250,204,21,0.15)':'transparent'};
+                  color:${tag==='pro'?'#facc15':'rgba(255,255,255,0.4)'};
+                  font-size:10px;font-weight:700;cursor:pointer;transition:all 0.15s">⚡ PRO</button>
+              <button onclick="setFollowerTag('${f.follower_id}','semi')"
+                style="padding:4px 10px;border-radius:20px;border:1px solid ${tag==='semi'?'#34d399':'rgba(255,255,255,0.15)'};
+                  background:${tag==='semi'?'rgba(52,211,153,0.15)':'transparent'};
+                  color:${tag==='semi'?'#34d399':'rgba(255,255,255,0.4)'};
+                  font-size:10px;font-weight:700;cursor:pointer;transition:all 0.15s">🎯 SEMI</button>
+              ${tag ? `<button onclick="setFollowerTag('${f.follower_id}',null)"
+                style="padding:4px 8px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);
+                  background:transparent;color:rgba(255,255,255,0.3);
+                  font-size:10px;cursor:pointer">✕</button>` : ''}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+async function setFollowerTag(followerId, tag) {
+  try {
+    await supa(
+      `follows?follower_id=eq.${followerId}&following_id=eq.${DB_USER_ID}`,
+      'PATCH',
+      { player_tag: tag }
+    );
+    // Update cache
+    const row = FOLLOWERS_CACHE.find(f => f.follower_id === followerId);
+    if (row) row.player_tag = tag;
+    renderFollowerList();
+    toast(tag ? `Tag ${tag.toUpperCase()} asignado ✓` : 'Tag eliminado', 'green');
+  } catch(e) {
+    toast('Error: ' + e.message, 'red');
+  }
+}
+
+// ─────────────────────────────────
+// Enrich player search with follower tag
+// ─────────────────────────────────
+let FOLLOWER_TAG_MAP = {};  // follower_id -> player_tag
+
+async function loadFollowerTags() {
+  if (!DB_USER_ID) return;
+  try {
+    const rows = await supa(`follows?following_id=eq.${DB_USER_ID}&select=follower_id,player_tag`) || [];
+    FOLLOWER_TAG_MAP = {};
+    rows.forEach(r => { if (r.player_tag) FOLLOWER_TAG_MAP[r.follower_id] = r.player_tag; });
+  } catch(e) { /* silent */ }
+}
+
 async function qsSearchUsers(q) {
   const res = document.getElementById('qs-results');
   if (!q || q.length < 2) { res.style.display = 'none'; QS_SELECTED = null; return; }
@@ -2742,7 +2937,14 @@ async function qsSearchUsers(q) {
         <div style="font-size:13px;font-weight:700;color:#fff">@${u.username}</div>
         ${u.club_name ? `<div style="font-size:11px;color:rgba(255,255,255,0.45)">${u.club_name}</div>` : ''}
       </div>
-      <button class="btn btn-amber btn-xs" style="pointer-events:none">+ Añadir</button>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+        ${FOLLOWER_TAG_MAP[u.id] === 'pro'
+          ? '<span class=\"badge badge-pro\" style=\"font-size:8px\">⚡ PRO</span>'
+          : FOLLOWER_TAG_MAP[u.id] === 'semi'
+            ? '<span class=\"badge badge-semi\" style=\"font-size:8px\">🎯 SEMI</span>'
+            : ''}
+        <button class="btn btn-amber btn-xs" style="pointer-events:none">+ Añadir</button>
+      </div>
     </div>`).join('');
 }
 
@@ -2753,7 +2955,8 @@ function qsSelectUser(userId, username) {
     document.getElementById('qs-results').style.display = 'none';
     return;
   }
-  G().players.push({ id: uid(), name: username, user_id: userId, username, level: ADD_LEVEL });
+  const autoLevel = FOLLOWER_TAG_MAP[userId] || ADD_LEVEL;
+  G().players.push({ id: uid(), name: username, user_id: userId, username, level: autoLevel });
   save(); renderQEntryList();
   const lvlLabel = ADD_LEVEL === 'pro' ? 'PRO' : 'SEMI PRO';
   toast(username + ' [' + lvlLabel + '] añadido ✓', 'green');
@@ -2803,7 +3006,14 @@ async function searchUsers(q) {
         <div style="font-size:13px;font-weight:700;color:var(--ink)">@${u.username}</div>
         ${u.club_name ? `<div style="font-size:11px;color:var(--ink4)">${u.club_name}</div>` : ''}
       </div>
-      <span style="margin-left:auto;font-size:11px;color:var(--accent);font-weight:600">Seleccionar</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+        ${FOLLOWER_TAG_MAP[u.id] === 'pro'
+          ? '<span class=\"badge badge-pro\" style=\"font-size:8px\">⚡ PRO</span>'
+          : FOLLOWER_TAG_MAP[u.id] === 'semi'
+            ? '<span class=\"badge badge-semi\" style=\"font-size:8px\">🎯 SEMI</span>'
+            : ''}
+        <span style="font-size:11px;color:var(--accent);font-weight:600">Seleccionar</span>
+      </div>
     </div>`).join('');
 }
 
@@ -2836,6 +3046,7 @@ function confirmAddPlayer() {
   if (AP_SELECTED_USER) {
     player.user_id  = AP_SELECTED_USER.user_id;
     player.username = AP_SELECTED_USER.username;
+    player.level    = FOLLOWER_TAG_MAP[AP_SELECTED_USER.user_id] || ADD_LEVEL;
   }
   G().players.push(player);
   save(); closeModal('m-add-player'); clearAddPlayer(); renderQEntryList();
