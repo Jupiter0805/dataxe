@@ -4103,7 +4103,16 @@ function renderHistory() {
   if (!gs || !Object.keys(gs).length) {
     gr.innerHTML = `<div class="card" style="color:var(--ink3);text-align:center;padding:2rem">Guarda torneos para acumular datos</div>`;
   } else {
-    const sorted = Object.entries(gs).sort((a, b) => b[1].wins - a[1].wins || b[1].qpts - a[1].qpts);
+    // Aggregate by player (sum across all tournaments)
+    const playerAgg = {};
+    Object.entries(gs).forEach(([key, s]) => {
+      const pName = s._pName || (key.includes('|||') ? key.split('|||')[1] : key);
+      if (!playerAgg[pName]) playerAgg[pName] = { wins: 0, tournaments: 0, qpts: 0 };
+      playerAgg[pName].wins       += s.wins       || 0;
+      playerAgg[pName].tournaments += s.tournaments || 0;
+      playerAgg[pName].qpts       += s.qpts        || 0;
+    });
+    const sorted = Object.entries(playerAgg).sort((a, b) => b[1].wins - a[1].wins || b[1].qpts - a[1].qpts);
     const rows = sorted.map(([name, s], i) => {
       const cls = i < 3 ? `rank-${i+1}` : '';
       return `<tr class="${cls}"><td><span class="rank-n">${i+1}</span></td><td class="p-name-cell">${name}</td>
