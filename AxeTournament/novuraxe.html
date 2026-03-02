@@ -2316,6 +2316,7 @@ async function syncToSupabase() {
       const tName      = s._tName || (key.includes('|||') ? key.split('|||')[0] : (ADMIN.tName || 'Torneo'));
       return {
         user_id:         playerUserMap[playerName] || DB_USER_ID,
+        organizer_id:    DB_USER_ID,
         player_name:     playerName,
         tournament_name: tName,
         tournaments:     s.tournaments    || 0,
@@ -3626,35 +3627,14 @@ async function renderRanking() {
 
   try {
     // Fetch all global_stats for this organizer's players
-    // Primary: stats saved directly by organizer
-    const ownStats = await dbGet(`global_stats?user_id=eq.${DB_USER_ID}&select=*&order=created_at.desc`) || [];
-    
-    // Secondary: stats saved under player accounts for this organizer's tournament names
-    // Get tournament names this organizer has run
-    const myTournaments = await dbGet(`tournaments?user_id=eq.${DB_USER_ID}&select=name`) || [];
-    const myTNames = myTournaments.map(t => t.name).filter(Boolean);
-    
-    let linkedStats = [];
-    if (myTNames.length) {
-      // Fetch stats where tournament_name matches one of our tournaments (different user_id = player account)
-      const tFilter = myTNames.map(n => `tournament_name.eq.${encodeURIComponent(n)}`).join(',');
-      linkedStats = await dbGet(`global_stats?or=(${tFilter})&user_id=neq.${DB_USER_ID}&select=*`) || [];
-    }
-    
-    // Merge, deduplicate by (player_name + tournament_name)
-    const seen = new Set();
-    RK_CACHE = [...ownStats, ...linkedStats].filter(r => {
-      const key = (r.player_name||'') + '|||' + (r.tournament_name||'');
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    // Fetch all stats for this organizer using organizer_id field
+    RK_CACHE = await dbGet(`global_stats?organizer_id=eq.${DB_USER_ID}&select=*&order=updated_at.desc`) || [];
 
     // Also fetch stats for linked players (user_id matches a player account)
     // These are stats saved by this organizer (player_name key)
     // Populate year filter from data
     const years = [...new Set(RK_CACHE
-      .map(r => r.created_at ? new Date(r.created_at).getFullYear() : null)
+      .map(r => r.updated_at ? new Date(r.updated_at).getFullYear() : null)
       .filter(Boolean)
     )].sort((a,b) => b - a);
 
