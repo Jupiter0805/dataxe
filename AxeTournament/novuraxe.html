@@ -1732,13 +1732,30 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     <!-- ──── RANKING ──── -->
     <div class="page" id="pg-ranking">
       <div class="pg-title">Ranki<em>ng</em></div>
-      <div class="pg-sub" id="rk-sub">Clasificación del torneo activo</div>
+      <div class="pg-sub">Histórico de todos los jugadores con este organizador</div>
 
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center">
+      <!-- Toolbar: PDF + filtros -->
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center">
         <button class="btn btn-amber" onclick="expPDFRanking()">📄 PDF Completo</button>
+        <div style="display:flex;gap:6px;align-items:center;margin-left:auto">
+          <select id="rk-filter-year" onchange="renderRanking()"
+            style="background:var(--bg2);color:var(--ink);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r);padding:6px 10px;font-size:12px">
+            <option value="">Todos los años</option>
+          </select>
+          <select id="rk-filter-month" onchange="renderRanking()"
+            style="background:var(--bg2);color:var(--ink);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r);padding:6px 10px;font-size:12px">
+            <option value="">Todos los meses</option>
+            <option value="1">Enero</option><option value="2">Febrero</option>
+            <option value="3">Marzo</option><option value="4">Abril</option>
+            <option value="5">Mayo</option><option value="6">Junio</option>
+            <option value="7">Julio</option><option value="8">Agosto</option>
+            <option value="9">Septiembre</option><option value="10">Octubre</option>
+            <option value="11">Noviembre</option><option value="12">Diciembre</option>
+          </select>
+        </div>
       </div>
 
-      <!-- 3 tabs -->
+      <!-- Tabs nivel -->
       <div class="tab-bar" style="margin-bottom:1.25rem">
         <div class="tab-item on" id="rkt-all"  onclick="switchRankTab('all')">🌐 Todos</div>
         <div class="tab-item"     id="rkt-pro"  onclick="switchRankTab('pro')">⚡ PRO</div>
@@ -3591,6 +3608,7 @@ function playerStats(pid, name) {
 }
 
 let CUR_RANK_TAB = 'all';
+let RK_CACHE = []; // cached global_stats rows from Supabase
 
 function switchRankTab(tab) {
   CUR_RANK_TAB = tab;
@@ -3598,74 +3616,143 @@ function switchRankTab(tab) {
     const el = document.getElementById('rkt-' + t);
     if (el) el.classList.toggle('on', t === tab);
   });
-  renderRanking();
+  renderRankingFromCache();
 }
 
-function renderRanking() {
-  document.getElementById('rk-sub').textContent = 'Clasificación del torneo activo';
-  const g = G();
+async function renderRanking() {
+  const container = document.getElementById('rk-content');
+  if (!container) return;
+  container.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando ranking...</div>';
+
+  try {
+    // Fetch all global_stats for this organizer's players
+    RK_CACHE = await dbGet(`global_stats?user_id=eq.${DB_USER_ID}&select=*&order=created_at.desc`) || [];
+
+    // Also fetch stats for linked players (user_id matches a player account)
+    // These are stats saved by this organizer (player_name key)
+    // Populate year filter from data
+    const years = [...new Set(RK_CACHE
+      .map(r => r.created_at ? new Date(r.created_at).getFullYear() : null)
+      .filter(Boolean)
+    )].sort((a,b) => b - a);
+
+    const yrSel = document.getElementById('rk-filter-year');
+    if (yrSel) {
+      const curYr = yrSel.value;
+      yrSel.innerHTML = '<option value="">Todos los años</option>'
+        + years.map(y => `<option value="${y}" ${curYr == y ? 'selected' : ''}>${y}</option>`).join('');
+    }
+  } catch(e) {
+    console.warn('[ranking]', e.message);
+    RK_CACHE = [];
+  }
+
+  renderRankingFromCache();
+}
+
+function renderRankingFromCache() {
   const container = document.getElementById('rk-content');
   if (!container) return;
 
-  // Get players filtered by tab
-  let players = [...g.players];
-  if (CUR_RANK_TAB === 'pro')  players = players.filter(p => (p.level||'pro') === 'pro');
-  if (CUR_RANK_TAB === 'semi') players = players.filter(p => p.level === 'semi');
+  const filterYear  = document.getElementById('rk-filter-year')?.value  || '';
+  const filterMonth = document.getElementById('rk-filter-month')?.value || '';
 
-  // Get matches from the correct bracket group for wins/losses
-  const bracketGroup = CUR_RANK_TAB === 'semi' ? ADMIN.semi : (CUR_RANK_TAB === 'pro' ? ADMIN.pro : null);
-
-  const ranked = players.map(p => {
-    const s = playerStats(p.id, p.name);
-    return { ...p, ...s };
-  }).sort((a, b) => {
-    if (!a.disqualified && !b.disqualified) return b.qpts - a.qpts;
-    return a.disqualified - b.disqualified;
+  // Filter rows by date
+  let rows = RK_CACHE.filter(r => {
+    if (!filterYear && !filterMonth) return true;
+    const d = r.created_at ? new Date(r.created_at) : null;
+    if (!d) return !filterYear && !filterMonth;
+    if (filterYear  && d.getFullYear()  !== parseInt(filterYear))  return false;
+    if (filterMonth && (d.getMonth()+1) !== parseInt(filterMonth)) return false;
+    return true;
   });
 
-  if (!ranked.length) {
-    container.innerHTML = '<div class="card" style="color:var(--ink3);text-align:center;padding:3rem">Sin jugadores</div>';
+  // Aggregate by player_name (sum across tournaments in period)
+  const agg = {};
+  rows.forEach(r => {
+    const name = r.player_name || '—';
+    if (!agg[name]) agg[name] = {
+      name, tournaments: 0, wins: 0, losses: 0,
+      qpts: 0, ks: 0, bs: 0, champs: 0
+    };
+    const a = agg[name];
+    a.tournaments += r.tournaments    || 0;
+    a.wins        += r.wins           || 0;
+    a.losses      += r.losses         || 0;
+    a.qpts        += r.total_qpts     || 0;
+    a.ks          += r.total_ks       || 0;
+    a.bs          += r.total_bs       || 0;
+    if (r.wins > 0) a.champs++;
+  });
+
+  let players = Object.values(agg);
+
+  // Tab filter — requires level info stored in player data
+  // For now: all tabs show same data (level not stored in global_stats)
+  // We'll mark PRO/SEMI from current active tournament as hint
+  const activePro  = new Set((ADMIN.pro?.players  || []).filter(p => (p.level||'pro')==='pro').map(p=>p.name));
+  const activeSemi = new Set((ADMIN.semi?.players || []).filter(p => p.level==='semi').map(p=>p.name));
+
+  if (CUR_RANK_TAB === 'pro')  players = players.filter(p => activePro.has(p.name)  || (!activeSemi.has(p.name) && !activePro.has(p.name)));
+  if (CUR_RANK_TAB === 'semi') players = players.filter(p => activeSemi.has(p.name));
+
+  // Sort: wins desc, then qpts desc
+  players.sort((a, b) => b.wins - a.wins || b.qpts - a.qpts);
+
+  if (!players.length) {
+    const msg = RK_CACHE.length
+      ? 'Sin resultados para este filtro'
+      : 'Aún no hay torneos guardados';
+    container.innerHTML = `<div class="card" style="color:var(--ink3);text-align:center;padding:3rem">${msg}</div>`;
     return;
   }
 
-  const proChamp  = ADMIN.pro?.champion;
-  const semiChamp = ADMIN.semi?.champion;
-
-  const rows = ranked.map((p, i) => {
-    const rank = p.disqualified ? '—' : i + 1 - ranked.slice(0, i).filter(x => x.disqualified).length;
-    const cls  = !p.disqualified && rank <= 3 ? 'rank-' + rank : '';
-    const lvlBadge = (p.level||'pro') === 'pro'
-      ? '<span class="badge badge-pro" style="font-size:8px">PRO</span>'
-      : '<span class="badge badge-semi" style="font-size:8px">SEMI</span>';
-    const isChamp = p.name === proChamp || p.name === semiChamp;
-    const st = p.disqualified
-      ? '<span class="badge badge-dq">DQ</span>'
-      : isChamp
-        ? '<span class="badge badge-champ">🏆</span>'
-        : p.losses > 0
-          ? '<span class="badge badge-elim" style="font-size:9px">Elim.</span>'
-          : '<span class="badge badge-active" style="font-size:9px">Activo</span>';
-    const ksBadge   = p.qks + p.elimKS > 0 ? '<span class="mini-badge ks-badge">🪓 ' + (p.qks + p.elimKS) + '</span>' : '';
-    const bullBadge = p.elimBull > 0 ? '<span class="mini-badge bull-badge">🎯 ' + p.elimBull + '</span>' : '';
-    return '<tr class="' + cls + ' rk-row" onclick="openPlayerStats(\'' + p.id + '\')" '
-      + (p.disqualified ? 'style="opacity:.45"' : '') + '>'
-      + '<td><span class="rank-n">' + rank + '</span></td>'
-      + '<td><div style="display:flex;align-items:center;gap:6px">'
-      + (CUR_RANK_TAB === 'all' ? lvlBadge : '')
-      + '<div><div class="p-name-cell">' + p.name + '</div>'
-      + '<div style="display:flex;gap:3px;margin-top:2px">' + ksBadge + bullBadge + '</div></div>'
-      + '</div></td>'
-      + '<td style="font-family:var(--f-display);color:var(--accent)">' + (p.disqualified ? 'DQ' : p.qpts) + '</td>'
-      + '<td style="font-family:var(--f-display);color:var(--green)">' + p.wins + '</td>'
-      + '<td style="font-family:var(--f-display);color:var(--red)">' + p.losses + '</td>'
-      + '<td>' + st + '</td>'
-      + '</tr>';
+  const tableRows = players.map((p, i) => {
+    const rank = i + 1;
+    const cls  = rank <= 3 ? 'rank-' + rank : '';
+    const wr   = (p.wins + p.losses) > 0 ? Math.round((p.wins / (p.wins + p.losses)) * 100) : 0;
+    const champBadge = p.champs > 0
+      ? `<span class="badge badge-champ" style="font-size:8px">🏆 ${p.champs}</span>` : '';
+    const ksBadge  = p.ks > 0 ? `<span class="mini-badge ks-badge">🪓 ${p.ks}</span>`  : '';
+    const bullBadge= p.bs > 0 ? `<span class="mini-badge bull-badge">🎯 ${p.bs}</span>` : '';
+    return `<tr class="${cls}">
+      <td><span class="rank-n">${rank}</span></td>
+      <td><div style="display:flex;align-items:center;gap:6px">
+        <div>
+          <div class="p-name-cell" style="display:flex;align-items:center;gap:5px">
+            ${p.name} ${champBadge}
+          </div>
+          <div style="display:flex;gap:3px;margin-top:2px">${ksBadge}${bullBadge}</div>
+        </div>
+      </div></td>
+      <td style="color:var(--ink3);font-size:12px">${p.tournaments}</td>
+      <td style="font-family:var(--f-display);color:var(--green)">${p.wins}</td>
+      <td style="font-family:var(--f-display);color:var(--red)">${p.losses}</td>
+      <td style="font-family:var(--f-display);color:var(--accent)">${p.qpts}</td>
+      <td style="font-size:12px;color:${wr>=50?'var(--green)':'var(--red)'};font-weight:700">${wr}%</td>
+    </tr>`;
   }).join('');
 
-  container.innerHTML = '<div class="card" style="padding:0;overflow:hidden"><table class="tbl">'
-    + '<thead><tr><th>#</th><th>Jugador</th><th>Clasif.</th><th>V</th><th>D</th><th>Estado</th></tr></thead>'
-    + '<tbody>' + rows + '</tbody>'
-    + '</table></div>';
+  const periodLabel = filterYear
+    ? (filterMonth ? `${['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(filterMonth)]} ${filterYear}` : filterYear)
+    : 'Histórico completo';
+
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase">${periodLabel} · ${players.length} jugadores</div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="tbl">
+        <thead><tr>
+          <th>#</th><th>Jugador</th><th>T</th>
+          <th style="color:var(--green)">V</th>
+          <th style="color:var(--red)">D</th>
+          <th style="color:var(--accent)">Pts</th>
+          <th>Win%</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>`;
 }
 
 function renderRankGroup(group, container) {
