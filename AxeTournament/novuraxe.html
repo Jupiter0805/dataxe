@@ -2326,15 +2326,17 @@ async function syncToSupabase() {
 
   // ── 3. Global stats — batch upsert ──
   try {
-    const playerUserMap = {};
+    const playerUserMap = { ...FOLLOWER_NAME_MAP };
     [...(ADMIN.pro?.players||[]), ...(ADMIN.semi?.players||[]), ...(G()?.players||[])]
-      .forEach(p => { if (p.user_id) playerUserMap[p.username || p.name] = p.user_id; });
+      .forEach(p => {
+        if (p.user_id) playerUserMap[p.username?.toLowerCase() || p.name.toLowerCase()] = p.user_id;
+      });
 
     const statsRows = Object.entries(ADMIN.global || {}).map(([key, s]) => {
       // key is either "tName|||pName" (new) or just "playerName" (legacy)
       const playerName = s._pName || (key.includes('|||') ? key.split('|||')[1] : key);
       const tName      = s._tName || (key.includes('|||') ? key.split('|||')[0] : (ADMIN.tName || 'Torneo'));
-      const pUserId = playerUserMap[playerName] || DB_USER_ID;
+      const pUserId = playerUserMap[playerName.toLowerCase()] || playerUserMap[playerName] || null;
       return {
         user_id:         pUserId,
         organizer_id:    DB_USER_ID,
@@ -2997,14 +2999,24 @@ async function applyFollowerTags() {
 // ─────────────────────────────────
 // Enrich player search with follower tag
 // ─────────────────────────────────
-let FOLLOWER_TAG_MAP = {};  // follower_id -> player_tag
+let FOLLOWER_TAG_MAP  = {};
+let FOLLOWER_NAME_MAP = {}; // username/name -> user_id for stats linking  // follower_id -> player_tag
 
 async function loadFollowerTags() {
   if (!DB_USER_ID) return;
   try {
     const rows = await supa(`follows?following_id=eq.${DB_USER_ID}&select=follower_id,player_tag`) || [];
-    FOLLOWER_TAG_MAP = {};
+    FOLLOWER_TAG_MAP  = {};
+    FOLLOWER_NAME_MAP = {};
     rows.forEach(r => { if (r.player_tag) FOLLOWER_TAG_MAP[r.follower_id] = r.player_tag; });
+    const ids = rows.map(r => r.follower_id).filter(Boolean);
+    if (ids.length) {
+      const users = await supa(`users?id=in.(${ids.join(',')})&select=id,username,full_name`) || [];
+      users.forEach(u => {
+        if (u.username)  FOLLOWER_NAME_MAP[u.username.toLowerCase()]  = u.id;
+        if (u.full_name) FOLLOWER_NAME_MAP[u.full_name.toLowerCase()] = u.id;
+      });
+    }
   } catch(e) { /* silent */ }
 }
 
