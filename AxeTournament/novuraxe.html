@@ -1805,6 +1805,9 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
           <div class="card-title">Torneo activo</div>
           <div class="f-group"><label class="f-label">Nombre del torneo</label><input class="f-input" type="text" id="cfg-tname" placeholder="Torneo Enero 2025"></div>
           <div class="f-group"><label class="f-label">Fecha</label><input class="f-input" type="date" id="cfg-tdate"></div>
+          <div style="margin-top:1rem">
+            <button class="btn btn-red" onclick="saveSettings()">Guardar</button>
+          </div>
           <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--line)">
             <div class="sec-title" style="margin-bottom:0.5rem">Zona peligrosa</div>
             <button class="btn btn-danger btn-sm" onclick="newTournament()">🆕 Nuevo torneo (borra todo)</button>
@@ -2561,7 +2564,7 @@ async function doLogout() {
     return;
   }
 
-  CUR_USER   = profile.username;
+  CUR_USER   = profile.username;  // must be set BEFORE loadAdmin() so gk() uses correct key
   DB_USER_ID = session.user.id;
   ADMIN      = loadAdmin();
   if (profile.club_name) ADMIN.club = profile.club_name;
@@ -4719,7 +4722,13 @@ function saveSettings() {
   ADMIN.tName = document.getElementById('cfg-tname').value.trim();
   ADMIN.tDate = document.getElementById('cfg-tdate').value;
   document.getElementById('t-club-name').textContent = ADMIN.club || CUR_USER;
-  save(); toast('Configuración guardada', 'green');
+  // Persist immediately to localStorage with correct key
+  localStorage.setItem(gk(), JSON.stringify(ADMIN));
+  // Also push club/logo to Supabase
+  syncToSupabase().catch(e => console.warn('sync error', e));
+  // Refresh dashboard to show updated tournament name
+  renderDash();
+  toast('Configuración guardada ✓', 'green');
 }
 
 async function handleLogo(evt) {
