@@ -909,6 +909,12 @@ input, textarea, select { font-family: inherit; }
           <input class="f-input" type="password" id="r-pass" placeholder="Mínimo 6 caracteres">
           <button class="pass-eye" onclick="togglePass('r-pass',this)">👁</button>
         </div>
+        <!-- TÉRMINOS — añadir antes del botón de crear cuenta -->
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0.875rem 1rem;margin-bottom:1rem;font-size:12px;color:rgba(255,255,255,0.45);line-height:1.6;text-align:center">
+        Al crear una cuenta aceptas automáticamente nuestros
+        <a href="terms.html" target="_blank" style="color:#C4873A;text-decoration:underline;text-underline-offset:3px">Términos de Uso y Política de Privacidad</a>.
+        Novuraxe no se hace responsable de daños derivados de la práctica del lanzamiento de hacha.
+      </div>
       </div>
       <button class="btn-full" onclick="doRegister()">Crear cuenta de jugador</button>
     </div>
@@ -2024,3 +2030,4 @@ async function renderHistory() {
 </script>
 </body>
 </html>
+
