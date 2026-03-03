@@ -1769,37 +1769,17 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     <!-- ──── HISTORIAL ──── -->
     <div class="page" id="pg-history">
       <div class="pg-title">Histo<em>rial</em></div>
-      <div class="pg-sub">Torneos anteriores y ranking global acumulado</div>
+      <div class="pg-sub">Torneos anteriores guardados</div>
 
-      <div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:flex-start">
-
-        <!-- Lista torneos — columna principal -->
-        <div style="flex:1;min-width:300px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
-            <div class="sec-title" style="margin-bottom:0">Torneos guardados</div>
-            <button class="btn btn-amber btn-sm" onclick="saveTournament()">💾 Guardar torneo actual</button>
-          </div>
-          <div id="hist-list">
-            <div class="card" style="color:var(--ink3);text-align:center;padding:2.5rem">
-              <div style="font-size:1.8rem;margin-bottom:8px">📁</div>
-              Aún no hay torneos guardados
-            </div>
-          </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+        <div class="sec-title" style="margin-bottom:0">Torneos guardados</div>
+        <button class="btn btn-amber btn-sm" onclick="saveTournament()">💾 Guardar torneo actual</button>
+      </div>
+      <div id="hist-list">
+        <div class="card" style="color:var(--ink3);text-align:center;padding:2.5rem">
+          <div style="font-size:1.8rem;margin-bottom:8px">📁</div>
+          Aún no hay torneos guardados
         </div>
-
-        <!-- Ranking global — columna lateral -->
-        <div style="width:320px;flex-shrink:0">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
-            <div class="sec-title" style="margin-bottom:0">Ranking global</div>
-            <button class="btn btn-ghost btn-sm" onclick="expPDF('global')">📄 PDF</button>
-          </div>
-          <div id="global-rk">
-            <div class="card" style="color:var(--ink3);text-align:center;padding:2rem;font-size:13px">
-              Guarda torneos para acumular datos
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
 
@@ -4517,31 +4497,6 @@ function renderHistory() {
         </div>
       </div>`;
     }).join('');
-  }
-
-  const gr = document.getElementById('global-rk');
-  const gs = ADMIN.global;
-  if (!gs || !Object.keys(gs).length) {
-    gr.innerHTML = `<div class="card" style="color:var(--ink3);text-align:center;padding:2rem">Guarda torneos para acumular datos</div>`;
-  } else {
-    // Aggregate by player (sum across all tournaments)
-    const playerAgg = {};
-    Object.entries(gs).forEach(([key, s]) => {
-      const pName = s._pName || (key.includes('|||') ? key.split('|||')[1] : key);
-      if (!playerAgg[pName]) playerAgg[pName] = { wins: 0, tournaments: 0, qpts: 0 };
-      playerAgg[pName].wins       += s.wins       || 0;
-      playerAgg[pName].tournaments += s.tournaments || 0;
-      playerAgg[pName].qpts       += s.qpts        || 0;
-    });
-    const sorted = Object.entries(playerAgg).sort((a, b) => b[1].wins - a[1].wins || b[1].qpts - a[1].qpts);
-    const rows = sorted.map(([name, s], i) => {
-      const cls = i < 3 ? `rank-${i+1}` : '';
-      return `<tr class="${cls}"><td><span class="rank-n">${i+1}</span></td><td class="p-name-cell">${name}</td>
-        <td style="color:var(--ink3)">${s.tournaments}</td>
-        <td style="font-family:var(--f-display);font-size:1.2rem;color:var(--accent)">${s.wins}</td>
-        <td style="font-family:var(--f-display);font-size:1.1rem;color:var(--green)">${s.qpts}</td></tr>`;
-    }).join('');
-    gr.innerHTML = `<div class="card" style="padding:0;overflow:hidden"><table class="tbl"><thead><tr><th>#</th><th>Jugador</th><th>Torneos</th><th>Campeonatos</th><th>Pts Acum.</th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 }
 
