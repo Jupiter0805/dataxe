@@ -4281,10 +4281,13 @@ function renderRankDetail(container) {
 }
 
 function openPlayerStats(pid) {
-  const g  = G();
-  const pl = g.players.find(p => p.id === pid);
+  // Find player in pro or semi group
+  let pl = ADMIN.pro?.players?.find(p => p.id === pid)
+        || ADMIN.semi?.players?.find(p => p.id === pid);
   if (!pl) return;
-  const s = playerStats(pid, pl.name);
+  const grpKey = ADMIN.semi?.players?.find(p => p.id === pid) ? 'semi' : 'pro';
+  const grp = ADMIN[grpKey];
+  const s = playerStatsFromGroup(pid, pl.name, grp);
 
   document.getElementById('m-pstats-title').innerHTML = pl.name;
 
