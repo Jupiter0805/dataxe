@@ -4631,99 +4631,110 @@ function viewHist(id) {
   openModal('m-hist');
 }
 
-function _renderHistModal(t) {
-  const gn = t.group === 'pro' ? 'PRO' : 'Semi Pro';
-  document.getElementById('m-hist-title').innerHTML =
-    `${t.name} <span style="color:var(--ink3);font-size:1rem;font-weight:500">${t.date} · ${gn}</span>`;
 
-  const g = t.data;
-
-  // Build ranked players from qual scores
-  const ranked = [...g.players].map(p => {
-    let total = 0;
-    for (let r = 0; r < (g.qualCfg?.rounds || 2); r++) {
-      ((g.qualScores?.[p.id] || {})['r' + r] || []).forEach(v => { if (v) total += v; });
+function buildHistStats(grp) {
+  if (!grp?.players?.length) return [];
+  return [...grp.players].map(p => {
+    let qpts = 0, ks = 0, bs = 0;
+    for (let r = 0; r < (grp.qualCfg?.rounds || 2); r++) {
+      ((grp.qualScores?.[p.id] || {})['r' + r] || []).forEach(v => {
+        if (v === null || v === undefined) return;
+        qpts += v;
+        if (v === QUAL_KS_VAL) ks++;
+      });
     }
-    return { ...p, total };
-  }).sort((a, b) => b.total - a.total);
+    const wins   = grp.champion === p.name ? 1 : (grp.champion ? 0 : 0);
+    (grp.matches || []).forEach(m => {
+      if (!m.winner) return;
+      const isP1 = m.p1 === p.name, isP2 = m.p2 === p.name;
+      if (!isP1 && !isP2) return;
+      const pIdx = isP1 ? 1 : 2;
+      for (let r = 0; r < 2; r++) {
+        (m[`r${r}p${pIdx}`] || []).forEach(v => {
+          if (v === DUEL_KS_VAL)  ks++;
+          if (v === DUEL_BULL_VAL) bs++;
+        });
+      }
+    });
+    return { ...p, qpts, ks, bs, wins };
+  }).sort((a, b) => b.qpts - a.qpts);
+}
+function _renderHistModal(t) {
+  const proData  = t.data;
+  const semiData = t.dataSemi;
 
-  // Bracket results log
-  const log = g.log || [];
+  // Title
+  let titleSub = t.date;
+  if (t.proPlayers && t.semiPlayers) titleSub += ` · ⚡${t.proPlayers} PRO · 🎯${t.semiPlayers} SEMI`;
+  else if (t.group === 'pro') titleSub += ' · PRO';
+  else titleSub += ' · SEMI PRO';
+  document.getElementById('m-hist-title').innerHTML =
+    `${t.name} <span style="color:var(--ink3);font-size:1rem;font-weight:500">${titleSub}</span>`;
+
+  const proStats  = buildHistStats(proData);
+  const semiStats = buildHistStats(semiData);
 
   let html = '';
 
-  // Champion banner
-  if (t.champion) {
-    html += `<div style="background:var(--sand-bg);border:1.5px solid var(--sand-ln);border-radius:10px;padding:1.25rem 1.5rem;text-align:center;margin-bottom:1.5rem">
-      <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sand);margin-bottom:4px">Campeón del Torneo</div>
-      <div style="font-family:var(--f-display);font-size:1.8rem;font-weight:800;color:var(--sand);letter-spacing:1px;text-transform:uppercase">🏆 ${t.champion}</div>
-    </div>`;
+  // Champions banner
+  if (t.champion || t.semiChampion) {
+    html += `<div style="background:var(--sand-bg);border:1.5px solid var(--sand-ln);border-radius:10px;
+      padding:1rem 1.5rem;text-align:center;margin-bottom:1.5rem;display:flex;gap:2rem;justify-content:center;flex-wrap:wrap">`;
+    if (t.champion)     html += `<div><div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sand);margin-bottom:2px">⚡ Campeón PRO</div>
+      <div style="font-family:var(--f-display);font-size:1.5rem;font-weight:800;color:var(--sand)">🏆 ${t.champion}</div></div>`;
+    if (t.semiChampion) html += `<div><div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--sand);margin-bottom:2px">🎯 Campeón SEMI</div>
+      <div style="font-family:var(--f-display);font-size:1.5rem;font-weight:800;color:var(--sand)">🏆 ${t.semiChampion}</div></div>`;
+    html += `</div>`;
   }
 
-  // Two columns: ranking + bracket log
-  html += `<div class="g2" style="gap:1.5rem">`;
-
-  // Clasificación
-  html += `<div>
-    <div class="sec-title">Clasificación</div>
-    <div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden">
-    <table class="tbl"><thead><tr><th>#</th><th>Jugador</th><th>Pts Clasif.</th></tr></thead><tbody>`;
-  ranked.forEach((p, i) => {
-    const cls = i < 3 ? `rank-${i+1}` : '';
-    html += `<tr class="${cls}">
-      <td><span class="rank-n">${i+1}</span></td>
-      <td class="p-name-cell">${p.name}</td>
-      <td style="font-family:var(--f-display);font-size:1.1rem;color:var(--accent)">${p.total}</td>
-    </tr>`;
-  });
-  html += `</tbody></table></div></div>`;
-
-  // Resultados eliminatoria
-  html += `<div>
-    <div class="sec-title">Fase Eliminatoria</div>`;
-  if (log.length) {
-    html += `<div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden">
-      <table class="tbl"><thead><tr><th>Resultado</th><th>Ganador</th></tr></thead><tbody>`;
-    log.forEach(r => {
-      html += `<tr>
-        <td style="font-size:12px">${r.text}</td>
-        <td style="font-weight:700;color:var(--accent);font-size:12px">${r.winner}</td>
+  function groupTable(label, stats, grp) {
+    if (!stats.length) return '';
+    const log = grp?.log || [];
+    let out = `<div style="margin-bottom:1.5rem">
+      <div class="sec-title">${label} — Clasificación</div>
+      <div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden">
+      <table class="tbl"><thead><tr><th>#</th><th>Jugador</th><th>Pts</th><th>V</th><th>KS</th><th>Bulls</th></tr></thead><tbody>`;
+    stats.forEach((p, i) => {
+      const cls = i < 3 ? `rank-${i+1}` : '';
+      out += `<tr class="${cls}">
+        <td><span class="rank-n">${i+1}</span></td>
+        <td class="p-name-cell">${p.name}${grp?.champion===p.name?' 🏆':''}</td>
+        <td style="font-family:var(--f-display);color:var(--accent)">${p.qpts}</td>
+        <td style="font-family:var(--f-display);color:var(--green)">${p.wins}</td>
+        <td>${p.ks > 0 ? `<span class="mini-badge ks-badge">🪓 ${p.ks}</span>` : '—'}</td>
+        <td>${p.bs > 0 ? `<span class="mini-badge bull-badge">🎯 ${p.bs}</span>` : '—'}</td>
       </tr>`;
     });
-    html += `</tbody></table></div>`;
-  } else {
-    html += `<div class="card" style="color:var(--ink3);text-align:center;padding:1.5rem;font-size:13px">Sin resultados de duelos</div>`;
+    out += `</tbody></table></div></div>`;
+    if (log.length) {
+      out += `<div class="sec-title">Fase Eliminatoria</div>
+        <div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden">
+        <table class="tbl"><thead><tr><th>Resultado</th><th>Ganador</th></tr></thead><tbody>`;
+      log.forEach(r => {
+        out += `<tr><td style="font-size:12px">${r.text}</td>
+          <td style="font-weight:700;color:var(--accent);font-size:12px">${r.winner}</td></tr>`;
+      });
+      out += `</tbody></table></div>`;
+    } else {
+      out += `<div class="card" style="color:var(--ink3);text-align:center;padding:1rem;font-size:13px">Sin duelos</div>`;
+    }
+    return out;
   }
-  html += `</div>`;
 
-  html += `</div>`; // end g2
+  if (proStats.length && semiStats.length) {
+    html += `<div class="g2" style="gap:1.5rem">
+      <div>${groupTable('⚡ PRO', proStats, proData)}</div>
+      <div>${groupTable('🎯 SEMI PRO', semiStats, semiData)}</div>
+    </div>`;
+  } else if (proStats.length) {
+    html += groupTable('⚡ PRO', proStats, proData);
+  } else if (semiStats.length) {
+    html += groupTable('🎯 SEMI PRO', semiStats, semiData);
+  }
 
   document.getElementById('m-hist-content').innerHTML = html;
 }
 
-function confirmDeleteHist() {
-  if (!VIEW_HIST) return;
-  askDeleteHist(VIEW_HIST.id);
-}
-
-function askDeleteHist(id) {
-  const t = ADMIN.history.find(h => h.id === id);
-  if (!t) return;
-  VIEW_HIST = t;
-  document.getElementById('m-del-hist-name').textContent = `${t.name}  ·  ${t.date}  ·  ${t.group.toUpperCase()}`;
-  openModal('m-del-hist');
-}
-
-function doDeleteHist() {
-  if (!VIEW_HIST) return;
-  ADMIN.history = ADMIN.history.filter(h => h.id !== VIEW_HIST.id);
-  VIEW_HIST = null;
-  save();
-  closeModal('m-del-hist');
-  closeModal('m-hist');
-  renderHistory();
-  toast('Torneo eliminado del historial', 'amber');
-}
 
 function expHistPDFById(id) {
   VIEW_HIST = ADMIN.history.find(h => h.id === id);
@@ -5094,39 +5105,75 @@ function expPDFRanking() {
 
 function expHistPDF() {
   const t = VIEW_HIST; if (!t) return;
-  const win  = window.open('', '_blank');
-  const club = ADMIN.club || 'NOVURAXE';
-  const logo = ADMIN.logo;
+  const win    = window.open('', '_blank');
+  const club   = ADMIN.club || 'NOVURAXE';
+  const logo   = ADMIN.logo;
   const logoHtml = logo ? `<img src="${logo}" style="max-height:56px;max-width:140px;object-fit:contain;flex-shrink:0">` : '';
-  const g = t.data;
-  const ranked = [...g.players].map(p => {
-    if (p.disqualified) return {...p, total: 0};
-    let total = 0;
-    for (let r = 0; r < (g.qualCfg.rounds||2); r++) {
-      ((g.qualScores[p.id]||{})['r'+r]||[]).forEach(v=>{if(v!==null)total+=v;});
+
+  const proStats  = buildHistStats(t.data);
+  const semiStats = buildHistStats(t.dataSemi);
+
+  function pdfGroup(label, stats, grp) {
+    if (!stats.length) return '';
+    const log = grp?.log || [];
+    let out = `<div class="sec"><h3>${label}</h3>
+      <table><thead><tr><th>#</th><th>Jugador</th><th>Pts Clasif.</th><th>V</th><th>KS</th><th>Bulls</th></tr></thead><tbody>`;
+    stats.forEach((p, i) => {
+      const champ = grp?.champion === p.name ? ' 🏆' : '';
+      out += `<tr class="${i<3?'top':''}">
+        <td>${i+1}</td><td>${p.name}${champ}</td>
+        <td style="font-weight:700">${p.qpts}</td>
+        <td>${p.wins}</td><td>${p.ks||'—'}</td><td>${p.bs||'—'}</td>
+      </tr>`;
+    });
+    out += `</tbody></table></div>`;
+    if (log.length) {
+      out += `<div class="sec"><h3>${label} — Eliminatoria</h3>
+        <table><thead><tr><th>Resultado</th><th>Ganador</th></tr></thead><tbody>`;
+      log.forEach(r => { out += `<tr><td>${r.text}</td><td style="font-weight:700">${r.winner}</td></tr>`; });
+      out += `</tbody></table></div>`;
     }
-    return {...p, total};
-  }).sort((a,b)=> a.disqualified - b.disqualified || b.total-a.total);
+    return out;
+  }
 
-  let body = `<div class="header"><div class="header-inner">${logoHtml}<div class="header-text"><h1>${club}</h1><h2>${t.name} — ${t.date}</h2></div></div></div>`;
-  if (t.champion) body += `<div class="champ-box">🏆 Campeón: ${t.champion}</div>`;
-  body += `<table><thead><tr><th>#</th><th>Jugador</th><th>Pts Clasif.</th><th>Estado</th></tr></thead><tbody>`;
-  ranked.forEach((p,i)=>{ body+=`<tr class="${i<3&&!p.disqualified?'top':''}${p.disqualified?' dq-row':''}"><td>${p.disqualified?'—':i+1}</td><td>${p.name}</td><td>${p.disqualified?'DQ':p.total}</td><td>${p.disqualified?'Desclasificado':'OK'}</td></tr>`; });
-  body += `</tbody></table>`;
+  let body = `<div class="header"><div class="header-inner">${logoHtml}
+    <div class="header-text"><h1>${club}</h1><h2>${t.name} — ${t.date}</h2></div></div></div>`;
 
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-    *{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;padding:2rem;color:#2c2418}
-    .header{margin-bottom:2rem;padding-bottom:1rem;border-bottom:3px solid #c4873a}
-    .header-inner{display:flex;align-items:center;gap:1.25rem}.header-text{flex:1}
-    h1{font-size:1.4rem;color:#c4873a;font-weight:800}h2{color:#4a3e30;font-size:.9rem;font-weight:600}
-    table{width:100%;border-collapse:collapse;margin-top:1rem}
-    th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#8c7d6a;padding:6px 10px;text-align:left;background:#f7f3ee;border-bottom:2px solid #ddd5c8}
-    td{padding:8px 10px;border-bottom:1px solid #e8e1d6}tr.top td{background:#fdf4e7}
-    .dq-row td{opacity:0.4;text-decoration:line-through}
-    .champ-box{padding:1rem;background:#fdf4e7;border:2px solid #f0d5a8;border-radius:6px;font-size:1.2rem;font-weight:bold;color:#9b7b52;margin:1rem 0;text-align:center}
-  </style></head><body>${body}${'<scr'+'ipt>'}window.print();${'</sc'+'ript>'}</body></html>`;
-  win.document.write(html); win.document.close();
+  if (t.champion || t.semiChampion) {
+    let cb = '';
+    if (t.champion)     cb += `⚡ PRO: 🏆 ${t.champion}   `;
+    if (t.semiChampion) cb += `🎯 SEMI: 🏆 ${t.semiChampion}`;
+    body += `<div class="champ-box">${cb.trim()}</div>`;
+  }
+
+  if (proStats.length && semiStats.length) {
+    body += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+      <div>${pdfGroup('⚡ PRO', proStats, t.data)}</div>
+      <div>${pdfGroup('🎯 SEMI PRO', semiStats, t.dataSemi)}</div>
+    </div>`;
+  } else {
+    body += pdfGroup(proStats.length ? '⚡ PRO' : '🎯 SEMI PRO', proStats.length ? proStats : semiStats, proStats.length ? t.data : t.dataSemi);
+  }
+
+  const css = `*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;padding:1.5rem;color:#2c2418}
+    .header{margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:3px solid #c4873a}
+    .header-inner{display:flex;align-items:center;gap:1rem}.header-text{flex:1}
+    h1{font-size:1.3rem;color:#c4873a;font-weight:800}h2{color:#4a3e30;font-size:.85rem;font-weight:600}
+    .champ-box{padding:.875rem 1rem;background:#fdf4e7;border:2px solid #f0d5a8;border-radius:6px;
+      font-size:1rem;font-weight:bold;color:#9b7b52;margin-bottom:1.25rem;text-align:center}
+    .sec{margin-bottom:1.25rem}.sec h3{font-size:9px;text-transform:uppercase;letter-spacing:2px;
+      color:#c4873a;border-bottom:1px solid #ddd5c8;padding-bottom:4px;margin-bottom:.5rem}
+    table{width:100%;border-collapse:collapse}
+    th{font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#8c7d6a;
+      padding:4px 8px;text-align:left;background:#f7f3ee;border-bottom:2px solid #ddd5c8}
+    td{padding:6px 8px;border-bottom:1px solid #e8e1d6;font-size:11px}
+    tr.top td{background:#fdf4e7}`;
+
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>${body}</body></html>`);
+  win.document.close();
+  setTimeout(() => win.print(), 400);
 }
+
 
 // ─────────────────────────────────
 // MODAL HELPERS
