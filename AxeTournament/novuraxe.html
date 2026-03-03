@@ -4886,141 +4886,179 @@ function expPDF(type) {
 function expPDFRanking() {
   if (!RK_CACHE.length) { toast('No hay datos en el ranking aún', 'red'); return; }
 
-  const win  = window.open('', '_blank');
-  const club = ADMIN.club || 'NOVURAXE';
-  const logo = ADMIN.logo;
-  const logoHtml = logo ? `<img src="${logo}" style="max-height:56px;max-width:140px;object-fit:contain;flex-shrink:0">` : '';
-  const today = new Date().toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' });
+  const win        = window.open('', '_blank');
+  const club       = ADMIN.club || 'NOVURAXE';
+  const logo       = ADMIN.logo;
+  const logoHtml   = logo ? `<img src="${logo}" style="max-height:56px;max-width:140px;object-fit:contain;flex-shrink:0">` : '';
+  const today      = new Date().toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' });
+  const filterYear  = document.getElementById('rk-filter-year')?.value  || '';
+  const filterMonth = document.getElementById('rk-filter-month')?.value || '';
+  const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const MONTHS_LONG  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-  // ── Build aggregated players from RK_CACHE ──
+  // ── Filter rows same as screen ──
+  let rows = RK_CACHE.filter(r => {
+    const d = r.updated_at ? new Date(r.updated_at) : null;
+    if (filterYear  && (!d || d.getFullYear()  !== parseInt(filterYear)))  return false;
+    if (filterMonth && (!d || (d.getMonth()+1) !== parseInt(filterMonth))) return false;
+    return true;
+  });
+
+  // ── Aggregate ──
   const agg = {};
-  RK_CACHE.forEach(r => {
+  rows.forEach(r => {
     const name = r.player_name || '—';
+    const d = r.updated_at ? new Date(r.updated_at) : null;
+    const m = d ? d.getMonth() : null;
     if (!agg[name]) agg[name] = {
       name, tag: r.player_tag || null,
-      tournaments: 0, wins: 0, losses: 0,
-      qpts: 0, ks: 0, bs: 0, champs: 0
+      monthPts: {}, total: 0,
+      wins: 0, losses: 0, tournaments: 0, ks: 0, bs: 0, champs: 0
     };
     const a = agg[name];
     if (r.player_tag) a.tag = r.player_tag;
-    a.tournaments += r.tournaments   || 0;
-    a.wins        += r.wins          || 0;
-    a.losses      += r.losses        || 0;
-    a.qpts        += r.total_qpts    || 0;
-    a.ks          += r.total_ks      || 0;
-    a.bs          += r.total_bs      || 0;
+    if (m !== null) a.monthPts[m] = (a.monthPts[m] || 0) + (r.total_qpts || 0);
+    a.total       += r.total_qpts  || 0;
+    a.wins        += r.wins        || 0;
+    a.losses      += r.losses      || 0;
+    a.tournaments += r.tournaments || 0;
+    a.ks          += r.total_ks    || 0;
+    a.bs          += r.total_bs    || 0;
     if (r.wins > 0) a.champs++;
   });
 
-  const allPlayers  = Object.values(agg).sort((a,b) => b.wins - a.wins || b.qpts - a.qpts);
-  const proPlayers  = allPlayers.filter(p => p.tag === 'pro');
-  const semiPlayers = allPlayers.filter(p => p.tag === 'semi');
-  const untagged    = allPlayers.filter(p => !p.tag);
+  let allPlayers  = Object.values(agg);
+  const proPlayers  = allPlayers.filter(p => p.tag === 'pro').sort((a,b) => b.total - a.total);
+  const semiPlayers = allPlayers.filter(p => p.tag === 'semi').sort((a,b) => b.total - a.total);
+  const untagged    = allPlayers.filter(p => !p.tag).sort((a,b) => b.total - a.total);
+  allPlayers = allPlayers.sort((a,b) => b.total - a.total);
 
-  function pdfTable(title, headers, rows) {
-    if (!rows) return '';
+  const totalT = new Set(rows.map(r => r.tournament_name).filter(Boolean)).size;
+  const periodLabel = filterMonth
+    ? `${MONTHS_LONG[parseInt(filterMonth)-1]}${filterYear ? ' ' + filterYear : ''}`
+    : filterYear || 'Histórico completo';
+
+  // ── helpers ──
+  function pdfTable(title, headers, rowsHtml) {
+    if (!rowsHtml) return '';
     let h = `<div class="sec"><h3>${title}</h3><table><thead><tr>`;
     headers.forEach(hh => { h += `<th>${hh}</th>`; });
-    h += `</tr></thead><tbody>${rows}</tbody></table></div>`;
-    return h;
+    return h + `</tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
   }
 
-  function rankRows(players) {
-    return players.map((p, i) => {
-      const wr = (p.wins + p.losses) > 0 ? Math.round(p.wins / (p.wins + p.losses) * 100) : 0;
-      const champBadge = p.champs > 0 ? ` 🏆` : '';
+  // ── Year table: cols Ene-Dic + Total ──
+  function yearTable(title, players) {
+    if (!players.length) return '';
+    const colHdrs = MONTHS_SHORT.map(m => `<th style="text-align:center">${m}</th>`).join('');
+    const tRows = players.map((p, i) => {
+      const tag = p.tag === 'pro' ? ' [PRO]' : p.tag === 'semi' ? ' [SEMI]' : '';
+      const champ = p.champs > 0 ? ' 🏆' : '';
+      const cols = [0,1,2,3,4,5,6,7,8,9,10,11].map(m => {
+        const pts = p.monthPts[m] || 0;
+        return `<td style="text-align:center;color:${pts>0?'#2c2418':'#ccc'}">${pts>0?pts:'—'}</td>`;
+      }).join('');
       return `<tr class="${i<3?'top':''}">
-        <td>${i+1}</td>
-        <td>${p.name}${champBadge}</td>
-        <td>${p.tournaments}</td>
-        <td>${p.wins}</td>
-        <td>${p.losses}</td>
-        <td>${p.qpts}</td>
-        <td>${wr}%</td>
+        <td>${i+1}</td><td>${p.name}${tag}${champ}</td>
+        ${cols}
+        <td style="text-align:center;font-weight:800;color:#c4873a">${p.total}</td>
       </tr>`;
     }).join('');
+    return `<div class="sec"><h3>${title}</h3>
+      <table><thead><tr><th>#</th><th>Jugador</th>${colHdrs}<th style="text-align:center;color:#c4873a">TOTAL</th></tr></thead>
+      <tbody>${tRows}</tbody></table></div>`;
+  }
+
+  // ── Month table: V/D/Pts/Win% ──
+  function monthTable(title, players) {
+    if (!players.length) return '';
+    const tRows = players.map((p, i) => {
+      const wr = (p.wins+p.losses)>0 ? Math.round(p.wins/(p.wins+p.losses)*100) : 0;
+      const tag = p.tag === 'pro' ? ' [PRO]' : p.tag === 'semi' ? ' [SEMI]' : '';
+      const champ = p.champs > 0 ? ' 🏆' : '';
+      return `<tr class="${i<3?'top':''}">
+        <td>${i+1}</td><td>${p.name}${tag}${champ}</td>
+        <td>${p.tournaments}</td><td>${p.wins}</td><td>${p.losses}</td>
+        <td style="font-weight:700">${p.total}</td><td>${wr}%</td>
+      </tr>`;
+    }).join('');
+    return pdfTable(title, ['#','Jugador','T','V','D','Pts','Win%'], tRows);
   }
 
   // ── Header ──
   let body = `<div class="header"><div class="header-inner">${logoHtml}
     <div class="header-text">
-      <h1>${club}</h1>
-      <h2>Ranking Global</h2>
+      <h1>${club}</h1><h2>Ranking · ${periodLabel}</h2>
       <p>${today} · Informe de Ranking</p>
     </div></div></div>`;
 
-  // ── Summary stats ──
-  const totalT = new Set(RK_CACHE.map(r => r.tournament_name).filter(Boolean)).size;
+  // ── Summary ──
   body += `<div class="summary-row">
     <div class="summary-card"><div class="summary-n">${allPlayers.length}</div><div class="summary-l">Jugadores</div></div>
     <div class="summary-card"><div class="summary-n">${totalT}</div><div class="summary-l">Torneos</div></div>
     <div class="summary-card pro-card"><div class="summary-n">${proPlayers.length}</div><div class="summary-l">⚡ PRO</div></div>
-    <div class="summary-card semi-card"><div class="summary-n">${semiPlayers.length}</div><div class="summary-l">🎯 SEMI PRO</div></div>
+    <div class="summary-card semi-card"><div class="summary-n">${semiPlayers.length}</div><div class="summary-l">🎯 SEMI</div></div>
   </div>`;
 
-  const hdrs = ['#','Jugador','T','V','D','Pts','Win%'];
-
-  // ── PRO table ──
-  if (proPlayers.length) {
-    body += pdfTable('⚡ Ranking PRO', hdrs, rankRows(proPlayers));
+  // ── Main tables ──
+  if (filterMonth) {
+    // Month view: classic
+    if (proPlayers.length)  body += monthTable('⚡ Ranking PRO', proPlayers);
+    if (semiPlayers.length) body += monthTable('🎯 Ranking SEMI PRO', semiPlayers);
+    if (untagged.length)    body += monthTable('🌐 General', untagged);
+  } else {
+    // Year view: monthly columns
+    if (proPlayers.length)  body += yearTable('⚡ Ranking PRO', proPlayers);
+    if (semiPlayers.length) body += yearTable('🎯 Ranking SEMI PRO', semiPlayers);
+    if (untagged.length)    body += yearTable('🌐 General (sin categoría)', untagged);
   }
 
-  // ── SEMI PRO table ──
-  if (semiPlayers.length) {
-    body += pdfTable('🎯 Ranking SEMI PRO', hdrs, rankRows(semiPlayers));
-  }
-
-  // ── Untagged / General ──
-  if (untagged.length) {
-    body += pdfTable('🌐 Ranking General (sin categoría)', hdrs, rankRows(untagged));
-  }
-
-  // ── Top KS ──
-  const topKS = [...allPlayers].filter(p => p.ks > 0).sort((a,b) => b.ks - a.ks).slice(0,10);
+  // ── Top 5 KS ──
+  const topKS = [...allPlayers].filter(p=>p.ks>0).sort((a,b)=>b.ks-a.ks).slice(0,5);
   if (topKS.length) {
-    const ksRows = topKS.map((p,i) =>
-      `<tr class="${i<3?'top':''}"><td>${i+1}</td><td>${p.name}</td><td><strong>${p.ks}</strong></td></tr>`
+    const ksRows = topKS.map((p,i)=>
+      `<tr class="${i<3?'top':''}"><td>${i+1}</td><td>${p.name}</td><td style="font-weight:800;text-align:center">${p.ks}</td></tr>`
     ).join('');
-    body += pdfTable('🪓 Más Killshots', ['#','Jugador','KS'], ksRows);
+    body += pdfTable('🪓 Top 5 Killshots', ['#','Jugador','KS'], ksRows);
   }
 
-  // ── Top Bulls ──
-  const topBulls = [...allPlayers].filter(p => p.bs > 0).sort((a,b) => b.bs - a.bs).slice(0,10);
+  // ── Top 5 Bulls ──
+  const topBulls = [...allPlayers].filter(p=>p.bs>0).sort((a,b)=>b.bs-a.bs).slice(0,5);
   if (topBulls.length) {
-    const bRows = topBulls.map((p,i) =>
-      `<tr class="${i<3?'top':''}"><td>${i+1}</td><td>${p.name}</td><td><strong>${p.bs}</strong></td></tr>`
+    const bRows = topBulls.map((p,i)=>
+      `<tr class="${i<3?'top':''}"><td>${i+1}</td><td>${p.name}</td><td style="font-weight:800;text-align:center">${p.bs}</td></tr>`
     ).join('');
-    body += pdfTable('🎯 Más Bulls Eyes', ['#','Jugador','Bulls'], bRows);
+    body += pdfTable('🎯 Top 5 Bulls Eyes', ['#','Jugador','Bulls'], bRows);
   }
 
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+  const css = `
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:Arial,sans-serif;padding:2rem;color:#2c2418;background:#fff;font-size:13px}
-    .header{margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:3px solid #c4873a}
+    body{font-family:Arial,sans-serif;padding:1.5rem;color:#2c2418;background:#fff;font-size:12px}
+    .header{margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:3px solid #c4873a}
     .header-inner{display:flex;align-items:center;gap:1.25rem}
-    .header-text{flex:1} h1{font-size:1.4rem;color:#c4873a;font-weight:800}
-    h2{font-size:0.9rem;color:#4a3e30;font-weight:600} p{color:#8c7d6a;font-size:11px}
-    .summary-row{display:flex;gap:1rem;margin-bottom:1.5rem}
-    .summary-card{flex:1;padding:0.75rem 1rem;background:#f7f3ee;border-radius:6px;text-align:center}
+    .header-text{flex:1} h1{font-size:1.3rem;color:#c4873a;font-weight:800}
+    h2{font-size:0.85rem;color:#4a3e30;font-weight:600} p{color:#8c7d6a;font-size:10px}
+    .summary-row{display:flex;gap:0.75rem;margin-bottom:1.25rem}
+    .summary-card{flex:1;padding:0.6rem 0.75rem;background:#f7f3ee;border-radius:5px;text-align:center}
     .pro-card{background:#fffbea;border:1px solid #f0d5a8}
     .semi-card{background:#f0fdf4;border:1px solid #a7f3d0}
-    .summary-n{font-size:1.6rem;font-weight:800;color:#c4873a}
-    .pro-card .summary-n{color:#b45309}
-    .semi-card .summary-n{color:#059669}
-    .summary-l{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#8c7d6a;margin-top:2px}
-    .sec{margin-bottom:1.5rem}
-    h3{font-size:10px;text-transform:uppercase;letter-spacing:2px;margin-bottom:0.6rem;color:#c4873a;border-bottom:1px solid #ddd5c8;padding-bottom:5px}
+    .summary-n{font-size:1.4rem;font-weight:800;color:#c4873a}
+    .pro-card .summary-n{color:#b45309} .semi-card .summary-n{color:#059669}
+    .summary-l{font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#8c7d6a;margin-top:2px}
+    .sec{margin-bottom:1.25rem;page-break-inside:avoid}
+    h3{font-size:9px;text-transform:uppercase;letter-spacing:2px;margin-bottom:0.5rem;
+      color:#c4873a;border-bottom:1px solid #ddd5c8;padding-bottom:4px}
     table{width:100%;border-collapse:collapse}
-    th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#8c7d6a;padding:5px 8px;text-align:left;background:#f7f3ee;border-bottom:2px solid #ddd5c8}
-    td{padding:7px 8px;border-bottom:1px solid #e8e1d6;font-size:12px}
+    th{font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#8c7d6a;
+      padding:4px 6px;text-align:left;background:#f7f3ee;border-bottom:2px solid #ddd5c8;white-space:nowrap}
+    td{padding:5px 6px;border-bottom:1px solid #e8e1d6;font-size:11px;white-space:nowrap}
     tr.top td{background:#fdf4e7}
-    @media print{body{padding:1rem}}
-  </style></head><body>${body}</body></html>`;
+    @media print{body{padding:1rem} .sec{page-break-inside:avoid}}`;
 
-  win.document.write(html);
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${css}</style></head><body>${body}</body></html>`);
   win.document.close();
   setTimeout(() => win.print(), 400);
 }
+
 
 function expHistPDF() {
   const t = VIEW_HIST; if (!t) return;
