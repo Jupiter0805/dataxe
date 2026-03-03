@@ -967,7 +967,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   box-shadow: var(--sh3);
   animation: modalIn 0.2s ease;
 }
-.modal.wide { max-width: 720px; }
+.modal.wide { max-width: 960px; }
 @keyframes modalIn {
   from { transform: translateY(14px) scale(0.97); opacity: 0; }
   to   { transform: none; opacity: 1; }
@@ -4690,34 +4690,47 @@ function _renderHistModal(t) {
   function groupTable(label, stats, grp) {
     if (!stats.length) return '';
     const log = grp?.log || [];
-    let out = `<div style="margin-bottom:1.5rem">
-      <div class="sec-title">${label} — Clasificación</div>
-      <div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden">
-      <table class="tbl"><thead><tr><th>#</th><th>Jugador</th><th>Pts</th><th>V</th><th>KS</th><th>Bulls</th></tr></thead><tbody>`;
+    const champName = grp?.champion;
+    let out = `<div style="background:var(--bg2);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:1rem">
+      <div style="padding:10px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent)">${label}</span>
+        ${champName ? `<span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--sand)">🏆 ${champName}</span>` : ''}
+      </div>
+      <table class="tbl"><thead><tr>
+        <th style="width:36px">#</th>
+        <th>Jugador</th>
+        <th style="text-align:center;color:var(--accent)">Pts</th>
+        <th style="text-align:center;color:var(--green)">V</th>
+        <th style="text-align:center">KS</th>
+        <th style="text-align:center">Bulls</th>
+      </tr></thead><tbody>`;
     stats.forEach((p, i) => {
       const cls = i < 3 ? `rank-${i+1}` : '';
+      const isChamp = champName === p.name;
       out += `<tr class="${cls}">
         <td><span class="rank-n">${i+1}</span></td>
-        <td class="p-name-cell">${p.name}${grp?.champion===p.name?' 🏆':''}</td>
-        <td style="font-family:var(--f-display);color:var(--accent)">${p.qpts}</td>
-        <td style="font-family:var(--f-display);color:var(--green)">${p.wins}</td>
-        <td>${p.ks > 0 ? `<span class="mini-badge ks-badge">🪓 ${p.ks}</span>` : '—'}</td>
-        <td>${p.bs > 0 ? `<span class="mini-badge bull-badge">🎯 ${p.bs}</span>` : '—'}</td>
+        <td class="p-name-cell">${p.name}${isChamp ? ' <span style="font-size:10px">🏆</span>' : ''}</td>
+        <td style="text-align:center;font-family:var(--f-display);font-size:1.1rem;color:var(--accent)">${p.qpts}</td>
+        <td style="text-align:center;font-family:var(--f-display);color:var(--green)">${p.wins}</td>
+        <td style="text-align:center">${p.ks > 0 ? `<span class="mini-badge ks-badge">🪓 ${p.ks}</span>` : '<span style="color:rgba(255,255,255,0.2)">—</span>'}</td>
+        <td style="text-align:center">${p.bs > 0 ? `<span class="mini-badge bull-badge">🎯 ${p.bs}</span>` : '<span style="color:rgba(255,255,255,0.2)">—</span>'}</td>
       </tr>`;
     });
-    out += `</tbody></table></div></div>`;
+    out += `</tbody></table>`;
     if (log.length) {
-      out += `<div class="sec-title">Fase Eliminatoria</div>
-        <div style="background:var(--white);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden">
-        <table class="tbl"><thead><tr><th>Resultado</th><th>Ganador</th></tr></thead><tbody>`;
+      out += `<div style="border-top:1px solid var(--line);padding:8px 14px 4px">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:6px">Fase eliminatoria</div>`;
       log.forEach(r => {
-        out += `<tr><td style="font-size:12px">${r.text}</td>
-          <td style="font-weight:700;color:var(--accent);font-size:12px">${r.winner}</td></tr>`;
+        out += `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px">
+          <span style="color:var(--ink3)">${r.text}</span>
+          <span style="font-weight:700;color:var(--accent)">${r.winner}</span>
+        </div>`;
       });
-      out += `</tbody></table></div>`;
+      out += `</div>`;
     } else {
-      out += `<div class="card" style="color:var(--ink3);text-align:center;padding:1rem;font-size:13px">Sin duelos</div>`;
+      out += `<div style="padding:10px 14px;font-size:12px;color:rgba(255,255,255,0.25);text-align:center;border-top:1px solid var(--line)">Sin duelos eliminatorios</div>`;
     }
+    out += `</div>`;
     return out;
   }
 
