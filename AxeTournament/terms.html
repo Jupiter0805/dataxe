@@ -164,6 +164,15 @@
   .info-box-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:0.5rem;display:flex;align-items:center;gap:6px}
   .info-box p{color:var(--ink2);font-size:14px;margin-bottom:0.5rem}
   .info-box p:last-child{margin-bottom:0}
+
+  /* RESPONSIBLE BOX */
+  .responsible-box{background:rgba(196,135,58,0.07);border:1px solid rgba(196,135,58,0.3);border-radius:var(--r2);padding:1.5rem 1.75rem;margin:1.25rem 0}
+  .responsible-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;display:flex;align-items:center;gap:6px}
+  .responsible-grid{display:flex;flex-direction:column;gap:0}
+  .responsible-row{display:flex;gap:1rem;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.05);align-items:baseline}
+  .responsible-row:last-child{border-bottom:none}
+  .responsible-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink4);min-width:160px;flex-shrink:0}
+  .responsible-value{font-size:14px;color:var(--ink1)}
   /* RGPD TABLES */
   .rgpd-table-wrap{width:100%;overflow-x:auto;margin:1.25rem 0}.rgpd-table{width:100%;border-collapse:collapse;font-size:13px;min-width:480px}
   .rgpd-table thead tr{background:rgba(196,135,58,0.1);border-bottom:2px solid rgba(196,135,58,0.25)}
@@ -225,8 +234,8 @@
   <div class="disclaimer-banner">
     <div class="disclaimer-icon">⚠️</div>
     <div class="disclaimer-text">
-      <strong>AVISO IMPORTANTE — Proyecto independiente sin razón social</strong><br>
-      Novuraxe es una plataforma desarrollada de forma <strong>amateur y personal</strong>, sin entidad jurídica registrada, sin ánimo de lucro y sin actividad comercial. Se trata de un <strong>proyecto de afición (hobby)</strong> orientado a la gestión de torneos de lanzamiento de hacha. No existe ninguna empresa, autónomo o razón social detrás de este servicio.
+      <strong>AVISO — Titularidad y marco legal</strong><br>
+      Novuraxe es una plataforma web gestionada por <strong>Juan Ignacio Moreno Cordido</strong> como persona física, sin actividad comercial ni ánimo de lucro. El tratamiento de datos se realiza conforme al <strong>RGPD (UE) 2016/679</strong> y la <strong>LOPDGDD 3/2018</strong>. Contacto: <a href="mailto:privacy@novuraxe.com" style="color:var(--accent)">privacy@novuraxe.com</a>
     </div>
   </div>
 
@@ -254,10 +263,34 @@
   <div class="section" id="s1">
     <span class="section-num">01 —</span>
     <h2>Identificación y Naturaleza del Proyecto</h2>
-    <p><strong>Novuraxe</strong> es una plataforma web de gestión de torneos de lanzamiento de hacha, desarrollada y mantenida de forma <em>individual y amateur</em> como actividad de ocio personal. No existe detrás de este proyecto ninguna empresa constituida, ningún autónomo registrado ni ninguna organización con personalidad jurídica.</p>
-    <p>Por tanto, este proyecto <strong>no está sujeto al Reglamento General de Protección de Datos (RGPD) como responsable del tratamiento en sentido estricto</strong>, si bien se adoptan voluntariamente medidas de buenas prácticas para garantizar la privacidad de los usuarios.</p>
+    <p><strong>Novuraxe</strong> es una plataforma web de gestión de torneos de lanzamiento de hacha. El presente documento constituye la Política de Privacidad y los Términos de Uso del servicio, de conformidad con el <strong>Reglamento (UE) 2016/679 (RGPD)</strong> y la <strong>Ley Orgánica 3/2018 de Protección de Datos Personales y garantía de los derechos digitales (LOPDGDD)</strong>.</p>
+    <div class="responsible-box">
+      <div class="responsible-title">👤 Responsable del Tratamiento</div>
+      <div class="responsible-grid">
+        <div class="responsible-row">
+          <span class="responsible-label">Titular</span>
+          <span class="responsible-value">Juan Ignacio Moreno Cordido</span>
+        </div>
+        <div class="responsible-row">
+          <span class="responsible-label">Servicio</span>
+          <span class="responsible-value">Novuraxe — Plataforma de gestión de torneos de lanzamiento de hacha</span>
+        </div>
+        <div class="responsible-row">
+          <span class="responsible-label">Email de contacto</span>
+          <span class="responsible-value"><a href="mailto:privacy@novuraxe.com" style="color:var(--accent)">privacy@novuraxe.com</a></span>
+        </div>
+        <div class="responsible-row">
+          <span class="responsible-label">País de residencia</span>
+          <span class="responsible-value">España</span>
+        </div>
+        <div class="responsible-row">
+          <span class="responsible-label">Marco legal aplicable</span>
+          <span class="responsible-value">RGPD (UE) 2016/679 · LOPDGDD 3/2018</span>
+        </div>
+      </div>
+    </div>
     <div class="info-box">
-      <div class="info-box-title">ℹ️ Transparencia total</div>
+      <div class="info-box-title">ℹ️ Sobre el servicio</div>
       <p>Novuraxe no genera ingresos, no vende datos y no tiene finalidad comercial de ningún tipo. El servicio se ofrece de forma gratuita como herramienta de apoyo a la comunidad de lanzamiento de hacha.</p>
     </div>
   </div>
@@ -310,7 +343,7 @@
     <span class="section-num">05 —</span>
     <h2>Responsabilidad de los Organizadores</h2>
     <p>Los usuarios registrados como <strong>organizadores</strong> son responsables exclusivos del contenido que publican: anuncios de torneos, resultados y comunicaciones. Se comprometen a no publicar información fraudulenta, falsa o contraria a la legislación vigente.</p>
-    <p>Novuraxe se reserva el derecho de suspender cuentas que hagan un uso abusivo o fraudulento de la plataforma, aunque no existen mecanismos automáticos de supervisión dado el carácter amateur del proyecto.</p>
+    <p>Novuraxe se reserva el derecho de suspender cuentas que hagan un uso abusivo o fraudulento de la plataforma.</p>
   </div>
 
   <!-- ═══ BLOQUE RGPD ═══ -->
@@ -318,8 +351,8 @@
   <div class="section" id="s6">
     <span class="section-num">06 —</span>
     <h2>Protección de Datos — Base Legal y Finalidad del Tratamiento</h2>
-    <p>Con carácter voluntario y de buena fe, Novuraxe aplica los principios del <strong>Reglamento (UE) 2016/679 (RGPD)</strong> y la <strong>Ley Orgánica 3/2018 (LOPDGDD)</strong>, aunque al tratarse de un proyecto personal sin actividad comercial no tiene obligación formal de hacerlo.</p>
-    <p><strong>Responsable del tratamiento (informal):</strong> Titular del proyecto Novuraxe — contacto disponible en la sección 15.</p>
+    <p>Novuraxe trata datos personales de conformidad con el <strong>Reglamento (UE) 2016/679 (RGPD)</strong> y la <strong>Ley Orgánica 3/2018 (LOPDGDD)</strong>. A continuación se detalla la base legal que ampara cada finalidad de tratamiento.</p>
+    <p><strong>Responsable del tratamiento:</strong> Juan Ignacio Moreno Cordido — <a href="mailto:privacy@novuraxe.com" style="color:var(--accent)">privacy@novuraxe.com</a></p>
 
     <div class="rgpd-table-wrap"><table class="rgpd-table">
       <thead>
@@ -427,7 +460,7 @@
     </ul>
     <div class="alert-box">
       <div class="alert-box-title">⚠️ Limitación de garantías</div>
-      <p>Dado el carácter <strong>amateur y no profesional</strong> de este proyecto, no se puede garantizar una seguridad absoluta. Los usuarios asumen este riesgo al crear una cuenta. En caso de brecha de seguridad, se comunicará a los afectados por email a la mayor brevedad posible.</p>
+      <p>No es posible garantizar una seguridad absoluta frente a cualquier incidente técnico. En caso de brecha de seguridad que afecte a datos personales, se notificará a los afectados por email en el menor plazo posible y, cuando proceda, a la Agencia Española de Protección de Datos en el plazo de 72 horas (Art. 33 RGPD).</p>
     </div>
   </div>
 
@@ -482,20 +515,22 @@
 
   <div class="section" id="s15">
     <span class="section-num">15 —</span>
-    <h2>Contacto, Ejercicio de Derechos y Reclamaciones</h2> 
+    <h2>Contacto, Ejercicio de Derechos y Reclamaciones</h2>
     <p>Para consultas sobre estos términos, ejercicio de derechos RGPD (acceso, rectificación, supresión, portabilidad, etc.), solicitudes de eliminación de cuenta o comunicación de incidencias de seguridad, puedes contactar a través de los canales disponibles en el perfil del proyecto.</p>
-    <p>Al tratarse de un proyecto personal de afición, los tiempos de respuesta pueden variar, pero nos comprometemos a responder en un plazo máximo de <strong>30 días naturales</strong> a cualquier solicitud relacionada con datos personales.</p>
+    <p>Nos comprometemos a responder en un plazo máximo de <strong>30 días naturales</strong> a cualquier solicitud relacionada con datos personales, conforme al Art. 12.3 RGPD.</p>
     <div class="info-box">
       <div class="info-box-title">📋 Información a incluir en tu solicitud RGPD</div>
       <p>Para agilizar la gestión, incluye en tu mensaje: (1) tipo de solicitud (acceso, supresión, portabilidad…), (2) nombre de usuario o email con el que estás registrado, (3) descripción breve de lo solicitado. No es necesario aportar documentación acreditativa adicional salvo que existan dudas razonables sobre tu identidad.</p>
     </div>
+    <hr class="divider">
+    <p style="font-size:13px;color:var(--ink4)">Este documento ha sido redactado conforme al RGPD y la LOPDGDD. Para cualquier consulta sobre privacidad: <a href="mailto:privacy@novuraxe.com" style="color:var(--accent)">privacy@novuraxe.com</a></p>
   </div>
 
 </div>
 
 <div class="footer">
   <strong><span>NOVURAXE</span></strong> &nbsp;·&nbsp; Plataforma de Gestión de Torneos de Lanzamiento de Hacha<br>
-  Proyecto independiente de afición · Sin razón social · Sin actividad comercial<br><br>
+  Responsable: Juan Ignacio Moreno Cordido · <a href="mailto:privacy@novuraxe.com" style="color:var(--accent);text-decoration:none">privacy@novuraxe.com</a><br><br>
   <span style="color:var(--ink4)">© 2026 Novuraxe · Todos los derechos reservados sobre diseño y código.</span>
 </div>
 
