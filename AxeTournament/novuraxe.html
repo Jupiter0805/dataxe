@@ -4835,132 +4835,143 @@ function expPDF(type) {
 }
 
 function expPDFRanking() {
+  if (!RK_CACHE.length) { toast('No hay datos en el ranking aún', 'red'); return; }
+
   const win  = window.open('', '_blank');
   const club = ADMIN.club || 'NOVURAXE';
-  const tn   = ADMIN.tName || 'Torneo';
-  const td   = ADMIN.tDate || '';
   const logo = ADMIN.logo;
-  const logoHtml = logo ? '<img src="' + logo + '" style="max-height:56px;max-width:140px;object-fit:contain;flex-shrink:0">' : '';
+  const logoHtml = logo ? `<img src="${logo}" style="max-height:56px;max-width:140px;object-fit:contain;flex-shrink:0">` : '';
+  const today = new Date().toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' });
 
-  const g = G(); // unified qualify group
-  const proChamp  = ADMIN.pro?.champion  || '—';
-  const semiChamp = ADMIN.semi?.champion || '—';
-
-  // ── Build player stats ──
-  const allPlayers = g.players.filter(p => !p.disqualified).map(p => {
-    const s = playerStats(p.id, p.name);
-    return { ...p, ...s };
-  });
-  const proPlayers  = allPlayers.filter(p => (p.level||'pro') === 'pro').sort((a,b) => b.qpts - a.qpts);
-  const semiPlayers = allPlayers.filter(p => p.level === 'semi').sort((a,b) => b.qpts - a.qpts);
-  const allSorted   = [...allPlayers].sort((a,b) => b.qpts - a.qpts);
-
-  // ── top Bulls (from bracket matches) ──
-  const allMatches = [...(ADMIN.pro?.matches||[]), ...(ADMIN.semi?.matches||[])];
-  const bullMap = {};
-  const ksMap   = {};
-  allMatches.forEach(m => {
-    if (m.bye) return;
-    [m.p1, m.p2].forEach((name, pi) => {
-      if (!name) return;
-      bullMap[name] = bullMap[name] || 0;
-      ksMap[name]   = ksMap[name]   || 0;
-      for (let r = 0; r < 2; r++) {
-        const arr = m['r' + r + 'p' + (pi+1)] || [];
-        arr.forEach(v => {
-          if (v === 7) bullMap[name]++;
-          if (v === 9) ksMap[name]++;
-        });
-      }
-    });
-  });
-  // Also count KS from qualify
-  g.players.forEach(p => {
-    ksMap[p.name] = ksMap[p.name] || 0;
-    for (let r = 0; r < g.qualCfg.rounds; r++) {
-      const sc = (g.qualScores[p.id]||{})['r'+r]||[];
-      sc.forEach(v => { if (v === QUAL_KS_VAL) ksMap[p.name]++; });
-    }
+  // ── Build aggregated players from RK_CACHE ──
+  const agg = {};
+  RK_CACHE.forEach(r => {
+    const name = r.player_name || '—';
+    if (!agg[name]) agg[name] = {
+      name, tag: r.player_tag || null,
+      tournaments: 0, wins: 0, losses: 0,
+      qpts: 0, ks: 0, bs: 0, champs: 0
+    };
+    const a = agg[name];
+    if (r.player_tag) a.tag = r.player_tag;
+    a.tournaments += r.tournaments   || 0;
+    a.wins        += r.wins          || 0;
+    a.losses      += r.losses        || 0;
+    a.qpts        += r.total_qpts    || 0;
+    a.ks          += r.total_ks      || 0;
+    a.bs          += r.total_bs      || 0;
+    if (r.wins > 0) a.champs++;
   });
 
-  const topBulls = Object.entries(bullMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
-  const topKS    = Object.entries(ksMap).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const allPlayers  = Object.values(agg).sort((a,b) => b.wins - a.wins || b.qpts - a.qpts);
+  const proPlayers  = allPlayers.filter(p => p.tag === 'pro');
+  const semiPlayers = allPlayers.filter(p => p.tag === 'semi');
+  const untagged    = allPlayers.filter(p => !p.tag);
 
   function pdfTable(title, headers, rows) {
-    let h = '<div class="sec"><h3>' + title + '</h3><table><thead><tr>';
-    headers.forEach(h2 => { h += '<th>' + h2 + '</th>'; });
-    h += '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+    if (!rows) return '';
+    let h = `<div class="sec"><h3>${title}</h3><table><thead><tr>`;
+    headers.forEach(hh => { h += `<th>${hh}</th>`; });
+    h += `</tr></thead><tbody>${rows}</tbody></table></div>`;
     return h;
   }
 
-  function rankRows(players, champName) {
+  function rankRows(players) {
     return players.map((p, i) => {
-      const st = p.name === champName ? '🏆' : p.losses > 0 ? 'Elim.' : 'Activo';
-      return '<tr class="' + (i<3?'top':'') + '"><td>' + (i+1) + '</td><td>' + p.name + '</td>'
-        + '<td>' + p.qpts + '</td><td>' + p.wins + '</td><td>' + p.losses + '</td><td>' + st + '</td></tr>';
+      const wr = (p.wins + p.losses) > 0 ? Math.round(p.wins / (p.wins + p.losses) * 100) : 0;
+      const champBadge = p.champs > 0 ? ` 🏆` : '';
+      return `<tr class="${i<3?'top':''}">
+        <td>${i+1}</td>
+        <td>${p.name}${champBadge}</td>
+        <td>${p.tournaments}</td>
+        <td>${p.wins}</td>
+        <td>${p.losses}</td>
+        <td>${p.qpts}</td>
+        <td>${wr}%</td>
+      </tr>`;
     }).join('');
   }
 
-  let body = '<div class="header"><div class="header-inner">' + logoHtml
-    + '<div class="header-text"><h1>' + club + '</h1><h2>' + tn + '</h2>'
-    + '<p>' + td + ' · Informe de Ranking</p></div></div></div>';
+  // ── Header ──
+  let body = `<div class="header"><div class="header-inner">${logoHtml}
+    <div class="header-text">
+      <h1>${club}</h1>
+      <h2>Ranking Global</h2>
+      <p>${today} · Informe de Ranking</p>
+    </div></div></div>`;
 
-  // Champions banner
-  if (proChamp !== '—' || semiChamp !== '—') {
-    body += '<div class="champ-box">🏆 PRO: ' + proChamp + '   ·   🎯 SEMI: ' + semiChamp + '</div>';
-  }
+  // ── Summary stats ──
+  const totalT = new Set(RK_CACHE.map(r => r.tournament_name).filter(Boolean)).size;
+  body += `<div class="summary-row">
+    <div class="summary-card"><div class="summary-n">${allPlayers.length}</div><div class="summary-l">Jugadores</div></div>
+    <div class="summary-card"><div class="summary-n">${totalT}</div><div class="summary-l">Torneos</div></div>
+    <div class="summary-card pro-card"><div class="summary-n">${proPlayers.length}</div><div class="summary-l">⚡ PRO</div></div>
+    <div class="summary-card semi-card"><div class="summary-n">${semiPlayers.length}</div><div class="summary-l">🎯 SEMI PRO</div></div>
+  </div>`;
 
-  // ── Table 1: Qualify pts by level ──
-  body += '<div class="level-split">';
+  const hdrs = ['#','Jugador','T','V','D','Pts','Win%'];
+
+  // ── PRO table ──
   if (proPlayers.length) {
-    body += pdfTable('⚡ Clasificación PRO',
-      ['#','Jugador','Pts Clasif.','Victorias','Derrotas','Estado'],
-      rankRows(proPlayers, proChamp));
+    body += pdfTable('⚡ Ranking PRO', hdrs, rankRows(proPlayers));
   }
+
+  // ── SEMI PRO table ──
   if (semiPlayers.length) {
-    body += pdfTable('🎯 Clasificación SEMI PRO',
-      ['#','Jugador','Pts Clasif.','Victorias','Derrotas','Estado'],
-      rankRows(semiPlayers, semiChamp));
-  }
-  body += '</div>';
-
-  // ── Table 2: Top Bulls ──
-  if (topBulls.length) {
-    const bullRows = topBulls.map(([name, n], i) =>
-      '<tr class="' + (i<3?'top':'') + '"><td>' + (i+1) + '</td><td>' + name + '</td><td><strong>' + n + '</strong></td></tr>'
-    ).join('');
-    body += pdfTable('🎯 Más Bulls Eyes (Eliminatoria)', ['#','Jugador','Bulls'], bullRows);
+    body += pdfTable('🎯 Ranking SEMI PRO', hdrs, rankRows(semiPlayers));
   }
 
-  // ── Table 3: Top KS ──
+  // ── Untagged / General ──
+  if (untagged.length) {
+    body += pdfTable('🌐 Ranking General (sin categoría)', hdrs, rankRows(untagged));
+  }
+
+  // ── Top KS ──
+  const topKS = [...allPlayers].filter(p => p.ks > 0).sort((a,b) => b.ks - a.ks).slice(0,10);
   if (topKS.length) {
-    const ksRows = topKS.map(([name, n], i) =>
-      '<tr class="' + (i<3?'top':'') + '"><td>' + (i+1) + '</td><td>' + name + '</td><td><strong>' + n + '</strong></td></tr>'
+    const ksRows = topKS.map((p,i) =>
+      `<tr class="${i<3?'top':''}"><td>${i+1}</td><td>${p.name}</td><td><strong>${p.ks}</strong></td></tr>`
     ).join('');
-    body += pdfTable('🪓 Más Killshots (Clasif. + Eliminatoria)', ['#','Jugador','KS'], ksRows);
+    body += pdfTable('🪓 Más Killshots', ['#','Jugador','KS'], ksRows);
   }
 
-  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
-    + '*{margin:0;padding:0;box-sizing:border-box}'
-    + 'body{font-family:Arial,sans-serif;padding:2rem;color:#2c2418;background:#fff;font-size:13px}'
-    + '.header{margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:3px solid #c4873a}'
-    + '.header-inner{display:flex;align-items:center;gap:1.25rem}'
-    + '.header-text{flex:1} h1{font-size:1.4rem;color:#c4873a;font-weight:800}'
-    + 'h2{font-size:0.9rem;color:#4a3e30;font-weight:600} p{color:#8c7d6a;font-size:11px}'
-    + '.level-split{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}'
-    + '.sec{margin-bottom:1.5rem}'
-    + 'h3{font-size:10px;text-transform:uppercase;letter-spacing:2px;margin-bottom:0.6rem;color:#c4873a;border-bottom:1px solid #ddd5c8;padding-bottom:5px}'
-    + 'table{width:100%;border-collapse:collapse}'
-    + 'th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#8c7d6a;padding:5px 8px;text-align:left;background:#f7f3ee;border-bottom:2px solid #ddd5c8}'
-    + 'td{padding:7px 8px;border-bottom:1px solid #e8e1d6;font-size:12px}'
-    + 'tr.top td{background:#fdf4e7}'
-    + '.champ-box{padding:1rem;background:#fdf4e7;border:2px solid #f0d5a8;border-radius:6px;font-size:1rem;font-weight:bold;color:#9b7b52;margin-bottom:1.5rem;text-align:center}'
-    + '@media print{body{padding:1rem}.level-split{grid-template-columns:1fr 1fr}}'
-    + '</style></head><body>' + body + '<scr' + 'ipt>window.print();</scr' + 'ipt></body></html>';
+  // ── Top Bulls ──
+  const topBulls = [...allPlayers].filter(p => p.bs > 0).sort((a,b) => b.bs - a.bs).slice(0,10);
+  if (topBulls.length) {
+    const bRows = topBulls.map((p,i) =>
+      `<tr class="${i<3?'top':''}"><td>${i+1}</td><td>${p.name}</td><td><strong>${p.bs}</strong></td></tr>`
+    ).join('');
+    body += pdfTable('🎯 Más Bulls Eyes', ['#','Jugador','Bulls'], bRows);
+  }
 
-  win.document.write(html); win.document.close();
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:Arial,sans-serif;padding:2rem;color:#2c2418;background:#fff;font-size:13px}
+    .header{margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:3px solid #c4873a}
+    .header-inner{display:flex;align-items:center;gap:1.25rem}
+    .header-text{flex:1} h1{font-size:1.4rem;color:#c4873a;font-weight:800}
+    h2{font-size:0.9rem;color:#4a3e30;font-weight:600} p{color:#8c7d6a;font-size:11px}
+    .summary-row{display:flex;gap:1rem;margin-bottom:1.5rem}
+    .summary-card{flex:1;padding:0.75rem 1rem;background:#f7f3ee;border-radius:6px;text-align:center}
+    .pro-card{background:#fffbea;border:1px solid #f0d5a8}
+    .semi-card{background:#f0fdf4;border:1px solid #a7f3d0}
+    .summary-n{font-size:1.6rem;font-weight:800;color:#c4873a}
+    .pro-card .summary-n{color:#b45309}
+    .semi-card .summary-n{color:#059669}
+    .summary-l{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#8c7d6a;margin-top:2px}
+    .sec{margin-bottom:1.5rem}
+    h3{font-size:10px;text-transform:uppercase;letter-spacing:2px;margin-bottom:0.6rem;color:#c4873a;border-bottom:1px solid #ddd5c8;padding-bottom:5px}
+    table{width:100%;border-collapse:collapse}
+    th{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#8c7d6a;padding:5px 8px;text-align:left;background:#f7f3ee;border-bottom:2px solid #ddd5c8}
+    td{padding:7px 8px;border-bottom:1px solid #e8e1d6;font-size:12px}
+    tr.top td{background:#fdf4e7}
+    @media print{body{padding:1rem}}
+  </style></head><body>${body}</body></html>`;
+
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 400);
 }
-
 
 function expHistPDF() {
   const t = VIEW_HIST; if (!t) return;
