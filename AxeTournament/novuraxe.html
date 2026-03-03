@@ -4607,7 +4607,17 @@ function saveTournament() {
 
   save(); renderHistory();
   toast('Guardando stats...', 'green');
-  syncToSupabase().then(() => {
+  syncToSupabase().then(async () => {
+    // Capture the Supabase tournament id into the snap for later deletion
+    try {
+      const tRows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id`);
+      if (tRows?.[0]?.id) {
+        snap.supabase_tid = tRows[0].id;
+        // Also mark tournament as archived in Supabase so it doesn't get overwritten
+        await safe(dbUpdate('tournaments', `id=eq.${tRows[0].id}`, { status: 'archived' }));
+        localStorage.setItem(gk(), JSON.stringify(ADMIN));
+      }
+    } catch(e) { /* silent */ }
     toast('✓ Torneo y stats guardados', 'green');
   }).catch(e => {
     console.error('syncToSupabase error:', e);
@@ -4676,12 +4686,24 @@ function confirmDeleteHist() {
 // Actually deletes after confirmation
 function doDeleteHist() {
   if (!VIEW_HIST) return;
-  ADMIN.history = ADMIN.history.filter(h => h.id !== VIEW_HIST.id);
+  const snap = VIEW_HIST;
+  ADMIN.history = ADMIN.history.filter(h => h.id !== snap.id);
   VIEW_HIST = null;
   localStorage.setItem(gk(), JSON.stringify(ADMIN));
   closeModal('m-del-hist');
   renderHistory();
   toast('Torneo eliminado', 'green');
+
+  // Delete from Supabase if we have the tournament id
+  if (snap.supabase_tid && DB_USER_ID) {
+    (async () => {
+      try {
+        await dbDelete('global_stats',
+          `organizer_id=eq.${DB_USER_ID}&tournament_name=eq.${encodeURIComponent(snap.name)}`);
+        await dbDelete('tournaments', `id=eq.${snap.supabase_tid}`);
+      } catch(e) { console.warn('[delete] supabase cleanup:', e.message); }
+    })();
+  }
 }
 
 
