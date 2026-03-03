@@ -3519,20 +3519,18 @@ function genBracket() {
 
   // Store qual scores & players into respective groups
   // Pro bracket → ADMIN.pro, Semi bracket → ADMIN.semi
-  if (proRanked.length >= 2) {
-    ADMIN.pro.players    = proRanked;
-    ADMIN.pro.qualScores = Object.fromEntries(
-      proRanked.map(p => [p.id, G().qualScores[p.id] || {}])
-    );
-    buildBracketForGroup(ADMIN.pro, proRanked);
-  }
-  if (semiRanked.length >= 2) {
-    ADMIN.semi.players    = semiRanked;
-    ADMIN.semi.qualScores = Object.fromEntries(
-      semiRanked.map(p => [p.id, G().qualScores[p.id] || {}])
-    );
-    buildBracketForGroup(ADMIN.semi, semiRanked);
-  }
+  // Always copy players+scores to their group, regardless of count
+  ADMIN.pro.players    = proRanked;
+  ADMIN.pro.qualScores = Object.fromEntries(
+    proRanked.map(p => [p.id, G().qualScores[p.id] || {}])
+  );
+  if (proRanked.length >= 2) buildBracketForGroup(ADMIN.pro, proRanked);
+
+  ADMIN.semi.players    = semiRanked;
+  ADMIN.semi.qualScores = Object.fromEntries(
+    semiRanked.map(p => [p.id, G().qualScores[p.id] || {}])
+  );
+  if (semiRanked.length >= 2) buildBracketForGroup(ADMIN.semi, semiRanked);
 
   save(); renderBracket(); renderDash();
 }
