@@ -3987,16 +3987,8 @@ function renderRankingYearView(container, filterYear) {
     return d && d.getFullYear() === parseInt(filterYear);
   });
 
-  // Determine which months have data
-  const monthsWithData = new Set();
-  rows.forEach(r => {
-    const d = r.updated_at ? new Date(r.updated_at) : null;
-    if (d) monthsWithData.add(d.getMonth()); // 0-11
-  });
-  // Always show all 12 months for the selected year, or just months with data if no year filter
-  const activeCols = filterYear
-    ? [0,1,2,3,4,5,6,7,8,9,10,11]
-    : [...monthsWithData].sort((a,b) => a-b);
+  // Always show all 12 months
+  const activeCols = [0,1,2,3,4,5,6,7,8,9,10,11];
 
   // Aggregate: player -> month -> total_qpts
   const agg = {}; // { playerName: { tag, monthPts: {0:x, 1:x...}, total } }
