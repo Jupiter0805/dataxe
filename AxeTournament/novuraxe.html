@@ -2244,23 +2244,25 @@ async function syncToSupabase() {
       }
       if (!gid) continue;
 
-      // qualify_config — upsert via Prefer header
-      await safe(dbUpsert('qualify_config', {
-        group_id: gid,
-        rounds: g.qualCfg.rounds,
-        throws_per_round: g.qualCfg.throws,
-        ks_enabled: g.qualCfg.ksEnabled !== false,
-        ks_value: 8,
-        allowed_scores: g.qualCfg.scores || [0,1,2,3,4,5,6]
-      }));
+      // qualify_config — GET first, then PATCH or POST
+      const qcRows = await dbGet('qualify_config', `group_id=eq.${gid}&select=id`);
+      const qcData = { group_id: gid, rounds: g.qualCfg.rounds, throws_per_round: g.qualCfg.throws,
+        ks_enabled: g.qualCfg.ksEnabled !== false, ks_value: 8, allowed_scores: g.qualCfg.scores || [0,1,2,3,4,5,6] };
+      if (qcRows?.[0]?.id) {
+        await safe(dbUpdate('qualify_config', `id=eq.${qcRows[0].id}`, qcData));
+      } else {
+        await safe(dbInsert('qualify_config', qcData));
+      }
 
-      // elim_config — upsert
-      await safe(dbUpsert('elim_config', {
-        group_id: gid,
-        ks_max: g.elimCfg.ksMax,
-        bull_max: g.elimCfg.bullMax,
-        allowed_scores: g.elimCfg.scores || [0,1,2,3,4,5]
-      }));
+      // elim_config — GET first, then PATCH or POST
+      const ecRows = await dbGet('elim_config', `group_id=eq.${gid}&select=id`);
+      const ecData = { group_id: gid, ks_max: g.elimCfg.ksMax, bull_max: g.elimCfg.bullMax,
+        allowed_scores: g.elimCfg.scores || [0,1,2,3,4,5] };
+      if (ecRows?.[0]?.id) {
+        await safe(dbUpdate('elim_config', `id=eq.${ecRows[0].id}`, ecData));
+      } else {
+        await safe(dbInsert('elim_config', ecData));
+      }
 
       // players + their throws
       for (const pl of g.players) {
@@ -2278,7 +2280,7 @@ async function syncToSupabase() {
           }
           if (!pid) continue;
 
-          // qualify throws — batch upsert all throws for this player at once
+          // qualify throws — delete first then insert to avoid unique constraint conflicts
           const throwRows = [];
           for (let r = 0; r < g.qualCfg.rounds; r++) {
             const sc = (g.qualScores[pl.id] || {})['r' + r] || [];
@@ -2287,7 +2289,10 @@ async function syncToSupabase() {
               throwRows.push({ player_id: pid, round: r, throw_num: t, value: sc[t], is_ks: sc[t] === 8 });
             }
           }
-          if (throwRows.length) await safe(dbUpsert('qualify_throws', throwRows));
+          if (throwRows.length) {
+            await safe(dbDelete('qualify_throws', `player_id=eq.${pid}`));
+            await safe(dbInsert('qualify_throws', throwRows));
+          }
 
         } catch(ep) { console.warn('[sync] player', pl.name, ep.message); }
       }
@@ -2348,16 +2353,25 @@ async function syncToSupabase() {
         elim_bulls:      s.elim_bulls     || 0,
       };
     });
-    if (statsRows.length) await safe(dbUpsert('global_stats', statsRows));
+    for (const row of statsRows) {
+      try {
+        const existing = await dbGet('global_stats',
+          `organizer_id=eq.${DB_USER_ID}&player_name=eq.${encodeURIComponent(row.player_name)}&tournament_name=eq.${encodeURIComponent(row.tournament_name)}&select=id`);
+        if (existing?.[0]?.id) {
+          await safe(dbUpdate('global_stats', `id=eq.${existing[0].id}`, row));
+        } else {
+          await safe(dbInsert('global_stats', row));
+        }
+      } catch(eg) { console.warn('[sync] global_stats row:', eg.message); }
+    }
   } catch(es) { console.warn('[sync] global_stats:', es.message); }
 
   // ── 4. Organizer profile ──
   await safe(dbUpdate('users', `id=eq.${DB_USER_ID}`, {
     club_name: ADMIN.club || '', logo_url: ADMIN.logo || null
   }));
-  await safe(dbUpsert('organizers', {
-    id: DB_USER_ID, user_id: DB_USER_ID,
-    club_name: ADMIN.club || '', username: CUR_USER || '', logo_url: ADMIN.logo || null
+  await safe(dbUpdate('organizers', `id=eq.${DB_USER_ID}`, {
+    club_name: ADMIN.club || '', logo_url: ADMIN.logo || null
   }));
 }
 
@@ -4652,7 +4666,7 @@ function doDeleteHist() {
   if (!VIEW_HIST) return;
   ADMIN.history = ADMIN.history.filter(h => h.id !== VIEW_HIST.id);
   VIEW_HIST = null;
-  save();
+  localStorage.setItem(gk(), JSON.stringify(ADMIN));
   closeModal('m-del-hist');
   renderHistory();
   toast('Torneo eliminado', 'green');
