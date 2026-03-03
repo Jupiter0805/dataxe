@@ -2261,16 +2261,14 @@ async function removeAvatar() {
 async function exportMyData() {
   if (!CUR_USER) return;
   toast('⏳ Preparando exportación...');
-  const [profile, stats, follows] = await Promise.all([
+  const [profile, stats] = await Promise.all([
     dbGet(`users?id=eq.${CUR_USER.id}&select=*`),
-    dbGet(`global_stats?user_id=eq.${CUR_USER.id}&select=*`),
-    dbGet(`follows?follower_id=eq.${CUR_USER.id}&select=*`)
+    dbGet(`global_stats?user_id=eq.${CUR_USER.id}&select=*`)
   ]);
   const data = {
     exportDate: new Date().toISOString(),
     profile:    profile?.[0] || {},
-    stats:      stats  || [],
-    follows:    follows|| []
+    stats:      stats  || []
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
