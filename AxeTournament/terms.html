@@ -18,13 +18,111 @@
   body{background:var(--bg0);color:var(--ink2);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.75;min-height:100vh}
   body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 800px 500px at 80% 10%,rgba(196,135,58,0.06) 0%,transparent 70%),radial-gradient(ellipse 600px 400px at 10% 80%,rgba(196,135,58,0.04) 0%,transparent 70%);pointer-events:none;z-index:0}
 
-  .topbar{position:sticky;top:0;z-index:100;background:rgba(17,16,9,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:1rem;padding:0 2rem;height:56px}
-  .topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--accent);text-decoration:none}
-  .topbar-sep{flex:1}
-  .topbar-back{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink4);text-decoration:none;border:1px solid rgba(255,255,255,0.1);padding:6px 14px;border-radius:20px;transition:all 0.2s;cursor:pointer;background:none}
-  .topbar-back:hover{color:var(--accent);border-color:rgba(196,135,58,0.4)}
+  /* ─── NAV ─── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 0 2.5rem;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s;
+    background: rgba(17,16,9,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(196,135,58,0.12);
+  }
+  nav.scrolled {
+    background: rgba(17,16,9,0.96);
+    border-bottom-color: rgba(196,135,58,0.2);
+  }
+  .t-logo {
+    background: white;
+    padding: 7px 13px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-img { height: 36px; width: auto; object-fit: contain; }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    text-decoration: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.06); }
+  .nav-cta {
+    background: var(--accent) !important;
+    color: #1a1410 !important;
+    font-weight: 700 !important;
+    padding: 8px 20px !important;
+    border-radius: 4px !important;
+  }
+  .nav-cta:hover { background: var(--accent2) !important; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(196,135,58,0.35); }
+  .nav-mobile-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+  }
+  /* Mobile menu */
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(17,16,9,0.98);
+    z-index: 99;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .mobile-menu a:hover { color: var(--accent); }
+  .mobile-menu-close {
+    position: absolute;
+    top: 1.5rem; right: 2rem;
+    background: none; border: none;
+    color: rgba(255,255,255,0.5);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+  @media(max-width:768px) {
+    .nav-links { display: none; }
+    .nav-mobile-btn { display: block; }
+  }
 
-  .hero{position:relative;z-index:1;padding:5rem 2rem 3rem;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05)}
+  .hero{position:relative;z-index:1;padding:8rem 2rem 3rem;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05)}
   .hero-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);background:rgba(196,135,58,0.1);border:1px solid rgba(196,135,58,0.2);padding:5px 16px;border-radius:20px;margin-bottom:1.5rem}
   .hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,6vw,4.5rem);letter-spacing:4px;color:var(--ink1);line-height:1.05;margin-bottom:1rem}
   .hero h1 span{color:var(--accent)}
@@ -71,10 +169,26 @@
 </head>
 <body>
 
-<div class="topbar">
-  <span class="topbar-logo">NOVURAXE</span>
-  <div class="topbar-sep"></div>
-  <button class="topbar-back" onclick="history.back()">← Volver</button>
+<nav id="nav">
+  <div class="t-logo">
+    <img src="public/novuraxe-logo.png" alt="NOVURAXE" class="logo-img">
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html#features">Funciones</a></li>
+    <li><a href="index.html#how">Como funciona</a></li>
+    <li><a href="index.html#about">Quienes somos</a></li>
+    <li><a href="index.html#gear">Equipamiento</a></li>
+    <li><a href="novuraxe.html" class="nav-cta">Iniciar sesion →</a></li>
+  </ul>
+  <button class="nav-mobile-btn" onclick="toggleMenu()">☰</button>
+</nav>
+<div class="mobile-menu" id="mobile-menu">
+  <button class="mobile-menu-close" onclick="toggleMenu()">✕ Cerrar</button>
+  <a href="index.html#features" onclick="toggleMenu()">Funciones</a>
+  <a href="index.html#how" onclick="toggleMenu()">Como funciona</a>
+  <a href="index.html#about" onclick="toggleMenu()">Quienes somos</a>
+  <a href="index.html#gear" onclick="toggleMenu()">Equipamiento</a>
+  <a href="novuraxe.html" style="padding:10px 28px;border-radius:4px;background:var(--accent);color:#1a1410;font-weight:700;letter-spacing:1.5px;font-size:11px;text-transform:uppercase">Iniciar sesion →</a>
 </div>
 
 <div class="hero">
@@ -256,5 +370,15 @@
   <span style="color:var(--ink4)">© 2025 Novuraxe · Todos los derechos reservados sobre diseño y código.</span>
 </div>
 
+<script>
+function toggleMenu() {
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+// Nav scroll effect
+window.addEventListener('scroll', function() {
+  const nav = document.getElementById('nav');
+  if (nav) nav.classList.toggle('scrolled', window.scrollY > 20);
+});
+</script>
 </body>
 </html>
