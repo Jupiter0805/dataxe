@@ -1508,10 +1508,11 @@ function showPage(p) {
 }
 
 function renderPage(p) {
-  if (p === 'feed')    renderFeed();
-  if (p === 'orgs')    renderOrgs();
-  if (p === 'stats')   renderStats();
-  if (p === 'history') renderHistory();
+  if (p === 'feed')     renderFeed();
+  if (p === 'orgs')     renderOrgs();
+  if (p === 'stats')    renderStats();
+  if (p === 'history')  renderHistory();
+  if (p === 'settings') initSettingsPage();
 }
 
 // ══════════════════════════════
