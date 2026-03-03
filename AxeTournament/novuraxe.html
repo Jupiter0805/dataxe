@@ -1434,8 +1434,8 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       <button class="t-nav-btn" data-page="bracket" onclick="showPage('bracket')">Bracket</button>
       <button class="t-nav-btn" data-page="ranking" onclick="showPage('ranking')">Ranking</button>
       <button class="t-nav-btn" data-page="history" onclick="showPage('history')">Historial</button>
-      <button class="t-nav-btn" data-page="followers" onclick="showPage('followers')">Seguidores</button>
-      <button class="t-nav-btn" data-page="posts" onclick="showPage('posts')">Publicaciones</button>
+      <button class="t-nav-btn" data-page="followers" onclick="showPage('followers')">👥 Seguidores</button>
+      <button class="t-nav-btn" data-page="posts" onclick="showPage('posts')">📢 Publicaciones</button>
       <button class="t-nav-btn" data-page="settings" onclick="showPage('settings')">Config</button>
     </div>
     <div class="t-right">
@@ -3968,77 +3968,180 @@ function renderRankingFromCache() {
   const filterYear  = document.getElementById('rk-filter-year')?.value  || '';
   const filterMonth = document.getElementById('rk-filter-month')?.value || '';
 
-  // Filter rows by date
+  // If a specific month is selected → classic view
+  if (filterMonth) {
+    renderRankingMonthView(container, filterYear, filterMonth);
+  } else {
+    renderRankingYearView(container, filterYear);
+  }
+}
+
+// ── YEAR VIEW: columns Jan-Dec + Total ──
+function renderRankingYearView(container, filterYear) {
+  const MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  // Filter by year only
   let rows = RK_CACHE.filter(r => {
-    if (!filterYear && !filterMonth) return true;
+    if (!filterYear) return true;
     const d = r.updated_at ? new Date(r.updated_at) : null;
-    if (!d) return !filterYear && !filterMonth;
+    return d && d.getFullYear() === parseInt(filterYear);
+  });
+
+  // Determine which months have data
+  const monthsWithData = new Set();
+  rows.forEach(r => {
+    const d = r.updated_at ? new Date(r.updated_at) : null;
+    if (d) monthsWithData.add(d.getMonth()); // 0-11
+  });
+  // Always show all 12 months for the selected year, or just months with data if no year filter
+  const activeCols = filterYear
+    ? [0,1,2,3,4,5,6,7,8,9,10,11]
+    : [...monthsWithData].sort((a,b) => a-b);
+
+  // Aggregate: player -> month -> total_qpts
+  const agg = {}; // { playerName: { tag, monthPts: {0:x, 1:x...}, total } }
+  rows.forEach(r => {
+    const name = r.player_name || '—';
+    const d = r.updated_at ? new Date(r.updated_at) : null;
+    const m = d ? d.getMonth() : null;
+    if (!agg[name]) agg[name] = {
+      name,
+      tag: r.player_tag || null,
+      monthPts: {},
+      total: 0
+    };
+    const a = agg[name];
+    if (r.player_tag) a.tag = r.player_tag;
+    if (m !== null) {
+      a.monthPts[m] = (a.monthPts[m] || 0) + (r.total_qpts || 0);
+    }
+    a.total += r.total_qpts || 0;
+  });
+
+  let players = Object.values(agg);
+
+  // Tab filter
+  if (CUR_RANK_TAB === 'pro')  players = players.filter(p => p.tag === 'pro');
+  if (CUR_RANK_TAB === 'semi') players = players.filter(p => p.tag === 'semi');
+
+  // Sort by total desc
+  players.sort((a, b) => b.total - a.total);
+
+  if (!players.length) {
+    container.innerHTML = `<div class="card" style="color:var(--ink3);text-align:center;padding:3rem">${RK_CACHE.length ? 'Sin resultados para este filtro' : 'Aún no hay torneos guardados'}</div>`;
+    return;
+  }
+
+  const yearLabel = filterYear || 'Histórico';
+  const colHeaders = activeCols.map(m =>
+    `<th style="text-align:center;color:rgba(255,255,255,0.5);font-size:11px;white-space:nowrap">${MONTHS[m]}</th>`
+  ).join('');
+
+  const tableRows = players.map((p, i) => {
+    const rank = i + 1;
+    const cls  = rank <= 3 ? 'rank-' + rank : '';
+    const tagBadge = p.tag === 'pro'
+      ? `<span class="badge badge-pro" style="font-size:8px">⚡ PRO</span>`
+      : p.tag === 'semi'
+        ? `<span class="badge badge-semi" style="font-size:8px">🎯 SEMI</span>`
+        : '';
+    const monthCols = activeCols.map(m => {
+      const pts = p.monthPts[m] || 0;
+      return `<td style="text-align:center;font-family:var(--f-display);font-size:13px;
+        color:${pts > 0 ? 'var(--ink)' : 'rgba(255,255,255,0.15)'}">${pts > 0 ? pts : '—'}</td>`;
+    }).join('');
+    return `<tr class="${cls}">
+      <td><span class="rank-n">${rank}</span></td>
+      <td><div style="display:flex;align-items:center;gap:5px">${tagBadge}
+        <span class="p-name-cell">${p.name}</span>
+      </div></td>
+      ${monthCols}
+      <td style="text-align:center;font-family:var(--f-display);font-size:14px;
+        font-weight:800;color:var(--accent)">${p.total}</td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase">
+        ${yearLabel} · ${players.length} jugadores
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;overflow-x:auto">
+      <table class="tbl" style="min-width:600px">
+        <thead><tr>
+          <th style="width:40px">#</th>
+          <th>Jugador</th>
+          ${colHeaders}
+          <th style="text-align:center;color:var(--accent)">TOTAL</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>`;
+}
+
+// ── MONTH VIEW: classic V/D/Pts/Win% ──
+function renderRankingMonthView(container, filterYear, filterMonth) {
+  let rows = RK_CACHE.filter(r => {
+    const d = r.updated_at ? new Date(r.updated_at) : null;
+    if (!d) return false;
     if (filterYear  && d.getFullYear()  !== parseInt(filterYear))  return false;
     if (filterMonth && (d.getMonth()+1) !== parseInt(filterMonth)) return false;
     return true;
   });
 
-  // Aggregate by player_name (sum across tournaments in period)
   const agg = {};
   rows.forEach(r => {
     const name = r.player_name || '—';
     if (!agg[name]) agg[name] = {
       name, user_id: r.user_id, tag: r.player_tag || null,
-      tournaments: 0, wins: 0, losses: 0,
-      qpts: 0, ks: 0, bs: 0, champs: 0
+      tournaments: 0, wins: 0, losses: 0, qpts: 0, ks: 0, bs: 0, champs: 0
     };
     const a = agg[name];
     if (r.user_id && r.user_id !== DB_USER_ID) a.user_id = r.user_id;
-    if (r.player_tag) a.tag = r.player_tag; // use tag if present in any row
-    a.tournaments += r.tournaments    || 0;
-    a.wins        += r.wins           || 0;
-    a.losses      += r.losses         || 0;
-    a.qpts        += r.total_qpts     || 0;
-    a.ks          += r.total_ks       || 0;
-    a.bs          += r.total_bs       || 0;
+    if (r.player_tag) a.tag = r.player_tag;
+    a.tournaments += r.tournaments || 0;
+    a.wins        += r.wins        || 0;
+    a.losses      += r.losses      || 0;
+    a.qpts        += r.total_qpts  || 0;
+    a.ks          += r.total_ks    || 0;
+    a.bs          += r.total_bs    || 0;
     if (r.wins > 0) a.champs++;
   });
 
   let players = Object.values(agg);
-
-  // Tab filter using player_tag from global_stats
   if (CUR_RANK_TAB === 'pro')  players = players.filter(p => p.tag === 'pro');
   if (CUR_RANK_TAB === 'semi') players = players.filter(p => p.tag === 'semi');
-
-  // Sort: wins desc, then qpts desc
   players.sort((a, b) => b.wins - a.wins || b.qpts - a.qpts);
 
   if (!players.length) {
-    const msg = RK_CACHE.length
-      ? 'Sin resultados para este filtro'
-      : 'Aún no hay torneos guardados';
-    container.innerHTML = `<div class="card" style="color:var(--ink3);text-align:center;padding:3rem">${msg}</div>`;
+    container.innerHTML = `<div class="card" style="color:var(--ink3);text-align:center;padding:3rem">Sin resultados para este filtro</div>`;
     return;
   }
+
+  const MONTH_NAMES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const periodLabel = `${MONTH_NAMES[parseInt(filterMonth)]}${filterYear ? ' ' + filterYear : ''}`;
 
   const tableRows = players.map((p, i) => {
     const rank = i + 1;
     const cls  = rank <= 3 ? 'rank-' + rank : '';
-    const wr   = (p.wins + p.losses) > 0 ? Math.round((p.wins / (p.wins + p.losses)) * 100) : 0;
-    const champBadge = p.champs > 0
-      ? `<span class="badge badge-champ" style="font-size:8px">🏆 ${p.champs}</span>` : '';
-    const ksBadge  = p.ks > 0 ? `<span class="mini-badge ks-badge">🪓 ${p.ks}</span>`  : '';
-    const bullBadge= p.bs > 0 ? `<span class="mini-badge bull-badge">🎯 ${p.bs}</span>` : '';
-    const tagBadge = p.tag === 'pro'
+    const wr   = (p.wins + p.losses) > 0 ? Math.round(p.wins / (p.wins + p.losses) * 100) : 0;
+    const champBadge = p.champs > 0 ? `<span class="badge badge-champ" style="font-size:8px">🏆 ${p.champs}</span>` : '';
+    const ksBadge   = p.ks > 0 ? `<span class="mini-badge ks-badge">🪓 ${p.ks}</span>`  : '';
+    const bullBadge = p.bs > 0 ? `<span class="mini-badge bull-badge">🎯 ${p.bs}</span>` : '';
+    const tagBadge  = p.tag === 'pro'
       ? `<span class="badge badge-pro" style="font-size:8px">⚡ PRO</span>`
       : p.tag === 'semi'
         ? `<span class="badge badge-semi" style="font-size:8px">🎯 SEMI</span>`
         : '';
     return `<tr class="${cls}">
       <td><span class="rank-n">${rank}</span></td>
-      <td><div style="display:flex;align-items:center;gap:6px">
-        <div>
-          <div class="p-name-cell" style="display:flex;align-items:center;gap:5px">
-            ${tagBadge} ${p.name} ${champBadge}
-          </div>
-          <div style="display:flex;gap:3px;margin-top:2px">${ksBadge}${bullBadge}</div>
+      <td><div style="display:flex;align-items:center;gap:6px"><div>
+        <div class="p-name-cell" style="display:flex;align-items:center;gap:5px">
+          ${tagBadge} ${p.name} ${champBadge}
         </div>
-      </div></td>
+        <div style="display:flex;gap:3px;margin-top:2px">${ksBadge}${bullBadge}</div>
+      </div></div></td>
       <td style="color:var(--ink3);font-size:12px">${p.tournaments}</td>
       <td style="font-family:var(--f-display);color:var(--green)">${p.wins}</td>
       <td style="font-family:var(--f-display);color:var(--red)">${p.losses}</td>
@@ -4047,13 +4150,11 @@ function renderRankingFromCache() {
     </tr>`;
   }).join('');
 
-  const periodLabel = filterYear
-    ? (filterMonth ? `${['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(filterMonth)]} ${filterYear}` : filterYear)
-    : 'Histórico completo';
-
   container.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
-      <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase">${periodLabel} · ${players.length} jugadores</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase">
+        ${periodLabel} · ${players.length} jugadores
+      </div>
     </div>
     <div class="card" style="padding:0;overflow:hidden">
       <table class="tbl">
@@ -4068,6 +4169,7 @@ function renderRankingFromCache() {
       </table>
     </div>`;
 }
+
 
 function renderRankGroup(group, container) {
   if (!container) return;
@@ -5327,4 +5429,3 @@ function toast(msg) {
 </script>
 </body>
 </html>
-
