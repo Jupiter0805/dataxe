@@ -2346,11 +2346,13 @@ async function syncToSupabase() {
       // key is either "tName|||pName" (new) or just "playerName" (legacy)
       const playerName = s._pName || (key.includes('|||') ? key.split('|||')[1] : key);
       const tName      = s._tName || (key.includes('|||') ? key.split('|||')[0] : (ADMIN.tName || 'Torneo'));
+      const pUserId = playerUserMap[playerName] || DB_USER_ID;
       return {
-        user_id:         playerUserMap[playerName] || DB_USER_ID,
+        user_id:         pUserId,
         organizer_id:    DB_USER_ID,
         player_name:     playerName,
         tournament_name: tName,
+        player_tag:      FOLLOWER_TAG_MAP[pUserId] || null,
         tournaments:     s.tournaments    || 0,
         wins:            s.wins           || 0,
         losses:          s.losses         || 0,
@@ -3943,15 +3945,11 @@ async function renderRanking() {
   container.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando ranking...</div>';
 
   try {
-    // Fetch stats + follower tags in parallel
-    const [byOrg, byUser, followTags] = await Promise.all([
+    // Fetch stats (player_tag is stored directly in global_stats)
+    const [byOrg, byUser] = await Promise.all([
       dbGet(`global_stats?organizer_id=eq.${DB_USER_ID}&select=*`).catch(() => []),
       dbGet(`global_stats?user_id=eq.${DB_USER_ID}&select=*`).catch(() => []),
-      dbGet(`follows?following_id=eq.${DB_USER_ID}&select=follower_id,player_tag`).catch(() => []),
     ]);
-    // Build map: user_id -> player_tag
-    window.RK_TAG_MAP = {};
-    (followTags||[]).forEach(f => { if (f.player_tag) window.RK_TAG_MAP[f.follower_id] = f.player_tag; });
     // Merge deduplicating by id
     const seen = new Set();
     RK_CACHE = [...(byOrg||[]), ...(byUser||[])].filter(r => {
@@ -4005,11 +4003,13 @@ function renderRankingFromCache() {
   rows.forEach(r => {
     const name = r.player_name || '—';
     if (!agg[name]) agg[name] = {
-      name, user_id: r.user_id, tournaments: 0, wins: 0, losses: 0,
+      name, user_id: r.user_id, tag: r.player_tag || null,
+      tournaments: 0, wins: 0, losses: 0,
       qpts: 0, ks: 0, bs: 0, champs: 0
     };
     const a = agg[name];
-    if (r.user_id && r.user_id !== DB_USER_ID) a.user_id = r.user_id; // prefer player's own user_id
+    if (r.user_id && r.user_id !== DB_USER_ID) a.user_id = r.user_id;
+    if (r.player_tag) a.tag = r.player_tag; // use tag if present in any row
     a.tournaments += r.tournaments    || 0;
     a.wins        += r.wins           || 0;
     a.losses      += r.losses         || 0;
@@ -4021,11 +4021,7 @@ function renderRankingFromCache() {
 
   let players = Object.values(agg);
 
-  // Tab filter using follower tags (source of truth)
-  const tagMap = window.RK_TAG_MAP || {};
-  // Assign tag to each player from their user_id
-  players.forEach(p => { p.tag = tagMap[p.user_id] || null; });
-
+  // Tab filter using player_tag from global_stats
   if (CUR_RANK_TAB === 'pro')  players = players.filter(p => p.tag === 'pro');
   if (CUR_RANK_TAB === 'semi') players = players.filter(p => p.tag === 'semi');
 
