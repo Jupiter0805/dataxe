@@ -2706,7 +2706,7 @@ function bulkAdd() {
   let added = 0;
   names.forEach(name => {
     if (!G().players.find(p => p.name.toLowerCase() === name.toLowerCase())) {
-      G().players.push({ id: uid(), name }); added++;
+      G().players.push({ id: uid(), name, level: ADD_LEVEL }); added++;
     }
   });
   document.getElementById('bulk-inp').value = '';
@@ -3860,8 +3860,17 @@ function resetBracket() {
 // ─────────────────────────────────
 
 // Compute full stats for one player
+function playerStatsFromGroup(pid, name, grp) {
+  const g = grp || G();
+  return _playerStatsCore(pid, name, g);
+}
+
 function playerStats(pid, name) {
   const g = G();
+  return _playerStatsCore(pid, name, g);
+}
+
+function _playerStatsCore(pid, name, g) {
   const pl = g.players.find(p => p.id === pid);
 
   // ── Clasificación ──
@@ -4392,7 +4401,7 @@ function adjDashN(d) {
   renderDash();
 }
 
-function renderDashGroup(players, containerId) {
+function renderDashGroup(players, containerId, groupKey) {
   const el = document.getElementById(containerId);
   if (!el) return;
   const g = G();
@@ -4402,7 +4411,8 @@ function renderDashGroup(players, containerId) {
   const ranked = players
     .filter(p => !p.disqualified)
     .map(p => {
-      const s = playerStats(p.id, p.name);
+      const grp = groupKey ? ADMIN[groupKey] : G();
+      const s = playerStatsFromGroup(p.id, p.name, grp);
       return { ...p, qpts: s.qpts, wins: s.wins, losses: s.losses, elimKS: s.elimKS, elimBull: s.elimBull };
     })
     .sort((a, b) => b.qpts - a.qpts);
@@ -4463,10 +4473,10 @@ function renderDash() {
   }
 
   // Split players by level and render each column
-  const proPlayers  = g.players.filter(p => (p.level || 'pro') === 'pro');
-  const semiPlayers = g.players.filter(p => p.level === 'semi');
-  renderDashGroup(proPlayers,  'ds-pro');
-  renderDashGroup(semiPlayers, 'ds-semi');
+  const proPlayers  = (ADMIN.pro?.players  || []).filter(p => (p.level || 'pro') === 'pro');
+  const semiPlayers = (ADMIN.semi?.players || []).filter(p => p.level === 'semi');
+  renderDashGroup(proPlayers,  'ds-pro',  'pro');
+  renderDashGroup(semiPlayers, 'ds-semi', 'semi');
 
   // Recent results from both brackets
   const allLog = [
