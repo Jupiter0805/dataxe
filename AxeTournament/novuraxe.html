@@ -4631,34 +4631,34 @@ function viewHist(id) {
   openModal('m-hist');
 }
 
-
-function buildHistStats(grp) {
-  if (!grp?.players?.length) return [];
-  return [...grp.players].map(p => {
-    let qpts = 0, ks = 0, bs = 0;
-    for (let r = 0; r < (grp.qualCfg?.rounds || 2); r++) {
-      ((grp.qualScores?.[p.id] || {})['r' + r] || []).forEach(v => {
-        if (v === null || v === undefined) return;
-        qpts += v;
-        if (v === QUAL_KS_VAL) ks++;
-      });
-    }
-    const wins   = grp.champion === p.name ? 1 : (grp.champion ? 0 : 0);
-    (grp.matches || []).forEach(m => {
-      if (!m.winner) return;
-      const isP1 = m.p1 === p.name, isP2 = m.p2 === p.name;
-      if (!isP1 && !isP2) return;
-      const pIdx = isP1 ? 1 : 2;
-      for (let r = 0; r < 2; r++) {
-        (m[`r${r}p${pIdx}`] || []).forEach(v => {
-          if (v === DUEL_KS_VAL)  ks++;
-          if (v === DUEL_BULL_VAL) bs++;
-        });
-      }
-    });
-    return { ...p, qpts, ks, bs, wins };
-  }).sort((a, b) => b.qpts - a.qpts);
+// Called from the 🗑 button in the history list row
+function askDeleteHist(id) {
+  VIEW_HIST = ADMIN.history.find(h => h.id === id);
+  if (!VIEW_HIST) return;
+  document.getElementById('m-del-hist-name').textContent = VIEW_HIST.name + ' · ' + (VIEW_HIST.date || '');
+  openModal('m-del-hist');
 }
+
+// Called from the 🗑 button inside the detail modal
+function confirmDeleteHist() {
+  if (!VIEW_HIST) return;
+  document.getElementById('m-del-hist-name').textContent = VIEW_HIST.name + ' · ' + (VIEW_HIST.date || '');
+  closeModal('m-hist');
+  openModal('m-del-hist');
+}
+
+// Actually deletes after confirmation
+function doDeleteHist() {
+  if (!VIEW_HIST) return;
+  ADMIN.history = ADMIN.history.filter(h => h.id !== VIEW_HIST.id);
+  VIEW_HIST = null;
+  save();
+  closeModal('m-del-hist');
+  renderHistory();
+  toast('Torneo eliminado', 'green');
+}
+
+
 function _renderHistModal(t) {
   const proData  = t.data;
   const semiData = t.dataSemi;
