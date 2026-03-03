@@ -4505,68 +4505,79 @@ function renderDash() {
 // HISTORY
 // ─────────────────────────────────
 function saveTournament() {
-  const g = G();
-  if (!g.players.length) { toast('Sin jugadores que guardar', 'red'); return; }
+  const proPlayers  = ADMIN.pro?.players  || [];
+  const semiPlayers = ADMIN.semi?.players || [];
+  const allPlayers  = [...proPlayers, ...semiPlayers];
+  if (!allPlayers.length) { toast('Sin jugadores que guardar', 'red'); return; }
+
+  const tKey = ADMIN.tName || 'Torneo';
+
+  // Save one history entry with both groups
   const snap = {
-    id: Date.now(), name: ADMIN.tName || 'Torneo', date: ADMIN.tDate || '',
-    group: CUR_GROUP, champion: g.champion, players: g.players.length,
-    data: JSON.parse(JSON.stringify(g)),
+    id: Date.now(),
+    name: tKey,
+    date: ADMIN.tDate || '',
+    group: 'mixed',
+    champion: ADMIN.pro?.champion || null,
+    semiChampion: ADMIN.semi?.champion || null,
+    players: allPlayers.length,
+    proPlayers: proPlayers.length,
+    semiPlayers: semiPlayers.length,
+    data: JSON.parse(JSON.stringify(ADMIN.pro)),
+    dataSemi: JSON.parse(JSON.stringify(ADMIN.semi)),
   };
   ADMIN.history.unshift(snap);
 
-  // Update global stats — keyed by "tournamentName|||playerName" for per-tournament rows
-  const tKey = ADMIN.tName || 'Torneo';
-  g.players.forEach(p => {
-    const key = tKey + '|||' + p.name;
-    if (!ADMIN.global[key]) ADMIN.global[key] = {
-      wins: 0, losses: 0, tournaments: 0, qpts: 0,
-      total_ks: 0, total_bs: 0,
-      qualify_throws: 0, qualify_sixes: 0,
-      elim_throws: 0, elim_bulls: 0,
-      _tName: tKey,
-      _pName: p.name
-    };
-    const gs = ADMIN.global[key];
-    gs._tName = tKey;
-    gs._pName = p.name;
-    gs.tournaments = 1;
-    gs.qpts = qTotal(p.id);
-    gs.wins = (g.champion === p.name) ? 1 : 0;
-    gs.losses = (g.champion && g.champion !== p.name) ? 1 : 0;
+  // Helper to process one group's players
+  function processGroup(grp, players) {
+    if (!grp || !players.length) return;
+    players.forEach(p => {
+      const key = tKey + '|||' + p.name;
+      if (!ADMIN.global[key]) ADMIN.global[key] = {
+        wins: 0, losses: 0, tournaments: 0, qpts: 0,
+        total_ks: 0, total_bs: 0,
+        qualify_throws: 0, qualify_sixes: 0,
+        elim_throws: 0, elim_bulls: 0,
+        _tName: tKey, _pName: p.name
+      };
+      const gs = ADMIN.global[key];
+      gs._tName = tKey; gs._pName = p.name;
+      gs.tournaments = 1;
+      gs.qpts = grp.qualScores ? Object.values((grp.qualScores[p.id] || {}))
+        .flat().reduce((s,v) => s + (v||0), 0) : 0;
+      gs.wins   = (grp.champion === p.name) ? 1 : 0;
+      gs.losses = (grp.champion && grp.champion !== p.name) ? 1 : 0;
+      gs.qualify_throws = 0; gs.qualify_sixes = 0;
+      gs.total_ks = 0; gs.total_bs = 0; gs.elim_throws = 0; gs.elim_bulls = 0;
 
-    // Reset and recount — this is a snapshot, not accumulation
-    gs.qualify_throws = 0; gs.qualify_sixes = 0; gs.total_ks = 0;
-    gs.total_bs = 0; gs.elim_throws = 0; gs.elim_bulls = 0;
-
-    // ── Qualify stats ──
-    for (let r = 0; r < g.qualCfg.rounds; r++) {
-      const throws = (g.qualScores[p.id] || {})['r' + r] || [];
-      throws.forEach(v => {
-        if (v === null || v === undefined) return;
-        gs.qualify_throws++;
-        if (v === QUAL_KS_VAL) gs.total_ks++;
-        if (v === 6) gs.qualify_sixes++;
-      });
-    }
-
-    // ── Elimination stats ──
-    (g.matches || []).forEach(m => {
-      if (!m.winner) return;
-      const isP1 = m.p1 === p.name;
-      const isP2 = m.p2 === p.name;
-      if (!isP1 && !isP2) return;
-      const pIdx = isP1 ? 1 : 2;
-      for (let r = 0; r < 2; r++) {
-        const arr = m[`r${r}p${pIdx}`] || [];
-        arr.forEach(v => {
+      for (let r = 0; r < (grp.qualCfg?.rounds || 2); r++) {
+        const throws = (grp.qualScores?.[p.id] || {})['r' + r] || [];
+        throws.forEach(v => {
           if (v === null || v === undefined) return;
-          gs.elim_throws++;
-          if (v === DUEL_KS_VAL)  { gs.total_ks++; }
-          if (v === DUEL_BULL_VAL) { gs.elim_bulls++; gs.total_bs++; }
+          gs.qualify_throws++;
+          if (v === QUAL_KS_VAL) gs.total_ks++;
+          if (v === 6) gs.qualify_sixes++;
         });
       }
+      (grp.matches || []).forEach(m => {
+        if (!m.winner) return;
+        const isP1 = m.p1 === p.name, isP2 = m.p2 === p.name;
+        if (!isP1 && !isP2) return;
+        const pIdx = isP1 ? 1 : 2;
+        for (let r = 0; r < 2; r++) {
+          (m[`r${r}p${pIdx}`] || []).forEach(v => {
+            if (v === null || v === undefined) return;
+            gs.elim_throws++;
+            if (v === DUEL_KS_VAL)  { gs.total_ks++; }
+            if (v === DUEL_BULL_VAL) { gs.elim_bulls++; gs.total_bs++; }
+          });
+        }
+      });
     });
-  });
+  }
+
+  processGroup(ADMIN.pro,  proPlayers);
+  processGroup(ADMIN.semi, semiPlayers);
 
   save(); renderHistory();
   toast('Guardando stats...', 'green');
@@ -4591,10 +4602,15 @@ function renderHistory() {
       const champHtml = t.champion
         ? `<span style="color:var(--accent);font-weight:700;font-size:12px">🏆 ${t.champion}</span>`
         : `<span style="color:var(--ink4);font-size:12px">Sin campeón</span>`;
+      const proInfo  = t.proPlayers  ? `⚡ ${t.proPlayers} PRO`   : '';
+      const semiInfo = t.semiPlayers ? ` · 🎯 ${t.semiPlayers} SEMI` : '';
+      const playersInfo = (t.proPlayers || t.semiPlayers)
+        ? proInfo + semiInfo
+        : `${t.players} jugadores`;
       return `<div class="hist-item">
         <div style="flex:1;min-width:0;cursor:pointer" onclick="viewHist(${t.id})">
           <div class="hist-name">${t.name}</div>
-          <div class="hist-date">${t.date} · ${gn} · ${t.players} jugadores</div>
+          <div class="hist-date">${t.date} · ${playersInfo}</div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:12px">
           ${champHtml}
