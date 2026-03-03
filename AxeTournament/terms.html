@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Privacidad y Términos de Uso — NOVURAXE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap');
+  :root {
+    --accent:#C4873A; --accent2:#e0a84f;
+    --bg0:#111009; --bg1:#1a1410; --bg2:#22190f; --bg3:#2c2418;
+    --ink1:#ffffff; --ink2:rgba(255,255,255,0.75);
+    --ink3:rgba(255,255,255,0.5); --ink4:rgba(255,255,255,0.3);
+    --r:8px; --r2:14px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg0);color:var(--ink2);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.75;min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 800px 500px at 80% 10%,rgba(196,135,58,0.06) 0%,transparent 70%),radial-gradient(ellipse 600px 400px at 10% 80%,rgba(196,135,58,0.04) 0%,transparent 70%);pointer-events:none;z-index:0}
+
+  .topbar{position:sticky;top:0;z-index:100;background:rgba(17,16,9,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:1rem;padding:0 2rem;height:56px}
+  .topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--accent);text-decoration:none}
+  .topbar-sep{flex:1}
+  .topbar-back{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink4);text-decoration:none;border:1px solid rgba(255,255,255,0.1);padding:6px 14px;border-radius:20px;transition:all 0.2s;cursor:pointer;background:none}
+  .topbar-back:hover{color:var(--accent);border-color:rgba(196,135,58,0.4)}
+
+  .hero{position:relative;z-index:1;padding:5rem 2rem 3rem;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05)}
+  .hero-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);background:rgba(196,135,58,0.1);border:1px solid rgba(196,135,58,0.2);padding:5px 16px;border-radius:20px;margin-bottom:1.5rem}
+  .hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,6vw,4.5rem);letter-spacing:4px;color:var(--ink1);line-height:1.05;margin-bottom:1rem}
+  .hero h1 span{color:var(--accent)}
+  .hero-meta{font-size:12px;color:var(--ink4);letter-spacing:1px;text-transform:uppercase}
+
+  .page-wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:2rem 2rem 6rem}
+
+  .disclaimer-banner{background:rgba(196,135,58,0.06);border:1px solid rgba(196,135,58,0.25);border-radius:var(--r2);padding:1.25rem 1.75rem;display:flex;gap:1rem;align-items:flex-start;margin-bottom:2rem}
+  .disclaimer-icon{font-size:1.4rem;flex-shrink:0;margin-top:2px}
+  .disclaimer-text{font-size:13px;color:rgba(196,135,58,0.9);line-height:1.6}
+  .disclaimer-text strong{color:var(--accent2)}
+
+  .toc{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r2);padding:1.5rem 2rem;margin-bottom:3rem}
+  .toc-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1rem}
+  .toc ol{padding-left:1.25rem;display:grid;grid-template-columns:1fr 1fr;gap:0.35rem 2rem}
+  @media(max-width:600px){.toc ol{grid-template-columns:1fr}}
+  .toc a{font-size:13px;color:var(--ink3);text-decoration:none;transition:color 0.2s}
+  .toc a:hover{color:var(--accent)}
+
+  .section{margin-bottom:3rem;scroll-margin-top:80px}
+  .section-num{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:var(--accent);margin-bottom:6px;display:block}
+  .section h2{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;letter-spacing:2px;color:var(--ink1);margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid rgba(255,255,255,0.06)}
+  .section p{margin-bottom:0.9rem;color:var(--ink2)}
+  .section ul,.section ol{padding-left:1.5rem;margin-bottom:0.9rem}
+  .section li{margin-bottom:0.4rem;color:var(--ink2)}
+
+  .alert-box{background:rgba(180,40,40,0.08);border:1px solid rgba(200,60,60,0.25);border-radius:var(--r);padding:1.25rem 1.5rem;margin:1.25rem 0}
+  .alert-box-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#e05555;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px}
+  .alert-box p{color:rgba(255,180,180,0.85);font-size:14px;margin-bottom:0.5rem}
+  .alert-box p:last-child{margin-bottom:0}
+
+  .info-box{background:rgba(196,135,58,0.05);border:1px solid rgba(196,135,58,0.2);border-radius:var(--r);padding:1.25rem 1.5rem;margin:1.25rem 0}
+  .info-box-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:0.5rem;display:flex;align-items:center;gap:6px}
+  .info-box p{color:var(--ink2);font-size:14px;margin-bottom:0.5rem}
+  .info-box p:last-child{margin-bottom:0}
+
+  hr.divider{border:none;border-top:1px solid rgba(255,255,255,0.05);margin:2rem 0}
+  strong{color:var(--ink1);font-weight:700}
+  em{color:var(--accent);font-style:normal}
+
+  .footer{position:relative;z-index:1;text-align:center;padding:2rem;border-top:1px solid rgba(255,255,255,0.05);font-size:12px;color:var(--ink4)}
+  .footer span{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-logo">NOVURAXE</span>
+  <div class="topbar-sep"></div>
+  <button class="topbar-back" onclick="history.back()">← Volver</button>
+</div>
+
+<div class="hero">
+  <div class="hero-tag">Documentación Legal</div>
+  <h1>Política de Privacidad<br>&amp; <span>Términos de Uso</span></h1>
+  <div class="hero-meta">Última actualización: Marzo 2025 &nbsp;·&nbsp; Versión 1.0</div>
+</div>
+
+<div class="page-wrap">
+
+  <div class="disclaimer-banner">
+    <div class="disclaimer-icon">⚠️</div>
+    <div class="disclaimer-text">
+      <strong>AVISO IMPORTANTE — Proyecto independiente sin razón social</strong><br>
+      Novuraxe es una plataforma desarrollada de forma <strong>amateur y personal</strong>, sin entidad jurídica registrada, sin ánimo de lucro y sin actividad comercial. Se trata de un <strong>proyecto de afición (hobby)</strong> orientado a la gestión de torneos de lanzamiento de hacha. No existe ninguna empresa, autónomo o razón social detrás de este servicio.
+    </div>
+  </div>
+
+  <div class="toc">
+    <div class="toc-title">Índice de contenidos</div>
+    <ol>
+      <li><a href="#s1">Identificación y naturaleza del proyecto</a></li>
+      <li><a href="#s2">Aceptación de los términos</a></li>
+      <li><a href="#s3">Descripción del servicio</a></li>
+      <li><a href="#s4">Exención de responsabilidad — Seguridad</a></li>
+      <li><a href="#s5">Responsabilidad de los organizadores</a></li>
+      <li><a href="#s6">Protección de datos personales</a></li>
+      <li><a href="#s7">Seguridad de los datos</a></li>
+      <li><a href="#s8">Cookies y almacenamiento local</a></li>
+      <li><a href="#s9">Menores de edad</a></li>
+      <li><a href="#s10">Modificaciones de los términos</a></li>
+      <li><a href="#s11">Limitación de responsabilidad general</a></li>
+      <li><a href="#s12">Contacto</a></li>
+    </ol>
+  </div>
+
+  <div class="section" id="s1">
+    <span class="section-num">01 —</span>
+    <h2>Identificación y Naturaleza del Proyecto</h2>
+    <p><strong>Novuraxe</strong> es una plataforma web de gestión de torneos de lanzamiento de hacha, desarrollada y mantenida de forma <em>individual y amateur</em> como actividad de ocio personal. No existe detrás de este proyecto ninguna empresa constituida, ningún autónomo registrado ni ninguna organización con personalidad jurídica.</p>
+    <p>Por tanto, este proyecto <strong>no está sujeto al Reglamento General de Protección de Datos (RGPD) como responsable del tratamiento en sentido estricto</strong>, si bien se adoptan voluntariamente medidas de buenas prácticas para garantizar la privacidad de los usuarios.</p>
+    <div class="info-box">
+      <div class="info-box-title">ℹ️ Transparencia total</div>
+      <p>Novuraxe no genera ingresos, no vende datos y no tiene finalidad comercial de ningún tipo. El servicio se ofrece de forma gratuita como herramienta de apoyo a la comunidad de lanzamiento de hacha.</p>
+    </div>
+  </div>
+
+  <div class="section" id="s2">
+    <span class="section-num">02 —</span>
+    <h2>Aceptación de los Términos</h2>
+    <p>Al <strong>crear una cuenta</strong> en Novuraxe — ya sea como jugador o como organizador — se entenderá automáticamente que el usuario <em>ha leído, comprendido y aceptado</em> íntegramente los presentes Términos de Uso y la Política de Privacidad.</p>
+    <p>El uso continuado de la plataforma tras cualquier actualización de estos términos implica igualmente la aceptación de dichas modificaciones. Si el usuario no está de acuerdo, deberá abstenerse de utilizar la plataforma y podrá solicitar la eliminación de su cuenta en cualquier momento.</p>
+  </div>
+
+  <div class="section" id="s3">
+    <span class="section-num">03 —</span>
+    <h2>Descripción del Servicio</h2>
+    <p>Novuraxe proporciona a organizadores de torneos las siguientes funcionalidades:</p>
+    <ul>
+      <li>Creación y gestión de torneos con bracket de clasificación y eliminación directa</li>
+      <li>Registro de participantes y estadísticas de lanzamiento</li>
+      <li>Rankings individuales y globales por club</li>
+      <li>Feed de anuncios y resultados visible para jugadores registrados</li>
+      <li>Exportación de datos en formato PDF</li>
+    </ul>
+    <p>Novuraxe actúa exclusivamente como <strong>plataforma de anuncio y gestión</strong>. No organiza, dirige ni supervisa los torneos físicos. Toda la actividad deportiva y logística real corresponde en exclusiva a los organizadores.</p>
+  </div>
+
+  <div class="section" id="s4">
+    <span class="section-num">04 —</span>
+    <h2>Exención de Responsabilidad — Seguridad en Torneos</h2>
+    <div class="alert-box">
+      <div class="alert-box-title">⚠️ Actividad de riesgo — Exención expresa</div>
+      <p>El lanzamiento de hacha es una actividad que implica el manejo de <strong>herramientas cortantes y potencialmente peligrosas</strong>. Novuraxe no tiene control alguno sobre la celebración, el desarrollo ni las condiciones de seguridad de los torneos anunciados en la plataforma.</p>
+      <p><strong>Novuraxe no se hace responsable, en ningún caso, de los daños físicos, materiales o de cualquier otra naturaleza</strong> que puedan sufrir los participantes, organizadores, espectadores o cualquier tercero con motivo de la práctica del lanzamiento de hacha en torneos anunciados, gestionados o difundidos a través de esta plataforma.</p>
+    </div>
+    <p>Los organizadores que publiquen torneos en Novuraxe son los <strong>únicos responsables</strong> de garantizar:</p>
+    <ul>
+      <li>Que el recinto cuenta con las medidas de seguridad adecuadas (zonas de lanzamiento, protecciones, señalización).</li>
+      <li>Que los participantes son informados de los riesgos inherentes antes de su participación.</li>
+      <li>El cumplimiento de la normativa local, autonómica o nacional aplicable a deportes de lanzamiento.</li>
+      <li>La disponibilidad de seguros de responsabilidad civil si así lo requiere la normativa o la prudencia.</li>
+      <li>Que los participantes menores de edad cuentan con autorización de sus tutores legales.</li>
+    </ul>
+    <p>Los jugadores participan en torneos anunciados en Novuraxe <em>bajo su propia responsabilidad</em>, asumiendo voluntariamente los riesgos derivados de la actividad.</p>
+    <div class="info-box">
+      <div class="info-box-title">🪓 Equipamiento</div>
+      <p>Novuraxe no verifica ni avala la calidad, estado ni idoneidad de las hachas u otros materiales. La responsabilidad sobre el equipamiento recae íntegramente en organizadores y participantes.</p>
+    </div>
+  </div>
+
+  <div class="section" id="s5">
+    <span class="section-num">05 —</span>
+    <h2>Responsabilidad de los Organizadores</h2>
+    <p>Los usuarios registrados como <strong>organizadores</strong> son responsables exclusivos del contenido que publican: anuncios de torneos, resultados y comunicaciones. Se comprometen a no publicar información fraudulenta, falsa o contraria a la legislación vigente.</p>
+    <p>Novuraxe se reserva el derecho de suspender cuentas que hagan un uso abusivo o fraudulento de la plataforma, aunque no existen mecanismos automáticos de supervisión dado el carácter amateur del proyecto.</p>
+  </div>
+
+  <div class="section" id="s6">
+    <span class="section-num">06 —</span>
+    <h2>Protección de Datos Personales</h2>
+    <p>Para prestar el servicio, Novuraxe recopila y almacena los siguientes datos:</p>
+    <ul>
+      <li><strong>Email</strong> — necesario para la autenticación.</li>
+      <li><strong>Nombre y nombre de usuario</strong> — para la identificación en la plataforma.</li>
+      <li><strong>Foto de perfil (opcional)</strong> — cargada voluntariamente.</li>
+      <li><strong>Estadísticas deportivas</strong> — resultados asociados a torneos.</li>
+      <li><strong>Relaciones de seguimiento</strong> — qué organizadores sigue cada jugador.</li>
+    </ul>
+    <p>Estos datos se utilizan <em>exclusivamente</em> para el funcionamiento interno de la plataforma. <strong>No son cedidos, vendidos ni compartidos con terceros bajo ningún concepto.</strong></p>
+    <p>El usuario puede solicitar la eliminación completa de su cuenta y todos sus datos en cualquier momento contactando por los medios indicados en la sección de contacto.</p>
+    <div class="info-box">
+      <div class="info-box-title">🔒 Sin comercialización de datos</div>
+      <p>Novuraxe no realiza perfilado comercial, no muestra publicidad y no comparte datos con anunciantes ni plataformas de análisis externas.</p>
+    </div>
+  </div>
+
+  <div class="section" id="s7">
+    <span class="section-num">07 —</span>
+    <h2>Seguridad de los Datos</h2>
+    <p>Novuraxe utiliza <strong>Supabase</strong> como proveedor de base de datos e infraestructura de autenticación, que implementa medidas estándar del sector:</p>
+    <ul>
+      <li>Cifrado en tránsito mediante <strong>TLS/HTTPS</strong>.</li>
+      <li>Almacenamiento seguro de contraseñas mediante <strong>hashing bcrypt</strong> — nunca en texto plano.</li>
+      <li>Control de acceso a datos mediante <strong>Row Level Security (RLS)</strong>.</li>
+      <li>Infraestructura con certificaciones de seguridad reconocidas.</li>
+    </ul>
+    <div class="alert-box">
+      <div class="alert-box-title">⚠️ Limitación de garantías</div>
+      <p>Dado el carácter <strong>amateur y no profesional</strong> de este proyecto, no se puede garantizar una seguridad absoluta. Los usuarios asumen este riesgo al crear una cuenta. En caso de brecha de seguridad, se comunicará a los afectados por email a la mayor brevedad posible.</p>
+    </div>
+  </div>
+
+  <div class="section" id="s8">
+    <span class="section-num">08 —</span>
+    <h2>Cookies y Almacenamiento Local</h2>
+    <p>Novuraxe utiliza <strong>almacenamiento local del navegador</strong> (<em>localStorage</em>) para guardar sesión y preferencias del usuario. Este almacenamiento es estrictamente necesario para el funcionamiento y no se usa con fines de seguimiento o publicidad.</p>
+    <p>No se emplean cookies de terceros, píxeles de seguimiento ni herramientas de analítica externas.</p>
+  </div>
+
+  <div class="section" id="s9">
+    <span class="section-num">09 —</span>
+    <h2>Menores de Edad</h2>
+    <p>Novuraxe está diseñada para usuarios mayores de <strong>16 años</strong>. Los menores no deben registrarse sin el consentimiento expreso de sus padres o tutores legales. La participación de menores en torneos físicos requiere siempre autorización de sus representantes, responsabilidad que recae sobre el organizador del evento.</p>
+  </div>
+
+  <div class="section" id="s10">
+    <span class="section-num">10 —</span>
+    <h2>Modificaciones de los Términos</h2>
+    <p>Novuraxe puede modificar estos términos en cualquier momento. Los cambios entrarán en vigor desde su publicación en esta página. El uso continuado de la plataforma tras la publicación implica la aceptación de los nuevos términos.</p>
+  </div>
+
+  <div class="section" id="s11">
+    <span class="section-num">11 —</span>
+    <h2>Limitación de Responsabilidad General</h2>
+    <p>En la máxima medida permitida por la legislación, Novuraxe <strong>no será responsable</strong> de:</p>
+    <ul>
+      <li>Daños físicos, materiales o personales derivados del uso de hachas en torneos anunciados en la plataforma.</li>
+      <li>Pérdida de datos por fallos técnicos o incidentes de seguridad.</li>
+      <li>Contenidos publicados por organizadores o usuarios que resulten incorrectos, fraudulentos o ilegales.</li>
+      <li>Interrupciones del servicio por fallos en infraestructura de terceros.</li>
+      <li>Daños indirectos, consecuentes o incidentales de cualquier tipo.</li>
+    </ul>
+  </div>
+
+  <div class="section" id="s12">
+    <span class="section-num">12 —</span>
+    <h2>Contacto</h2>
+    <p>Para consultas sobre estos términos, solicitudes de eliminación de datos o comunicación de incidencias, puedes contactar a través de los canales disponibles en el perfil del proyecto. Al tratarse de un proyecto personal de afición, los tiempos de respuesta pueden variar.</p>
+    <hr class="divider">
+    <p style="font-size:13px;color:var(--ink4)">Este documento no constituye asesoramiento jurídico profesional. Novuraxe es un proyecto de afición sin razón social, redactado de buena fe para ser transparente con sus usuarios.</p>
+  </div>
+
+</div>
+
+<div class="footer">
+  <strong><span>NOVURAXE</span></strong> &nbsp;·&nbsp; Plataforma de Gestión de Torneos de Lanzamiento de Hacha<br>
+  Proyecto independiente de afición · Sin razón social · Sin actividad comercial<br><br>
+  <span style="color:var(--ink4)">© 2025 Novuraxe · Todos los derechos reservados sobre diseño y código.</span>
+</div>
+
+</body>
+</html>
