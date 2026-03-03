@@ -2187,18 +2187,26 @@ async function renderHistory() {
 
 /* ═══ SETTINGS ═══ */
 async function initSettingsPage() {
-  if (!CUR_USER || !PROFILE) return;
+  // Re-fetch PROFILE fresh in case it changed
+  if (!CUR_USER) return;
+  if (!PROFILE) {
+    const rows = await dbGet(`users?id=eq.${CUR_USER.id}&select=id,username,club_name,avatar_url,created_at,role`);
+    if (rows && rows[0]) PROFILE = rows[0];
+  }
+  if (!PROFILE) return;
+
+  // Fill text fields
   document.getElementById('cfg-fullname').value = PROFILE.club_name || '';
   document.getElementById('cfg-username').value  = PROFILE.username  || '';
   document.getElementById('cfg-email').value     = CUR_USER.email    || '';
-  // Avatar
+
+  // Avatar preview
   const preview = document.getElementById('cfg-avatar-preview');
-  const initials = document.getElementById('cfg-avatar-initials');
   if (PROFILE.avatar_url) {
-    preview.innerHTML = `<img src="${PROFILE.avatar_url}" alt="">`;
+    preview.innerHTML = `<img src="${PROFILE.avatar_url}?t=${Date.now()}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
   } else {
     const name = PROFILE.club_name || PROFILE.username || '?';
-    initials.textContent = name.charAt(0).toUpperCase();
+    preview.innerHTML = `<div class="settings-avatar-placeholder">${name.charAt(0).toUpperCase()}</div>`;
   }
 }
 
