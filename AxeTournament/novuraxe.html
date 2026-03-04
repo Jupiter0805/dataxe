@@ -1384,6 +1384,87 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     transition: opacity 0.4s;
     max-width: 220px; overflow: hidden; text-overflow: ellipsis;
   }
+
+  /* POST TYPE SELECTOR */
+  .post-type-selector {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .post-type-btn {
+    flex: 1; min-width: 100px;
+    padding: 9px 14px; border-radius: 8px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+    font-family: inherit; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.5);
+    transition: all 0.15s;
+  }
+  .post-type-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .post-type-btn.on {
+    background: rgba(196,135,58,0.15);
+    border-color: rgba(196,135,58,0.5);
+    color: var(--amber);
+  }
+  /* PRIZES */
+  .prizes-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+  .prize-row {
+    display: flex; gap: 8px; align-items: center;
+  }
+  .prize-pos {
+    width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 800;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .prize-pos.gold   { background: rgba(212,175,55,0.15); border-color: rgba(212,175,55,0.4); color: #d4af37; }
+  .prize-pos.silver { background: rgba(160,160,170,0.12); border-color: rgba(160,160,170,0.3); color: #a0a0aa; }
+  .prize-pos.bronze { background: rgba(176,100,50,0.15); border-color: rgba(176,100,50,0.4); color: #b06432; }
+  .prize-input {
+    flex: 1; background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+    padding: 8px 12px; font-size: 13px; color: #fff; font-family: inherit; outline: none;
+    transition: border-color 0.2s;
+  }
+  .prize-input:focus { border-color: rgba(196,135,58,0.5); }
+  .prize-remove {
+    width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0;
+    background: none; border: none; color: rgba(255,255,255,0.25);
+    cursor: pointer; font-size: 15px; transition: color 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .prize-remove:hover { color: var(--red); }
+  .prizes-add-btn {
+    font-size: 12px; font-weight: 700; color: var(--amber);
+    background: rgba(196,135,58,0.08); border: 1px dashed rgba(196,135,58,0.3);
+    border-radius: 8px; padding: 8px 14px; cursor: pointer; width: 100%;
+    font-family: inherit; transition: all 0.15s;
+  }
+  .prizes-add-btn:hover { background: rgba(196,135,58,0.14); }
+  /* Post type badge in cards */
+  .post-type-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 20px; margin-bottom: 6px;
+  }
+  .badge-torneo { background: rgba(196,135,58,0.12); color: var(--amber); border: 1px solid rgba(196,135,58,0.25); }
+  .badge-aviso  { background: rgba(239,68,68,0.1);   color: #f87171;     border: 1px solid rgba(239,68,68,0.25); }
+  .badge-info   { background: rgba(99,179,237,0.1);  color: #63b3ed;     border: 1px solid rgba(99,179,237,0.25); }
+  /* Prizes display in cards/view */
+  .post-prizes {
+    margin-top: 0.75rem; padding-top: 0.75rem;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .post-prizes-title {
+    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 4px;
+  }
+  .post-prize-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: rgba(255,255,255,0.7);
+  }
+  .post-prize-medal { font-size: 14px; }
 </style>
 </head>
 <body>
@@ -1914,8 +1995,19 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 
 <!-- ══ MODAL NUEVA/EDITAR PUBLICACIÓN ══ -->
 <div class="modal-bg" id="m-post">
-  <div class="modal" style="max-width:560px">
+  <div class="modal" style="max-width:580px">
     <div class="modal-title" id="m-post-title">Nueva publicación</div>
+
+    <!-- TYPE SELECTOR -->
+    <div class="f-group">
+      <label class="f-label">Tipo de publicación *</label>
+      <div class="post-type-selector">
+        <button class="post-type-btn on" data-type="torneo"    onclick="selectPostType('torneo')">🏆 Torneo</button>
+        <button class="post-type-btn"    data-type="aviso"     onclick="selectPostType('aviso')">⚠️ Aviso</button>
+        <button class="post-type-btn"    data-type="info"      onclick="selectPostType('info')">ℹ️ Información</button>
+      </div>
+      <input type="hidden" id="post-type" value="torneo">
+    </div>
 
     <div class="f-group">
       <label class="f-label">Título *</label>
@@ -1924,23 +2016,32 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 
     <div class="f-group">
       <label class="f-label">Descripción</label>
-      <textarea class="f-input" id="post-desc" rows="4" placeholder="Describe el torneo, normas, premios..."></textarea>
+      <textarea class="f-input" id="post-desc" rows="3" placeholder="Describe el evento, normas, información relevante..."></textarea>
     </div>
 
-    <div class="g2" style="gap:0.75rem">
-      <div class="f-group">
-        <label class="f-label">Fecha del torneo</label>
-        <input class="f-input" type="date" id="post-date">
+    <!-- TORNEO FIELDS (fecha, hora, lugar) -->
+    <div id="post-torneo-fields">
+      <div class="g2" style="gap:0.75rem">
+        <div class="f-group">
+          <label class="f-label">Fecha del torneo</label>
+          <input class="f-input" type="date" id="post-date">
+        </div>
+        <div class="f-group">
+          <label class="f-label">Hora</label>
+          <input class="f-input" type="time" id="post-time">
+        </div>
       </div>
       <div class="f-group">
-        <label class="f-label">Hora</label>
-        <input class="f-input" type="time" id="post-time">
+        <label class="f-label">Lugar</label>
+        <input class="f-input" type="text" id="post-location" placeholder="Axe House Madrid, Calle...">
       </div>
-    </div>
 
-    <div class="f-group">
-      <label class="f-label">Lugar</label>
-      <input class="f-input" type="text" id="post-location" placeholder="Axe House Madrid, Calle...">
+      <!-- PRIZES -->
+      <div class="f-group">
+        <label class="f-label">Premios <span style="color:var(--ink4);font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label>
+        <div class="prizes-list" id="prizes-list"></div>
+        <button class="prizes-add-btn" onclick="addPrizeRow()">+ Añadir premio</button>
+      </div>
     </div>
 
     <div class="f-group">
@@ -5417,8 +5518,23 @@ function postCard(p) {
       <button class="post-kebab" onclick="editPost(${p.id})" title="Editar">⋯</button>
     </div>
     <div class="post-body">
+      ${(() => {
+        const t = p.post_type || 'torneo';
+        const labels = { torneo: '🏆 Torneo', aviso: '⚠️ Aviso', info: 'ℹ️ Información' };
+        return `<div class="post-type-badge badge-${t}">${labels[t] || t}</div>`;
+      })()}
       <div class="post-title">${p.title}</div>
       ${p.description ? `<div class="post-desc">${p.description}</div>` : ''}
+      ${(() => {
+        if ((p.post_type || 'torneo') !== 'torneo') return '';
+        const prizes = p.prizes ? (typeof p.prizes === 'string' ? JSON.parse(p.prizes) : p.prizes) : [];
+        if (!prizes.length) return '';
+        const medals = ['🥇','🥈','🥉'];
+        return `<div class="post-prizes">
+          <div class="post-prizes-title">Premios</div>
+          ${prizes.slice(0,3).map((pr,i) => `<div class="post-prize-row"><span class="post-prize-medal">${medals[i]||'🏅'}</span>${pr}</div>`).join('')}
+        </div>`;
+      })()}
     </div>
     ${p.image_url ? `
     <div class="post-img-wrap">
@@ -5449,6 +5565,9 @@ function openNewPost() {
   document.getElementById('post-time').value     = '';
   document.getElementById('post-location').value = '';
   document.getElementById('post-err').style.display = 'none';
+  selectPostType('torneo');
+  document.getElementById('prizes-list').innerHTML = '';
+  addPrizeRow(1); addPrizeRow(2); addPrizeRow(3); // default 3 prizes
   resetImgZone();
   openModal('m-post');
 }
@@ -5468,6 +5587,19 @@ function editPost(id) {
   document.getElementById('post-time').value     = p.time ? p.time.slice(0,5) : '';
   document.getElementById('post-location').value = p.location || '';
   document.getElementById('post-err').style.display = 'none';
+
+  // Restore type
+  selectPostType(p.post_type || 'torneo');
+
+  // Restore prizes
+  const prizesList = document.getElementById('prizes-list');
+  prizesList.innerHTML = '';
+  const prizes = p.prizes ? (typeof p.prizes === 'string' ? JSON.parse(p.prizes) : p.prizes) : [];
+  if (prizes.length) {
+    prizes.forEach((pr, i) => addPrizeRow(i + 1, pr));
+  } else if ((p.post_type || 'torneo') === 'torneo') {
+    addPrizeRow(1); addPrizeRow(2); addPrizeRow(3);
+  }
 
   // Show existing image if any
   if (p.image_url) {
@@ -5493,8 +5625,23 @@ function viewPost(id) {
   document.getElementById('m-post-view-body').innerHTML = `
     ${p.image_url ? `<img src="${p.image_url}" style="width:100%;max-height:280px;object-fit:cover;display:block">` : ''}
     <div style="padding:1.5rem">
+      ${(() => {
+        const t = p.post_type || 'torneo';
+        const labels = { torneo: '🏆 Torneo', aviso: '⚠️ Aviso', info: 'ℹ️ Información' };
+        return `<div class="post-type-badge badge-${t}" style="margin-bottom:10px">${labels[t]||t}</div>`;
+      })()}
       <div style="font-size:1.1rem;font-weight:800;color:var(--ink);margin-bottom:0.75rem;line-height:1.3">${p.title}</div>
       ${p.description ? `<p style="font-size:13px;color:var(--ink3);line-height:1.7;margin-bottom:1rem">${p.description}</p>` : ''}
+      ${(() => {
+        if ((p.post_type||'torneo') !== 'torneo') return '';
+        const prizes = p.prizes ? (typeof p.prizes === 'string' ? JSON.parse(p.prizes) : p.prizes) : [];
+        if (!prizes.length) return '';
+        const medals = ['🥇','🥈','🥉'];
+        return `<div style="border-top:1px solid rgba(0,0,0,0.08);padding-top:1rem;margin-top:0.5rem">
+          <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink4);margin-bottom:8px">Premios</div>
+          ${prizes.slice(0,3).map((pr,i)=>`<div style="display:flex;gap:8px;align-items:center;font-size:13px;color:var(--ink3);margin-bottom:5px"><span>${medals[i]||'🏅'}</span>${pr}</div>`).join('')}
+        </div>`;
+      })()}
       <div style="display:flex;flex-wrap:wrap;gap:0.75rem">
         ${dateLabel ? `<div style="font-size:12px;color:var(--ink4);display:flex;gap:5px;align-items:center">📅 ${dateLabel}${p.time ? ' · ' + p.time.slice(0,5) : ''}</div>` : ''}
         ${p.location ? `<div style="font-size:12px;color:var(--ink4);display:flex;gap:5px;align-items:center">📍 ${p.location}</div>` : ''}
@@ -5626,7 +5773,31 @@ async function savePost() {
     if (!imageUrl) { btn.textContent = EDIT_POST_ID ? 'Guardar cambios' : 'Publicar'; btn.disabled = false; return; }
   }
 
-  const body = { title, description: desc || null, image_url: imageUrl, date, time, location };
+  // Collect type
+  const postType = document.getElementById('post-type').value || 'torneo';
+
+  // Collect prizes (only for torneo type)
+  let prizes = null;
+  if (postType === 'torneo') {
+    const rows = document.querySelectorAll('#prizes-list .prize-row');
+    const collected = [];
+    rows.forEach(row => {
+      const val = row.querySelector('.prize-input')?.value?.trim();
+      if (val) collected.push(val);
+    });
+    if (collected.length) prizes = JSON.stringify(collected);
+  }
+
+  const body = {
+    title,
+    description: desc || null,
+    image_url:   imageUrl,
+    date:        postType === 'torneo' ? date : null,
+    time:        postType === 'torneo' ? time : null,
+    location:    postType === 'torneo' ? location : null,
+    post_type:   postType,
+    prizes:      prizes
+  };
 
   if (EDIT_POST_ID) {
     await dbUpdate('posts', `id=eq.${EDIT_POST_ID}`, body);
@@ -5795,6 +5966,38 @@ function updateSyncStatus(status) {
   if (status === 'offline') { dot.style.background = '#e05555'; dot.title = 'Sin conexión'; }
 }
 
+
+/* ═══ POST TYPE & PRIZES ═══ */
+function selectPostType(type) {
+  document.getElementById('post-type').value = type;
+  document.querySelectorAll('.post-type-btn').forEach(btn => {
+    btn.classList.toggle('on', btn.dataset.type === type);
+  });
+  // Show/hide torneo-only fields
+  const torneoFields = document.getElementById('post-torneo-fields');
+  if (torneoFields) torneoFields.style.display = type === 'torneo' ? '' : 'none';
+}
+
+let _prizeCounter = 0;
+function addPrizeRow(pos, value) {
+  _prizeCounter++;
+  const id = 'prize-' + _prizeCounter;
+  const medals = { 1: { emoji: '🥇', cls: 'gold', label: '1.º' },
+                   2: { emoji: '🥈', cls: 'silver', label: '2.º' },
+                   3: { emoji: '🥉', cls: 'bronze', label: '3.º' } };
+  const m = medals[pos] || { emoji: '🏅', cls: '', label: pos + '.º' };
+  const placeholders = { 1: 'Ej: Trofeo + 50€', 2: 'Ej: Medalla + 25€', 3: 'Ej: Medalla' };
+  const ph = placeholders[pos] || 'Premio ' + (pos || '') + '.º';
+
+  const row = document.createElement('div');
+  row.className = 'prize-row';
+  row.id = id;
+  row.innerHTML = `
+    <div class="prize-pos ${m.cls}">${m.emoji}</div>
+    <input class="prize-input" type="text" placeholder="${ph}" value="${value||''}">
+    <button class="prize-remove" onclick="document.getElementById('${id}').remove()" title="Eliminar">✕</button>`;
+  document.getElementById('prizes-list').appendChild(row);
+}
 </script>
 </body>
 </html>
