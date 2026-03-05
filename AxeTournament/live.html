@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NOVURAXE · Live</title>
-  <link rel="icon" type="image/png" href="public/dataxe-simple.png">
+  <link rel="icon" href="public/dataxe-simple.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -158,58 +158,101 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── ORG SELECTOR ── */
-    .orgs-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 1rem; margin-bottom: 2.5rem;
+    /* ── ACCORDION LIST ── */
+    .tournament-list {
+      display: flex; flex-direction: column; gap: 0;
     }
-    .org-card {
+
+    /* Banner / header row */
+    .t-banner {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1.1rem 1.5rem;
       background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: var(--r);
-      padding: 1.25rem 1.5rem;
       cursor: pointer;
       transition: all 0.2s;
-      display: flex; align-items: center; gap: 1rem;
+      position: relative; z-index: 1;
+      margin-bottom: 2px;
+      user-select: none;
     }
-    .org-card:hover {
-      border-color: rgba(196,135,58,0.35);
+    .t-banner:hover {
+      border-color: rgba(196,135,58,0.3);
       background: rgba(196,135,58,0.04);
-      transform: translateY(-1px);
     }
-    .org-logo {
-      width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    .t-banner.open {
+      border-color: rgba(196,135,58,0.4);
+      background: rgba(196,135,58,0.06);
+      border-radius: var(--r) var(--r) 0 0;
+      margin-bottom: 0;
+    }
+    .t-banner-logo {
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
       overflow: hidden; background: rgba(196,135,58,0.1);
       border: 1px solid rgba(196,135,58,0.2);
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.3rem;
+      font-size: 1.2rem;
     }
-    .org-logo img { width: 100%; height: 100%; object-fit: cover; }
-    .org-name { font-weight: 700; font-size: 15px; }
-    .org-meta { font-size: 11px; color: var(--ink4); margin-top: 2px; }
+    .t-banner-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .t-banner-info { flex: 1; min-width: 0; }
+    .t-banner-name { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .t-banner-meta { font-size: 11px; color: var(--ink4); margin-top: 2px; }
+    .t-banner-champ { font-size: 11px; color: var(--amber); margin-top: 3px; font-weight: 600; }
+    .t-banner-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     .org-live-badge {
-      margin-left: auto; flex-shrink: 0;
       font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
-      text-transform: uppercase; padding: 3px 8px; border-radius: 20px;
+      text-transform: uppercase; padding: 3px 10px; border-radius: 20px;
       background: rgba(76,217,138,0.1); color: var(--green);
       border: 1px solid rgba(76,217,138,0.2);
+      display: flex; align-items: center; gap: 5px;
     }
     .org-done-badge {
-      margin-left: auto; flex-shrink: 0;
       font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
-      text-transform: uppercase; padding: 3px 8px; border-radius: 20px;
+      text-transform: uppercase; padding: 3px 10px; border-radius: 20px;
       background: rgba(255,255,255,0.04); color: var(--ink4);
       border: 1px solid rgba(255,255,255,0.08);
     }
-    .org-card-done {
-      opacity: 0.75;
+    .org-closed-badge {
+      font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; padding: 3px 10px; border-radius: 20px;
+      background: rgba(212,99,90,0.12); color: #e05555;
+      border: 1px solid rgba(212,99,90,0.35);
     }
-    .org-card-done:hover { opacity: 1; }
-    .org-champ {
-      font-size: 11px; color: var(--amber);
-      margin-top: 4px; font-weight: 600;
+    .t-banner-chevron {
+      font-size: 11px; color: var(--ink4);
+      transition: transform 0.25s; flex-shrink: 0;
     }
+    .t-banner.open .t-banner-chevron { transform: rotate(180deg); }
+
+    /* Expandable panel */
+    .t-panel {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
+      background: var(--bg);
+      border: 1px solid rgba(196,135,58,0.25);
+      border-top: none;
+      border-radius: 0 0 var(--r) var(--r);
+      margin-bottom: 12px;
+    }
+    .t-panel.open {
+      max-height: 4000px;
+    }
+    .t-panel-inner {
+      padding: 1.5rem;
+    }
+
+    /* Section labels */
+    .list-section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--ink4);
+      margin-bottom: 0.75rem; margin-top: 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .list-section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .org-champ { font-size: 11px; color: var(--amber); margin-top: 3px; font-weight: 600; }
 
     /* ── SECTION HEADER ── */
     .section-hdr {
@@ -611,11 +654,12 @@ async function init() {
   // 1. Traer activos Y archivados con state_json
   let rows;
   try {
-    const [active, archived] = await Promise.all([
+    const [active, archived, closed] = await Promise.all([
       get(`tournaments?status=eq.active&select=id,name,date,updated_at,state_json,user_id,status`),
-      get(`tournaments?status=eq.archived&select=id,name,date,updated_at,state_json,user_id,status&order=updated_at.desc&limit=20`)
+      get(`tournaments?status=eq.archived&select=id,name,date,updated_at,state_json,user_id,status&order=updated_at.desc&limit=20`),
+      get(`tournaments?status=eq.closed&select=id,name,date,updated_at,state_json,user_id,status&order=updated_at.desc&limit=20`)
     ]);
-    rows = [...(active || []), ...(archived || [])].filter(r => r.state_json);
+    rows = [...(active || []), ...(archived || []), ...(closed || [])].filter(r => r.state_json);
   } catch(e) {
     console.error('[live] error:', e);
     renderEmpty(); return;
@@ -647,82 +691,190 @@ async function init() {
 
   const activos     = enriched.filter(t => t.status === 'active');
   const finalizados = enriched.filter(t => t.status === 'archived');
+  const cerrados    = enriched.filter(t => t.status === 'closed');
 
-  // Si solo hay 1 activo y ningún finalizado → entrar directo
-  if (activos.length === 1 && finalizados.length === 0) {
+  // Si solo hay 1 activo y ningún finalizado/cerrado → entrar directo
+  if (activos.length === 1 && finalizados.length === 0 && cerrados.length === 0) {
     selectOrg(activos[0]);
   } else {
-    renderOrgList(activos, finalizados);
+    renderOrgList(activos, finalizados, cerrados);
   }
 
   _pollTimer = setInterval(() => { if (!CUR_ORG) init(); }, 20000);
 }
 
 // ═══════════════════════════════════════════
-//  ORG LIST VIEW
+//  ACCORDION LIST VIEW
 // ═══════════════════════════════════════════
-function renderOrgList(activos, finalizados) {
+let OPEN_ID = null; // ID del torneo expandido actualmente
+
+function renderOrgList(activos, finalizados, cerrados) {
   if (!activos)     activos     = ALL_ORGS.filter(t => t.status === 'active');
   if (!finalizados) finalizados = ALL_ORGS.filter(t => t.status === 'archived');
+  if (!cerrados)    cerrados    = ALL_ORGS.filter(t => t.status === 'closed');
 
   const wrap = document.getElementById('main-wrap');
 
-  const orgCard = (t, isLive) => {
+  const buildBanner = (t, mode) => {
     const org = t.organizers;
     const logoHtml = org?.logo_url ? `<img src="${org.logo_url}" alt="">` : '🏟';
-    const badge = isLive
-      ? `<div class="org-live-badge">● Live</div>`
-      : `<div class="org-done-badge">✓ Finalizado</div>`;
+    const badge = mode === 'live'
+      ? `<div class="org-live-badge"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 1.4s infinite"></span> Live</div>`
+      : mode === 'closed'
+        ? `<div class="org-closed-badge">✕ Cerrado</div>`
+        : `<div class="org-done-badge">✓ Finalizado</div>`;
+    const isLive = mode === 'live';
     let champ = '';
     try {
       const s = typeof t.state_json === 'string' ? JSON.parse(t.state_json) : t.state_json;
       const c = [s?.pro?.champion, s?.semi?.champion].filter(Boolean);
-      if (c.length) champ = `<div class="org-champ">🏆 ${c.join(' · ')}</div>`;
+      if (c.length) champ = `<div class="t-banner-champ">🏆 ${c.join(' · ')}</div>`;
     } catch(e) {}
     return `
-      <div class="org-card ${isLive ? '' : 'org-card-done'}" onclick="selectOrgById('${t.id}')">
-        <div class="org-logo">${logoHtml}</div>
-        <div style="flex:1;min-width:0">
-          <div class="org-name">${org?.club_name || org?.username || 'Organizador'}</div>
-          <div class="org-meta">${t.name || 'Torneo'}${t.date ? ' · ' + fmtDate(t.date) : ''}</div>
+      <div class="t-banner" id="banner-${t.id}" onclick="toggleAccordion('${t.id}')">
+        <div class="t-banner-logo">${logoHtml}</div>
+        <div class="t-banner-info">
+          <div class="t-banner-name">${t.name || org?.club_name || 'Torneo'}</div>
+          <div class="t-banner-meta">${org?.club_name || org?.username || ''}${t.date ? ' · ' + fmtDate(t.date) : ''}</div>
           ${champ}
         </div>
-        ${badge}
+        <div class="t-banner-right">
+          ${badge}
+          <span class="t-banner-chevron">▼</span>
+        </div>
+      </div>
+      <div class="t-panel" id="panel-${t.id}">
+        <div class="t-panel-inner" id="panel-inner-${t.id}"></div>
       </div>`;
   };
 
-  let html = `<div class="fade-in">`;
+  let html = `<div class="fade-in"><div class="tournament-list">`;
+
+  const hasAnything = activos.length || finalizados.length || cerrados.length;
 
   if (activos.length) {
-    html += `
-      <div style="margin-bottom:1.5rem">
-        <div class="section-eyebrow">En directo ahora</div>
-        <div class="section-title">Torneos activos</div>
-      </div>
-      <div class="orgs-grid" style="margin-bottom:3rem">
-        ${activos.map(t => orgCard(t, true)).join('')}
-      </div>`;
+    html += `<div class="list-section-label">En directo</div>`;
+    html += activos.map(t => buildBanner(t, 'live')).join('');
   }
-
   if (finalizados.length) {
-    html += `
-      <div style="margin-bottom:1.5rem${activos.length ? ';padding-top:2rem;border-top:1px solid var(--border)' : ''}">
-        <div class="section-eyebrow" style="color:var(--ink4)">Resultados</div>
-        <div class="section-title" style="font-size:1.6rem;color:var(--ink3)">Torneos finalizados</div>
-      </div>
-      <div class="orgs-grid">
-        ${finalizados.map(t => orgCard(t, false)).join('')}
-      </div>`;
+    html += `<div class="list-section-label" style="margin-top:${activos.length ? '1.5rem' : '0'}">Finalizados</div>`;
+    html += finalizados.map(t => buildBanner(t, 'done')).join('');
   }
-
-  if (!activos.length && !finalizados.length) {
+  if (cerrados.length) {
+    html += `<div class="list-section-label" style="margin-top:${(activos.length || finalizados.length) ? '1.5rem' : '0'};color:#e05555">Cerrados</div>`;
+    html += cerrados.map(t => buildBanner(t, 'closed')).join('');
+  }
+  if (!hasAnything) {
     html += `<div class="state-center"><div class="state-icon">🪓</div>
       <div class="state-title">Sin torneos</div>
       <div class="state-sub">Vuelve más tarde.</div></div>`;
   }
 
-  html += `</div>`;
+  html += `</div></div>`;
   wrap.innerHTML = html;
+
+  // Auto-abrir el primero activo si existe
+  if (activos.length === 1) toggleAccordion(activos[0].id);
+}
+
+function toggleAccordion(tid) {
+  const t = ALL_ORGS.find(x => x.id === tid);
+  if (!t) return;
+
+  const banner = document.getElementById('banner-' + tid);
+  const panel  = document.getElementById('panel-' + tid);
+
+  // Cerrar el anterior si es diferente
+  if (OPEN_ID && OPEN_ID !== tid) {
+    const prevBanner = document.getElementById('banner-' + OPEN_ID);
+    const prevPanel  = document.getElementById('panel-' + OPEN_ID);
+    if (prevBanner) prevBanner.classList.remove('open');
+    if (prevPanel)  prevPanel.classList.remove('open');
+    stopSync();
+  }
+
+  const isOpening = !banner.classList.contains('open');
+
+  if (isOpening) {
+    banner.classList.add('open');
+    panel.classList.add('open');
+    OPEN_ID = tid;
+    // Cargar contenido del panel
+    renderPanelContent(t);
+    // Sync solo si activo
+    if (t.status === 'active') startLiveSync(t.user_id, tid);
+    // Scroll suave al banner
+    setTimeout(() => banner.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  } else {
+    banner.classList.remove('open');
+    panel.classList.remove('open');
+    OPEN_ID = null;
+    stopSync();
+  }
+}
+
+function renderPanelContent(tournament) {
+  CUR_ORG   = tournament;
+  const state = tournament.state_json;
+  CUR_STATE = typeof state === 'string' ? JSON.parse(state) : state;
+  CUR_TAB   = 'qualify';
+  CUR_GROUP = hasPro() ? 'pro' : 'semi';
+
+  const inner = document.getElementById('panel-inner-' + tournament.id);
+  if (!inner) return;
+
+  const s = CUR_STATE;
+  const isFinished = tournament.status === 'archived';
+  const isClosed   = tournament.status === 'closed';
+
+  // Phase pill
+  const phase = (hasPro() ? s?.pro?.phase : s?.semi?.phase) || 'qualify';
+  const phaseLabel = { qualify: 'Clasificación', elim: 'Eliminatorias', done: 'Finalizado' };
+  const phasePill = isClosed
+    ? `<div class="pill" style="background:rgba(212,99,90,0.12);color:#e05555;border:1px solid rgba(212,99,90,0.35)">✕ Cerrado</div>`
+    : isFinished
+      ? `<div class="pill pill-phase-done">✓ Finalizado</div>`
+      : `<div class="pill pill-phase-${phase}">${phaseLabel[phase] || phase}</div>`;
+
+  const groupPills = [
+    hasPro()  ? `<div class="pill pill-pro">PRO</div>`      : '',
+    hasSemi() ? `<div class="pill pill-semi">SEMI PRO</div>` : '',
+  ].join('');
+
+  // Champion banner
+  const champHtml = ((isFinished || isClosed) && (s?.pro?.champion || s?.semi?.champion)) ? `
+    <div class="champion-card" style="margin-bottom:1.25rem">
+      <div class="champion-label">🏆 ${[s?.pro?.champion && 'Campeón PRO', s?.semi?.champion && 'Campeón SEMI PRO'].filter(Boolean).join(' · ')}</div>
+      <div class="champion-name">${[s?.pro?.champion, s?.semi?.champion].filter(Boolean).join(' & ')}</div>
+    </div>` : '';
+
+  // Group selector
+  const showGroupTabs = hasPro() && hasSemi();
+  const groupTabsHtml = showGroupTabs ? `
+    <div class="group-selector">
+      <div class="group-selector-label">Categoría</div>
+      <div class="group-tabs">
+        <button class="group-tab ${CUR_GROUP==='pro' ? 'on':''}" data-group="pro" onclick="switchGroup('pro')">
+          <span class="group-tab-dot pro-dot"></span> PRO
+        </button>
+        <button class="group-tab ${CUR_GROUP==='semi' ? 'on':''}" data-group="semi" onclick="switchGroup('semi')">
+          <span class="group-tab-dot semi-dot"></span> SEMI PRO
+        </button>
+      </div>
+    </div>` : '';
+
+  // Tabs
+  const tabs = `
+    <div class="tabs" style="margin-bottom:1.25rem">
+      <button class="tab-btn ${CUR_TAB==='qualify' ? 'on':''}" onclick="switchTab('qualify')">📊 Clasificación</button>
+      <button class="tab-btn ${CUR_TAB==='bracket' ? 'on':''}" onclick="switchTab('bracket')">🏆 Bracket</button>
+    </div>`;
+
+  // Pills row
+  const pillsRow = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem">${phasePill}${groupPills}</div>`;
+
+  inner.innerHTML = champHtml + pillsRow + tabs + groupTabsHtml + `<div id="tab-content"></div>`;
+  renderTabContent();
 }
 
 function renderEmpty() {
@@ -735,22 +887,21 @@ function renderEmpty() {
 }
 
 // ═══════════════════════════════════════════
-//  SELECT ORG & LOAD TOURNAMENT
+//  SELECT ORG (kept for direct-entry single-tournament case)
 // ═══════════════════════════════════════════
 function selectOrgById(tid) {
-  const t = ALL_ORGS.find(x => x.id === tid);
-  if (t) selectOrg(t);
+  toggleAccordion(tid);
 }
 
 function selectOrg(tournament) {
-  CUR_ORG = tournament;
+  // Used when there is only 1 active tournament — go directly
+  CUR_ORG   = tournament;
   const state = tournament.state_json;
   CUR_STATE = typeof state === 'string' ? JSON.parse(state) : state;
   CUR_TAB   = 'qualify';
   CUR_GROUP = hasPro() ? 'pro' : 'semi';
   renderTournament();
-  // Solo sync en tiempo real si está activo
-  if (tournament.status === 'active') startLiveSync(tournament.user_id);
+  if (tournament.status === 'active') startLiveSync(tournament.user_id, tournament.id);
 }
 
 // ═══════════════════════════════════════════
@@ -1011,14 +1162,33 @@ function switchGroup(g) {
 function backToList() {
   stopSync();
   CUR_ORG = null; CUR_STATE = null;
+  OPEN_ID = null;
   renderOrgList();
 }
 
 // ═══════════════════════════════════════════
 //  LIVE SYNC (realtime + polling)
 // ═══════════════════════════════════════════
-function startLiveSync(userId) {
+function startLiveSync(userId, tid) {
   stopSync();
+
+  const applyUpdate = (state, newStatus) => {
+    if (!state) return;
+    CUR_STATE = state;
+    if (CUR_ORG) CUR_ORG = { ...CUR_ORG, state_json: state, status: newStatus || CUR_ORG.status };
+    // update ALL_ORGS too
+    const idx = ALL_ORGS.findIndex(x => x.id === tid);
+    if (idx >= 0) ALL_ORGS[idx] = { ...ALL_ORGS[idx], state_json: state, status: newStatus || ALL_ORGS[idx].status };
+    if (newStatus === 'archived') stopSync();
+    stampTime();
+    // Re-render panel if still open
+    if (OPEN_ID === tid) {
+      const t = ALL_ORGS.find(x => x.id === tid);
+      if (t) renderPanelContent(t);
+    } else if (document.getElementById('tab-content')) {
+      renderTournament();
+    }
+  };
 
   // Realtime
   _rtChannel = sb.channel('live-' + userId)
@@ -1029,25 +1199,18 @@ function startLiveSync(userId) {
       const row = payload.new;
       if (!row?.state_json) return;
       const state = typeof row.state_json === 'string' ? JSON.parse(row.state_json) : row.state_json;
-      CUR_STATE = state;
-      CUR_ORG = { ...CUR_ORG, state_json: state };
-      stampTime();
-      renderTournament();
+      applyUpdate(state, row.status);
     })
     .subscribe();
 
   // Polling every 20s as fallback
   _pollTimer = setInterval(async () => {
-    if (!CUR_ORG) return;
     try {
-      const rows = await get(`tournaments?user_id=eq.${userId}&status=eq.active&select=state_json,updated_at&order=updated_at.desc&limit=1`);
+      const rows = await get(`tournaments?user_id=eq.${userId}&status=eq.active&select=state_json,updated_at,status&order=updated_at.desc&limit=1`);
       if (!rows?.[0]?.state_json) return;
       const state = typeof rows[0].state_json === 'string' ? JSON.parse(rows[0].state_json) : rows[0].state_json;
-      // Only re-render if different
       if (JSON.stringify(state) === JSON.stringify(CUR_STATE)) return;
-      CUR_STATE = state;
-      stampTime();
-      renderTournament();
+      applyUpdate(state, rows[0].status);
     } catch(e) {}
   }, 20000);
 }
