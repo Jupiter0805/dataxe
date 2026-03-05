@@ -1536,8 +1536,8 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       <button class="t-nav-btn" data-page="bracket" onclick="showPage('bracket')">Bracket</button>
       <button class="t-nav-btn" data-page="ranking" onclick="showPage('ranking')">Ranking</button>
       <button class="t-nav-btn" data-page="history" onclick="showPage('history')">Historial</button>
-      <button class="t-nav-btn" data-page="followers" onclick="showPage('followers')">👥 Seguidores</button>
-      <button class="t-nav-btn" data-page="posts" onclick="showPage('posts')">📢 Publicaciones</button>
+      <button class="t-nav-btn" data-page="followers" onclick="showPage('followers')">Seguidores</button>
+      <button class="t-nav-btn" data-page="posts" onclick="showPage('posts')">Publicaciones</button>
       <button class="t-nav-btn" data-page="settings" onclick="showPage('settings')">Config</button>
     </div>
     <div class="t-right">
@@ -1944,6 +1944,27 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       <div class="pg-title">Segui<em>dores</em></div>
       <div class="pg-sub">Gestiona y etiqueta a los jugadores que te siguen</div>
 
+      <!-- Followers counter banner -->
+      <div id="posts-followers-banner" style="
+        background: linear-gradient(135deg, rgba(196,135,58,0.12) 0%, rgba(196,135,58,0.04) 100%);
+        border: 1px solid rgba(196,135,58,0.2);
+        border-radius: var(--r2); padding: 1.25rem 1.5rem;
+        display: flex; align-items: center; gap: 1.5rem;
+        margin-bottom: 1.5rem; flex-wrap: wrap;
+      ">
+        <div style="display:flex;align-items:center;gap:12px;flex:1">
+          <div style="font-size:2.5rem;line-height:1">👥</div>
+          <div>
+            <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:2px">Tus seguidores</div>
+            <div id="posts-followers-count" style="font-size:2rem;font-weight:800;color:var(--accent);line-height:1">—</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:4px">Jugadores que te siguen y verán tus publicaciones</div>
+          <div id="posts-followers-names" style="font-size:12px;color:rgba(255,255,255,0.5)">Cargando...</div>
+        </div>
+      </div>
+
       <div style="display:flex;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center">
         <input type="text" id="fol-search" class="f-input" placeholder="🔍 Buscar seguidor..."
           oninput="filterFollowers(this.value)" style="max-width:280px">
@@ -1974,27 +1995,6 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     <div class="page" id="pg-posts">
       <div class="pg-title">Publi<em>caciones</em></div>
       <div class="pg-sub">Anuncia torneos y novedades a tus seguidores</div>
-
-      <!-- Followers banner -->
-      <div id="posts-followers-banner" style="
-        background: linear-gradient(135deg, rgba(196,135,58,0.12) 0%, rgba(196,135,58,0.04) 100%);
-        border: 1px solid rgba(196,135,58,0.2);
-        border-radius: var(--r2); padding: 1.25rem 1.5rem;
-        display: flex; align-items: center; gap: 1.5rem;
-        margin-bottom: 1.5rem; flex-wrap: wrap;
-      ">
-        <div style="display:flex;align-items:center;gap:12px;flex:1">
-          <div style="font-size:2.5rem;line-height:1">👥</div>
-          <div>
-            <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:2px">Tus seguidores</div>
-            <div id="posts-followers-count" style="font-size:2rem;font-weight:800;color:var(--accent);line-height:1">—</div>
-          </div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:4px">Jugadores que te siguen y verán tus publicaciones</div>
-          <div id="posts-followers-names" style="font-size:12px;color:rgba(255,255,255,0.5)">Cargando...</div>
-        </div>
-      </div>
 
       <div class="posts-toolbar">
         <div style="font-size:12px;color:var(--ink4)" id="posts-count">—</div>
