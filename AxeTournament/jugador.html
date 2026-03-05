@@ -6,7 +6,7 @@
 <title>NOVURAXE — Portal del Jugador</title>
 <link rel="icon" type="image/png" href="public/dataxe-simple.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 :root {
@@ -33,7 +33,8 @@
   --r2: 12px;
   --sh: 0 2px 12px rgba(0,0,0,0.35);
   --sh2: 0 8px 32px rgba(0,0,0,0.5);
-  --f: 'Montserrat', sans-serif;
+  --f: 'Segoe UI', system-ui, sans-serif;
+  --f-display: 'Bebas Neue', sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -246,7 +247,8 @@ input, textarea, select { font-family: inherit; }
 }
 .pg-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--accent); }
 .pg-title {
-  font-size: 1.6rem; font-weight: 800; letter-spacing: 1px;
+  font-size: 1.9rem; font-weight: 800; letter-spacing: 1px;
+  font-family: var(--f-display);
   text-transform: uppercase; color: var(--ink);
   line-height: 1.1; margin-bottom: 4px;
 }
@@ -281,7 +283,8 @@ input, textarea, select { font-family: inherit; }
 .stat-card:hover { border-color: rgba(196,135,58,0.3); background: rgba(196,135,58,0.06); }
 .stat-n {
   font-size: 2rem; font-weight: 800; color: var(--accent);
-  line-height: 1; letter-spacing: -1px;
+  font-family: var(--f-display);
+  line-height: 1; letter-spacing: 0;
 }
 .stat-n.green { color: var(--green); }
 .stat-n.sand  { color: var(--sand); }
@@ -366,7 +369,7 @@ input, textarea, select { font-family: inherit; }
   flex-shrink: 0;
 }
 .sidebar-info { padding: 0 1.25rem 1rem; }
-.sidebar-name { font-size: 15px; font-weight: 800; color: #fff; line-height: 1.2; }
+.sidebar-name { font-size: 17px; font-weight: 800; color: #fff; font-family: var(--f-display); letter-spacing: 0.5px; line-height: 1.2; }
 .sidebar-username { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 3px; }
 .sidebar-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 0; }
 .sidebar-stats { display: grid; grid-template-columns: 1fr 1fr; }
@@ -596,7 +599,7 @@ input, textarea, select { font-family: inherit; }
 .org-card-info {
   padding: 2.2rem 1.25rem 0.75rem;
 }
-.org-name { font-size: 17px; font-weight: 800; color: #ffffff; line-height: 1.2; }
+.org-name { font-size: 19px; font-weight: 800; color: #ffffff; font-family: var(--f-display); letter-spacing: 0.5px; line-height: 1.2; }
 .org-username { font-size: 13px; color: rgba(255,255,255,0.45); margin-top: 3px; }
 .org-description {
   font-size: 13px; color: rgba(255,255,255,0.6);
@@ -676,7 +679,7 @@ input, textarea, select { font-family: inherit; }
   position: absolute; inset: 0; opacity: 0; cursor: pointer; border-radius: 50%;
 }
 .profile-info { padding: 0 1.25rem 1.25rem; }
-.profile-name { font-size: 18px; font-weight: 800; color: #ffffff; line-height: 1.2; }
+.profile-name { font-size: 20px; font-weight: 800; color: #ffffff; font-family: var(--f-display); letter-spacing: 0.5px; line-height: 1.2; }
 .profile-username { font-size: 13px; color: var(--accent); margin-top: 4px; letter-spacing: 0.5px; }
 .profile-since { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 6px; }
 .profile-upload-hint {
@@ -770,7 +773,8 @@ input, textarea, select { font-family: inherit; }
   border-radius: 0 0 calc(var(--r2) + 4px) calc(var(--r2) + 4px);
 }
 .modal-title {
-  font-size: 1rem; font-weight: 800; letter-spacing: 0.5px;
+  font-size: 1.2rem; font-weight: 800; letter-spacing: 1px;
+  font-family: var(--f-display);
   text-transform: uppercase; color: var(--ink);
   margin-bottom: 1.25rem;
 }
@@ -834,99 +838,6 @@ input, textarea, select { font-family: inherit; }
   .g3 { grid-template-columns: 1fr 1fr; }
   .g2 { grid-template-columns: 1fr; }
 }
-
-  /* ═══ SETTINGS ═══ */
-  .settings-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    max-width: 640px;
-  }
-  .settings-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 14px;
-    overflow: hidden;
-  }
-  .settings-card-danger {
-    border-color: rgba(220,80,80,0.2);
-    background: rgba(220,80,80,0.03);
-  }
-  .settings-card-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.1rem 1.5rem;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    background: rgba(255,255,255,0.02);
-  }
-  .settings-card-danger .settings-card-header {
-    border-bottom-color: rgba(220,80,80,0.12);
-    background: rgba(220,80,80,0.04);
-  }
-  .settings-card-icon { font-size: 1.4rem; flex-shrink: 0; }
-  .settings-card-title { font-size: 15px; font-weight: 700; color: #fff; }
-  .settings-card-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
-  .settings-fields { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1.1rem; }
-  .settings-field { display: flex; flex-direction: column; gap: 6px; }
-  .settings-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.4); }
-  .settings-field-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-  .settings-input {
-    flex: 1;
-    min-width: 0;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
-    padding: 9px 14px;
-    font-size: 14px;
-    color: #fff;
-    font-family: inherit;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .settings-input:focus { border-color: rgba(196,135,58,0.5); }
-  .settings-hint { font-size: 12px; color: rgba(255,255,255,0.3); line-height: 1.5; margin-top: 2px; }
-  .settings-badge {
-    font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
-    background: rgba(80,200,120,0.12); color: #4cd98a;
-    border: 1px solid rgba(80,200,120,0.25); border-radius: 20px;
-    padding: 4px 10px; white-space: nowrap;
-  }
-  .settings-btn-save {
-    font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
-    background: rgba(196,135,58,0.15); color: var(--accent);
-    border: 1px solid rgba(196,135,58,0.3); border-radius: 8px;
-    padding: 9px 18px; cursor: pointer; white-space: nowrap;
-    transition: all 0.2s; font-family: inherit;
-  }
-  .settings-btn-save:hover { background: rgba(196,135,58,0.25); border-color: var(--accent); }
-  .settings-btn-danger {
-    font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
-    background: rgba(220,80,80,0.12); color: #e05555;
-    border: 1px solid rgba(220,80,80,0.25); border-radius: 8px;
-    padding: 9px 18px; cursor: pointer; white-space: nowrap;
-    transition: all 0.2s; font-family: inherit;
-  }
-  .settings-btn-danger:hover { background: rgba(220,80,80,0.22); border-color: #e05555; }
-  .settings-btn-danger-sm {
-    font-size: 11px; font-weight: 700;
-    background: transparent; color: rgba(220,80,80,0.7);
-    border: 1px solid rgba(220,80,80,0.2); border-radius: 8px;
-    padding: 8px 14px; cursor: pointer;
-    transition: all 0.2s; font-family: inherit;
-  }
-  .settings-btn-danger-sm:hover { background: rgba(220,80,80,0.1); color: #e05555; }
-  /* Avatar upload */
-  .settings-avatar-wrap { display: flex; align-items: center; gap: 1.5rem; padding: 1.25rem 1.5rem; }
-  .settings-avatar-preview {
-    width: 72px; height: 72px; border-radius: 50%;
-    background: rgba(196,135,58,0.1); border: 2px solid rgba(196,135,58,0.3);
-    overflow: hidden; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .settings-avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
-  .settings-avatar-placeholder { font-size: 1.6rem; font-weight: 800; color: var(--accent); }
-  .settings-avatar-actions { display: flex; flex-direction: column; gap: 8px; }
 </style>
 </head>
 <body>
@@ -1030,7 +941,6 @@ input, textarea, select { font-family: inherit; }
       <button class="t-nav-btn" data-page="orgs" onclick="showPage('orgs')">🏟 Organizadores</button>
       <button class="t-nav-btn" data-page="stats" onclick="showPage('stats')">📊 Mis stats</button>
       <button class="t-nav-btn" data-page="history" onclick="showPage('history')">📁 Historial</button>
-      <button class="t-nav-btn" data-page="settings" onclick="showPage('settings')">⚙️ Ajustes</button>
     </nav>
     <div class="t-right">
       <span class="t-username" id="t-username"></span>
@@ -1127,53 +1037,6 @@ input, textarea, select { font-family: inherit; }
       </div>
     </div>
 
-    <!-- settings page placeholder -->
-    <div class="page" id="pg-settings">
-      <div class="pg-eyebrow">Cuenta</div>
-      <h1 class="pg-title">Ajustes <em>&amp; perfil.</em></h1>
-      <p class="pg-sub">Gestiona tu cuenta, datos personales y preferencias</p>
-      <div class="settings-wrap">
-        <div class="settings-card">
-          <div class="settings-card-header"><span class="settings-card-icon">👤</span><div><div class="settings-card-title">Información del perfil</div><div class="settings-card-sub">Nombre visible y nombre de usuario</div></div></div>
-          <div class="settings-fields">
-            <div class="settings-field"><label class="settings-label">Nombre completo</label><div class="settings-field-row"><input class="settings-input" type="text" id="cfg-fullname" placeholder="Tu nombre"><button class="settings-btn-save" onclick="saveFullName()">Guardar</button></div></div>
-            <div class="settings-field"><label class="settings-label">Nombre de usuario</label><div class="settings-field-row"><input class="settings-input" type="text" id="cfg-username" placeholder="@usuario"><button class="settings-btn-save" onclick="saveUsername()">Guardar</button></div></div>
-          </div>
-        </div>
-        <div class="settings-card">
-          <div class="settings-card-header"><span class="settings-card-icon">🖼</span><div><div class="settings-card-title">Foto de perfil</div><div class="settings-card-sub">Imagen que aparece en tu perfil</div></div></div>
-          <div class="settings-avatar-wrap">
-            <div class="settings-avatar-preview" id="cfg-avatar-preview"><div class="settings-avatar-placeholder" id="cfg-avatar-initials"></div></div>
-            <div class="settings-avatar-actions">
-              <label class="settings-btn-save" style="cursor:pointer">Subir imagen<input type="file" accept="image/*" style="display:none" onchange="uploadAvatar(this)"></label>
-              <button class="settings-btn-danger-sm" onclick="removeAvatar()">Eliminar foto</button>
-            </div>
-          </div>
-        </div>
-        <div class="settings-card">
-          <div class="settings-card-header"><span class="settings-card-icon">🔒</span><div><div class="settings-card-title">Seguridad</div><div class="settings-card-sub">Contraseña y acceso a la cuenta</div></div></div>
-          <div class="settings-fields">
-            <div class="settings-field"><label class="settings-label">Email</label><div class="settings-field-row"><input class="settings-input" type="text" id="cfg-email" disabled style="opacity:0.5"><span class="settings-badge">Verificado</span></div></div>
-            <div class="settings-field"><label class="settings-label">Contraseña</label><div class="settings-field-row"><button class="settings-btn-save" onclick="sendPasswordReset()">Enviar email de cambio</button></div><p class="settings-hint">Recibirás un email con el enlace para cambiar tu contraseña.</p></div>
-          </div>
-        </div>
-        <div class="settings-card">
-          <div class="settings-card-header"><span class="settings-card-icon">🛡</span><div><div class="settings-card-title">Privacidad y datos</div><div class="settings-card-sub">Control sobre tus datos personales (RGPD)</div></div></div>
-          <div class="settings-fields">
-            <div class="settings-field"><label class="settings-label">Exportar mis datos</label><div class="settings-field-row"><button class="settings-btn-save" onclick="exportMyData()">Descargar JSON</button></div><p class="settings-hint">Copia completa de tus datos almacenados en Novuraxe (Art. 20 RGPD — Portabilidad).</p></div>
-            <div class="settings-field"><label class="settings-label">Política de privacidad</label><div class="settings-field-row"><a href="terms.html" target="_blank" class="settings-btn-save" style="text-decoration:none">Ver política →</a></div></div>
-          </div>
-        </div>
-        <div class="settings-card settings-card-danger">
-          <div class="settings-card-header"><span class="settings-card-icon">⚠️</span><div><div class="settings-card-title" style="color:#e05555">Zona de peligro</div><div class="settings-card-sub">Acciones irreversibles sobre tu cuenta</div></div></div>
-          <div class="settings-fields">
-            <div class="settings-field"><label class="settings-label">Cerrar sesión</label><div class="settings-field-row"><button class="settings-btn-danger" onclick="doLogout()">Cerrar sesión</button></div></div>
-            <div class="settings-field"><label class="settings-label">Eliminar cuenta</label><div class="settings-field-row"><button class="settings-btn-danger" onclick="askDeleteAccount()">Eliminar mi cuenta</button></div><p class="settings-hint" style="color:rgba(220,80,80,0.7)">Acción permanente. Se eliminarán todos tus datos, estadísticas y seguimientos.</p></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div><!-- content -->
 </div><!-- scr-app -->
 
@@ -1185,22 +1048,6 @@ input, textarea, select { font-family: inherit; }
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('m-event')">Cerrar</button>
       <button class="btn btn-accent" id="m-event-reg-btn" onclick="registerToEvent()">Inscribirme</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL ELIMINAR CUENTA ══ -->
-<div class="modal-overlay" id="m-delete-account" style="display:none">
-  <div class="modal" style="max-width:400px">
-    <div class="modal-title" style="color:#e05555">⚠️ Eliminar cuenta</div>
-    <p style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:1.25rem;line-height:1.6">
-      Esta acción es <strong style="color:#fff">permanente e irreversible</strong>. Se eliminarán todos tus datos, estadísticas, historial y seguimientos.<br><br>
-      Escribe <strong style="color:#e05555">ELIMINAR</strong> para confirmar:
-    </p>
-    <input class="settings-input" type="text" id="delete-confirm-input" placeholder="Escribe ELIMINAR" style="margin-bottom:1rem">
-    <div style="display:flex;gap:0.75rem">
-      <button class="btn btn-ghost" style="flex:1" onclick="closeModal('m-delete-account')">Cancelar</button>
-      <button class="settings-btn-danger" style="flex:1" onclick="confirmDeleteAccount()">Eliminar cuenta</button>
     </div>
   </div>
 </div>
@@ -1508,11 +1355,10 @@ function showPage(p) {
 }
 
 function renderPage(p) {
-  if (p === 'feed')     renderFeed();
-  if (p === 'orgs')     renderOrgs();
-  if (p === 'stats')    renderStats();
-  if (p === 'history')  renderHistory();
-  if (p === 'settings') initSettingsPage();
+  if (p === 'feed')    renderFeed();
+  if (p === 'orgs')    renderOrgs();
+  if (p === 'stats')   renderStats();
+  if (p === 'history') renderHistory();
 }
 
 // ══════════════════════════════
@@ -2184,131 +2030,6 @@ async function renderHistory() {
         </tbody>
       </table>
     </div>`;
-}
-
-/* ═══ SETTINGS ═══ */
-async function initSettingsPage() {
-  // Re-fetch PROFILE fresh in case it changed
-  if (!CUR_USER) return;
-  if (!PROFILE) {
-    const rows = await dbGet(`users?id=eq.${CUR_USER.id}&select=id,username,club_name,avatar_url,created_at,role`);
-    if (rows && rows[0]) PROFILE = rows[0];
-  }
-  if (!PROFILE) return;
-
-  // Fill text fields
-  document.getElementById('cfg-fullname').value = PROFILE.club_name || '';
-  document.getElementById('cfg-username').value  = PROFILE.username  || '';
-  document.getElementById('cfg-email').value     = CUR_USER.email    || '';
-
-  // Avatar preview
-  const preview = document.getElementById('cfg-avatar-preview');
-  if (PROFILE.avatar_url) {
-    preview.innerHTML = `<img src="${PROFILE.avatar_url}?t=${Date.now()}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-  } else {
-    const name = PROFILE.club_name || PROFILE.username || '?';
-    preview.innerHTML = `<div class="settings-avatar-placeholder">${name.charAt(0).toUpperCase()}</div>`;
-  }
-}
-
-async function saveFullName() {
-  const val = document.getElementById('cfg-fullname').value.trim();
-  if (!val) return toast('⚠️ El nombre no puede estar vacío');
-  await dbPatch('users', `id=eq.${CUR_USER.id}`, { club_name: val });
-  PROFILE.club_name = val;
-  toast('✓ Nombre actualizado');
-}
-
-async function saveUsername() {
-  const val = document.getElementById('cfg-username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g,'');
-  if (!val || val.length < 3) return toast('⚠️ El usuario debe tener al menos 3 caracteres');
-  document.getElementById('cfg-username').value = val;
-  // Check uniqueness
-  const existing = await dbGet(`users?username=eq.${val}&id=neq.${CUR_USER.id}&select=id`);
-  if (existing && existing.length > 0) return toast('⚠️ Ese nombre de usuario ya está en uso');
-  await dbPatch('users', `id=eq.${CUR_USER.id}`, { username: val });
-  PROFILE.username = val;
-  document.getElementById('t-username').textContent = val;
-  toast('✓ Usuario actualizado');
-}
-
-async function sendPasswordReset() {
-  if (!CUR_USER?.email) return;
-  await sb.auth.resetPasswordForEmail(CUR_USER.email, {
-    redirectTo: window.location.href
-  });
-  toast('📧 Email enviado — revisa tu bandeja de entrada');
-}
-
-async function uploadAvatar(input) {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > 2 * 1024 * 1024) return toast('⚠️ Imagen demasiado grande (máx. 2MB)');
-  const ext  = file.name.split('.').pop();
-  const path = `avatars/${CUR_USER.id}.${ext}`;
-  toast('⏳ Subiendo imagen...');
-  const { error } = await sb.storage.from('avatars').upload(path, file, { upsert: true });
-  if (error) return toast('❌ Error al subir la imagen');
-  const { data } = sb.storage.from('avatars').getPublicUrl(path);
-  const url = data.publicUrl + '?t=' + Date.now();
-  await dbPatch('users', `id=eq.${CUR_USER.id}`, { avatar_url: url });
-  PROFILE.avatar_url = url;
-  document.getElementById('cfg-avatar-preview').innerHTML = `<img src="${url}" alt="">`;
-  toast('✓ Foto actualizada');
-}
-
-async function removeAvatar() {
-  if (!confirm('¿Eliminar tu foto de perfil?')) return;
-  await dbPatch('users', `id=eq.${CUR_USER.id}`, { avatar_url: null });
-  PROFILE.avatar_url = null;
-  const name = PROFILE.club_name || PROFILE.username || '?';
-  document.getElementById('cfg-avatar-preview').innerHTML =
-    `<div class="settings-avatar-placeholder">${name.charAt(0).toUpperCase()}</div>`;
-  toast('✓ Foto eliminada');
-}
-
-async function exportMyData() {
-  if (!CUR_USER) return;
-  toast('⏳ Preparando exportación...');
-  const [profile, stats] = await Promise.all([
-    dbGet(`users?id=eq.${CUR_USER.id}&select=*`),
-    dbGet(`global_stats?user_id=eq.${CUR_USER.id}&select=*`)
-  ]);
-  const data = {
-    exportDate: new Date().toISOString(),
-    profile:    profile?.[0] || {},
-    stats:      stats  || []
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = `novuraxe-datos-${CUR_USER.id.slice(0,8)}.json`;
-  a.click(); URL.revokeObjectURL(url);
-  toast('✓ Datos exportados');
-}
-
-function askDeleteAccount() {
-  openModal('m-delete-account');
-}
-
-async function confirmDeleteAccount() {
-  const confirm_input = document.getElementById('delete-confirm-input').value.trim();
-  if (confirm_input !== 'ELIMINAR') return toast('⚠️ Escribe ELIMINAR para confirmar');
-  closeModal('m-delete-account');
-  toast('⏳ Eliminando cuenta...');
-  try {
-    // Delete user data cascades from DB (follows, stats, etc.)
-    await dbDelete('follows',      `follower_id=eq.${CUR_USER.id}`);
-    await dbDelete('follows',      `following_id=eq.${CUR_USER.id}`);
-    await dbDelete('global_stats', `user_id=eq.${CUR_USER.id}`);
-    await dbDelete('users',        `id=eq.${CUR_USER.id}`);
-    await sb.auth.admin?.deleteUser?.(CUR_USER.id);
-    await sb.auth.signOut();
-    toast('Cuenta eliminada. Hasta pronto.');
-    setTimeout(() => location.reload(), 1500);
-  } catch(e) {
-    toast('❌ Error al eliminar la cuenta. Contacta con support.');
-  }
 }
 </script>
 </body>
