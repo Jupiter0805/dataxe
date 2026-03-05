@@ -944,97 +944,6 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   letter-spacing: 1px;
 }
 
-/* ─── MUERTE SÚBITA ─── */
-.sd-section {
-  margin-top: 1rem;
-  border: 1.5px solid var(--red);
-  border-radius: var(--r);
-  overflow: hidden;
-}
-.sd-header {
-  background: rgba(184,64,64,0.15);
-  border-bottom: 1px solid rgba(184,64,64,0.3);
-  padding: 0.5rem 1rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--red);
-}
-.sd-body {
-  padding: 0.75rem 1rem;
-}
-.sd-round-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-.sd-player-col {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.sd-player-name {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--ink3);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.sd-cell {
-  width: 44px;
-  height: 44px;
-  border-radius: 6px;
-  border: 1.5px solid rgba(184,64,64,0.4);
-  background: rgba(184,64,64,0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--ink3);
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-.sd-cell:hover { border-color: var(--red); background: rgba(184,64,64,0.18); }
-.sd-cell.d-scored { background: rgba(99,179,237,0.18); border-color: rgba(99,179,237,0.5); color: var(--ink); }
-.sd-cell.d-ks { background: rgba(196,135,58,0.2); border-color: var(--accent); color: var(--accent); }
-.sd-cell.d-bull { background: rgba(72,187,120,0.18); border-color: rgba(72,187,120,0.6); color: #48bb78; }
-.sd-cell.d-active { border-color: var(--red) !important; box-shadow: 0 0 0 2px rgba(184,64,64,0.3); }
-.sd-round-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--red);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-}
-.sd-totals {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  font-size: 13px;
-  color: var(--ink3);
-}
-.sd-total-val {
-  font-family: var(--f-display);
-  font-size: 1.6rem;
-  color: var(--red);
-  min-width: 2ch;
-  text-align: center;
-}
-
 /* ─── MODAL ─── */
 .modal-bg {
   display: none;
@@ -1964,7 +1873,25 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     <!-- ──── HISTORIAL ──── -->
     <div class="page" id="pg-history">
       <div class="pg-title">Histo<em>rial</em></div>
-      <div class="pg-sub">Torneos anteriores guardados</div>
+      <div class="pg-sub">Gestión de torneos</div>
+
+      <!-- ── TORNEO ACTIVO ── -->
+      <div style="
+        background: linear-gradient(135deg, rgba(196,135,58,0.1) 0%, rgba(196,135,58,0.03) 100%);
+        border: 1px solid rgba(196,135,58,0.3); border-radius: var(--r2);
+        padding: 1.25rem 1.5rem; margin-bottom: 1.75rem;
+        display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      ">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:4px">● Torneo activo</div>
+          <div id="active-t-name" style="font-size:15px;font-weight:700;color:#fff">—</div>
+          <div id="active-t-info" style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px">—</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0">
+          <button class="btn btn-amber btn-sm" onclick="saveTournament()">💾 Guardar en historial</button>
+          <button class="btn btn-red btn-sm" onclick="newTournament()">🆕 Nuevo torneo</button>
+        </div>
+      </div>
 
       <!-- ── TORNEOS EN SUPABASE ── -->
       <div style="margin-bottom:2rem">
@@ -1983,8 +1910,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       <div style="height:1px;background:rgba(255,255,255,0.07);margin-bottom:1.5rem"></div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
-        <div class="sec-title" style="margin-bottom:0">Torneos guardados localmente</div>
-        <button class="btn btn-amber btn-sm" onclick="saveTournament()">💾 Guardar torneo actual</button>
+        <div class="sec-title" style="margin-bottom:0">Guardados localmente</div>
       </div>
       <div id="hist-list">
         <div class="card" style="color:var(--ink3);text-align:center;padding:2.5rem">
@@ -2018,10 +1944,6 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
           <div class="f-group"><label class="f-label">Fecha</label><input class="f-input" type="date" id="cfg-tdate"></div>
           <div style="margin-top:1rem">
             <button class="btn btn-red" onclick="saveSettings()">Guardar</button>
-          </div>
-          <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--line)">
-            <div class="sec-title" style="margin-bottom:0.5rem">Zona peligrosa</div>
-            <button class="btn btn-danger btn-sm" onclick="newTournament()">🆕 Nuevo torneo</button>
           </div>
         </div>
       </div>
@@ -2252,8 +2174,31 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     <div id="m-duel-content"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('m-duel')">Cancelar</button>
-      <button class="btn btn-amber" id="btn-sd" onclick="addSuddenDeathRound()" style="display:none">💀 Muerte súbita</button>
       <button class="btn btn-red" onclick="confirmDuel()">✓ Confirmar resultado</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL NUEVO TORNEO ══ -->
+<div class="modal-bg" id="m-new-tournament">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-title">🆕 Nuevo torneo</div>
+    <p style="font-size:13px;color:var(--ink3);margin-bottom:1.25rem;line-height:1.6">
+      El torneo activo quedará <strong>archivado</strong> y se creará uno nuevo limpio.
+      Los datos actuales se conservan en el historial.
+    </p>
+    <div class="f-group">
+      <label class="f-label">Nombre del torneo *</label>
+      <input class="f-input" type="text" id="nt-name" placeholder="Torneo Abril 2026" maxlength="80">
+    </div>
+    <div class="f-group">
+      <label class="f-label">Fecha del torneo</label>
+      <input class="f-input" type="date" id="nt-date">
+    </div>
+    <div class="err-msg" id="nt-err"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('m-new-tournament')">Cancelar</button>
+      <button class="btn btn-red" onclick="confirmNewTournament()">✓ Crear torneo</button>
     </div>
   </div>
 </div>
@@ -2457,42 +2402,58 @@ function save() {
 }
 
 // Full sync of current ADMIN state to Supabase
+let _writeLock = false;
+let _writePending = false;
+
 async function syncToSupabase() {
   if (!DB_USER_ID) return;
+  if (_writeLock) { _writePending = true; return; }
+  _writeLock = true;
+  try {
+    await _doSync();
+    if (_writePending) { _writePending = false; await _doSync(); }
+  } finally {
+    _writeLock = false;
+  }
+}
 
-  // ── Helpers: upsert wrappers that never throw ──
+async function _doSync() {
   const safe = fn => fn.catch(e => { console.warn('[sync]', e.message); return null; });
 
-  // ── 1. Tournament ──
-  let tid;
+  // ── 1. Tournament — usar __tid cacheado para evitar inserts duplicados ──
+  let tid = ADMIN.__tid || null;
   try {
-    const tRows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id`);
-    tid = tRows?.[0]?.id;
-
-    if (!tid) {
-      // Solo crear fila nueva si realmente hay datos (evita crear torneo vacío por error de timing)
-      const hasData = (ADMIN.pro?.players?.length || 0) + (ADMIN.semi?.players?.length || 0) > 0
-                   || ADMIN.tName;
-      if (!hasData) {
-        console.warn('[sync] sin tid y sin datos — abortando para no crear fila vacía');
-        return;
-      }
-      const t = await dbInsert('tournaments', {
-        user_id:    DB_USER_ID,
-        name:       ADMIN.tName || 'Torneo',
-        date:       ADMIN.tDate || new Date().toISOString().split('T')[0],
-        updated_at: new Date().toISOString(),
-        state_json: JSON.stringify(ADMIN),
-        status:     'active'
-      });
-      tid = t?.[0]?.id;
-    } else {
+    if (tid) {
       await safe(dbUpdate('tournaments', `id=eq.${tid}`, {
         name:       ADMIN.tName || 'Torneo',
         date:       ADMIN.tDate || new Date().toISOString().split('T')[0],
         updated_at: new Date().toISOString(),
         state_json: JSON.stringify(ADMIN),
       }));
+    } else {
+      const tRows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id&order=updated_at.desc&limit=1`);
+      tid = tRows?.[0]?.id;
+      if (!tid) {
+        const hasData = (ADMIN.pro?.players?.length || 0) + (ADMIN.semi?.players?.length || 0) > 0 || ADMIN.tName;
+        if (!hasData) { console.warn('[sync] sin tid y sin datos — abortando'); return; }
+        const t = await dbInsert('tournaments', {
+          user_id:    DB_USER_ID,
+          name:       ADMIN.tName || 'Torneo',
+          date:       ADMIN.tDate || new Date().toISOString().split('T')[0],
+          updated_at: new Date().toISOString(),
+          state_json: JSON.stringify(ADMIN),
+          status:     'active'
+        });
+        tid = t?.[0]?.id;
+      } else {
+        await safe(dbUpdate('tournaments', `id=eq.${tid}`, {
+          name:       ADMIN.tName || 'Torneo',
+          date:       ADMIN.tDate || new Date().toISOString().split('T')[0],
+          updated_at: new Date().toISOString(),
+          state_json: JSON.stringify(ADMIN),
+        }));
+      }
+      if (tid) { ADMIN.__tid = tid; localStorage.setItem(gk(), JSON.stringify(ADMIN)); }
     }
   } catch(e) { console.warn('[sync] tournament:', e.message); }
   if (!tid) { console.warn('[sync] no tid, aborting'); return; }
@@ -2891,7 +2852,7 @@ function renderPage(p) {
   if (p === 'qualify')   renderQualify();
   if (p === 'bracket')   renderBracket();
   if (p === 'ranking')   renderRanking();
-  if (p === 'history')   { renderHistory(); loadSupaTournaments(); }
+  if (p === 'history')   { renderActiveTournamentCard(); renderHistory(); loadSupaTournaments(); }
   if (p === 'settings')  renderSettings();
   if (p === 'posts')     renderPosts();
   if (p === 'followers') renderFollowers();
@@ -4017,127 +3978,7 @@ function buildDuelUI(m) {
     <div class="score-grid" id="d-picker-grid"></div>
   </div>`;
 
-  // ── Muerte súbita rounds ──
-  const sdRounds = m.sdRounds || [];
-  if (sdRounds.length > 0) {
-    html += `<div class="sd-section">
-      <div class="sd-header">💀 Muerte Súbita</div>
-      <div class="sd-body">`;
-
-    sdRounds.forEach((sd, si) => {
-      const sd1cls = sd.p1 !== null ? (sd.p1 === DUEL_KS_VAL ? 'd-ks' : (sd.p1 === DUEL_BULL_VAL ? 'd-bull' : 'd-scored')) : '';
-      const sd2cls = sd.p2 !== null ? (sd.p2 === DUEL_KS_VAL ? 'd-ks' : (sd.p2 === DUEL_BULL_VAL ? 'd-bull' : 'd-scored')) : '';
-      const sd1disp = sd.p1 !== null ? (sd.p1 === DUEL_KS_VAL ? 'KS' : (sd.p1 === DUEL_BULL_VAL ? 'B' : sd.p1)) : '?';
-      const sd2disp = sd.p2 !== null ? (sd.p2 === DUEL_KS_VAL ? 'KS' : (sd.p2 === DUEL_BULL_VAL ? 'B' : sd.p2)) : '?';
-      html += `
-        <div class="sd-round-label">Ronda ${si + 1}</div>
-        <div class="sd-round-row">
-          <div class="sd-player-col">
-            <div class="sd-player-name">${m.p1}</div>
-            <div class="sd-cell ${sd1cls}" id="sdc-${si}-0" onclick="clickSDCell(${si},0)">${sd1disp}</div>
-          </div>
-          <div class="sd-player-col">
-            <div class="sd-player-name">${m.p2}</div>
-            <div class="sd-cell ${sd2cls}" id="sdc-${si}-1" onclick="clickSDCell(${si},1)">${sd2disp}</div>
-          </div>
-        </div>`;
-    });
-
-    // SD running totals
-    let sdT1 = 0, sdT2 = 0;
-    sdRounds.forEach(sd => { if (sd.p1 !== null) sdT1 += sd.p1; if (sd.p2 !== null) sdT2 += sd.p2; });
-    html += `<div class="sd-totals">
-      <span>${m.p1}</span>
-      <span class="sd-total-val">${sdT1}</span>
-      <span style="color:var(--ink4)">VS</span>
-      <span class="sd-total-val">${sdT2}</span>
-      <span>${m.p2}</span>
-    </div>`;
-
-    html += `</div></div>`; // sd-body / sd-section
-  }
-
-  // SD picker (separate from normal picker)
-  html += `<div class="d-score-picker" id="sd-picker" style="display:none;border-color:rgba(184,64,64,0.4)">
-    <div class="d-picker-title" id="sd-picker-title" style="color:var(--red)">Muerte Súbita — selecciona valor</div>
-    <div class="score-grid" id="sd-picker-grid"></div>
-  </div>`;
-
   return html;
-}
-
-let SD_PICK = null; // { si, p }
-
-function clickSDCell(si, p) {
-  SD_PICK = { si, p };
-  const m   = getM(DUEL_CTX.mid);
-  const cfg = G().elimCfg;
-  const sd  = m.sdRounds[si];
-  const cur = p === 0 ? sd.p1 : sd.p2;
-  const pName = p === 0 ? m.p1 : m.p2;
-
-  // Count KS/Bull across all SD rounds for this player
-  let ksUsed = 0, bullUsed = 0;
-  (m.sdRounds || []).forEach((r, ri) => {
-    const v = p === 0 ? r.p1 : r.p2;
-    if (v === DUEL_KS_VAL) ksUsed++;
-    if (v === DUEL_BULL_VAL) bullUsed++;
-  });
-
-  document.querySelectorAll('.sd-cell').forEach(c => c.classList.remove('d-active'));
-  document.getElementById(`sdc-${si}-${p}`)?.classList.add('d-active');
-
-  // Hide normal picker
-  document.getElementById('d-picker').style.display = 'none';
-
-  const picker = document.getElementById('sd-picker');
-  picker.style.display = 'block';
-  document.getElementById('sd-picker-title').textContent = `💀 MS R${si+1} — ${pName}  ·  KS: ${ksUsed}/${cfg.ksMax}  Bulls: ${bullUsed}/${cfg.bullMax}`;
-
-  const canKS   = ksUsed   < cfg.ksMax   || cur === DUEL_KS_VAL;
-  const canBull = bullUsed < cfg.bullMax || cur === DUEL_BULL_VAL;
-  const activeScores = G().elimCfg.scores?.length ? G().elimCfg.scores : DUEL_ALL_SCORES;
-
-  let html = '';
-  activeScores.forEach(v => {
-    html += `<div class="sc-btn${cur === v ? ' on' : ''}${v === 0 ? ' sc-btn-zero' : ''}" onclick="applySDScore(${v})">${v}</div>`;
-  });
-  html += `<div class="sc-btn bull${cur === DUEL_BULL_VAL ? ' on' : ''}${!canBull ? '" style="opacity:.35;cursor:not-allowed' : ''}" 
-    onclick="${canBull ? 'applySDScore(' + DUEL_BULL_VAL + ')' : "toast('Límite de bulls eye alcanzado','red')"}">
-    🎯 Bull <span style="opacity:.7;font-size:.75em">${DUEL_BULL_VAL}pts</span></div>`;
-  html += `<div class="sc-btn ks${cur === DUEL_KS_VAL ? ' on' : ''}${!canKS ? '" style="opacity:.35;cursor:not-allowed' : ''}" 
-    onclick="${canKS ? 'applySDScore(' + DUEL_KS_VAL + ')' : "toast('Límite de killshots alcanzado','red')"}">
-    🪓 KS <span style="opacity:.7;font-size:.75em">${DUEL_KS_VAL}pts</span></div>`;
-  html += `<div class="sc-btn clr" onclick="applySDScore(null)">✕ Borrar</div>`;
-  document.getElementById('sd-picker-grid').innerHTML = html;
-}
-
-function applySDScore(val) {
-  const ctx = SD_PICK; if (!ctx) return;
-  const m   = getM(DUEL_CTX.mid);
-  const sd  = m.sdRounds[ctx.si];
-  if (ctx.p === 0) sd.p1 = val; else sd.p2 = val;
-
-  const cellId = `sdc-${ctx.si}-${ctx.p}`;
-  const cell = document.getElementById(cellId);
-  if (cell) {
-    const isKS = val === DUEL_KS_VAL, isBU = val === DUEL_BULL_VAL;
-    cell.className = `sd-cell ${val !== null ? (isKS ? 'd-ks' : (isBU ? 'd-bull' : 'd-scored')) : ''}`;
-    cell.innerHTML = val !== null ? (isKS ? 'KS' : (isBU ? 'B' : val)) : '?';
-  }
-
-  document.getElementById('sd-picker').style.display = 'none';
-  document.querySelectorAll('.sd-cell').forEach(c => c.classList.remove('d-active'));
-
-  // Recalc SD totals display
-  let sdT1 = 0, sdT2 = 0;
-  (m.sdRounds || []).forEach(r => { if (r.p1 !== null) sdT1 += r.p1; if (r.p2 !== null) sdT2 += r.p2; });
-  const totEls = document.querySelectorAll('.sd-total-val');
-  if (totEls[0]) totEls[0].textContent = sdT1;
-  if (totEls[1]) totEls[1].textContent = sdT2;
-
-  updateSuddenDeathButton();
-  SD_PICK = null;
 }
 
 function clickDCell(r, p, t) {
@@ -4210,7 +4051,6 @@ function applyDScore(val) {
   // Update totals
   document.getElementById('dt-p1').textContent = duelTotal(m, 0);
   document.getElementById('dt-p2').textContent = duelTotal(m, 1);
-  updateSuddenDeathButton();
 }
 
 function duelTotal(m, pIdx) {
@@ -4222,54 +4062,17 @@ function duelTotal(m, pIdx) {
 }
 
 function confirmDuel() {
-  const m  = getM(DUEL_CTX.mid);
-  const t1 = duelTotal(m, 0), t2 = duelTotal(m, 1);
+  const m   = getM(DUEL_CTX.mid);
+  const t1  = duelTotal(m, 0), t2 = duelTotal(m, 1);
 
   if (t1 === 0 && t2 === 0) { toast('Ingresa al menos un puntaje', 'red'); return; }
-
-  // Check if there are unresolved sudden death rounds (tie after each SD round)
-  if (t1 === t2) {
-    const sdRounds = m.sdRounds || [];
-    if (sdRounds.length === 0) {
-      toast('Hay empate — usa "💀 Muerte súbita" para desempatar', 'red'); return;
-    }
-    // Check last SD round is complete and still tied
-    const lastSD = sdRounds[sdRounds.length - 1];
-    const sdT1 = (lastSD.p1 ?? 0), sdT2 = (lastSD.p2 ?? 0);
-    if (lastSD.p1 === null || lastSD.p2 === null) {
-      toast('Completa el lanzamiento de muerte súbita primero', 'red'); return;
-    }
-    if (sdT1 === sdT2) {
-      toast('Sigue el empate — añade otra muerte súbita', 'red'); return;
-    }
-  }
-
-  // Determine winner including SD rounds
-  let winner;
-  if (t1 !== t2) {
-    winner = t1 > t2 ? m.p1 : m.p2;
-  } else {
-    // Must have been resolved by SD rounds — find last non-tied SD
-    const sdRounds = m.sdRounds || [];
-    for (let i = sdRounds.length - 1; i >= 0; i--) {
-      const sd = sdRounds[i];
-      if (sd.p1 !== null && sd.p2 !== null && sd.p1 !== sd.p2) {
-        winner = sd.p1 > sd.p2 ? m.p1 : m.p2;
-        break;
-      }
-    }
-  }
-  if (!winner) { toast('No se pudo determinar el ganador', 'red'); return; }
+  if (t1 === t2) { toast('No puede ser empate — ajusta los puntajes', 'red'); return; }
 
   m.score1 = t1; m.score2 = t2;
-  m.winner = winner;
-
-  const sdLabel = (m.sdRounds?.length)
-    ? ` (MS×${m.sdRounds.length})`
-    : '';
+  m.winner = t1 > t2 ? m.p1 : m.p2;
 
   GB().log.unshift({
-    text: m.p1 + ' ' + t1 + ' — ' + t2 + ' ' + m.p2 + sdLabel,
+    text: m.p1 + ' ' + t1 + ' — ' + t2 + ' ' + m.p2,
     winner: m.winner,
     time: new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }),
   });
@@ -4277,8 +4080,8 @@ function confirmDuel() {
   // Propagate
   const ri = m.round;
   if (ri < GB().rounds.length - 1) {
-    const idx = GB().rounds[ri].indexOf(m.id);
-    const nm  = getM(GB().rounds[ri+1][Math.floor(idx/2)]);
+    const idx  = GB().rounds[ri].indexOf(m.id);
+    const nm   = getM(GB().rounds[ri+1][Math.floor(idx/2)]);
     if (nm) { if (idx % 2 === 0) nm.p1 = m.winner; else nm.p2 = m.winner; }
   } else {
     GB().champion = m.winner; GB().phase = 'done';
@@ -4288,54 +4091,6 @@ function confirmDuel() {
   }
 
   save(); closeModal('m-duel'); renderBracket(); renderRanking(); renderDash();
-}
-
-function addSuddenDeathRound() {
-  const m = getM(DUEL_CTX.mid);
-  if (!m.sdRounds) m.sdRounds = [];
-
-  // Check last SD round is complete and still tied before adding another
-  if (m.sdRounds.length > 0) {
-    const last = m.sdRounds[m.sdRounds.length - 1];
-    if (last.p1 === null || last.p2 === null) {
-      toast('Completa la muerte súbita actual primero', 'red'); return;
-    }
-    if (last.p1 !== last.p2) {
-      toast('El empate ya está resuelto — confirma el resultado', 'red'); return;
-    }
-  }
-
-  m.sdRounds.push({ p1: null, p2: null });
-  document.getElementById('m-duel-content').innerHTML = buildDuelUI(m);
-  updateSuddenDeathButton();
-}
-
-function updateSuddenDeathButton() {
-  const m = getM(DUEL_CTX?.mid); if (!m) return;
-  const t1 = duelTotal(m, 0), t2 = duelTotal(m, 1);
-  const btn = document.getElementById('btn-sd');
-  if (!btn) return;
-
-  const allFilled = allDuelCellsFilled(m);
-  if (allFilled && t1 === t2) {
-    btn.style.display = '';
-  } else {
-    btn.style.display = 'none';
-  }
-}
-
-function allDuelCellsFilled(m) {
-  for (let r = 0; r < 2; r++) {
-    for (let p = 0; p < 2; p++) {
-      const arr = m[`r${r}p${p+1}`] || [];
-      if (arr.length < 5 || arr.some(v => v === null || v === undefined)) return false;
-    }
-  }
-  // Also check SD rounds if any
-  for (const sd of (m.sdRounds || [])) {
-    if (sd.p1 === null || sd.p2 === null) return false;
-  }
-  return true;
 }
 
 function resetMatch(mid) {
@@ -4353,7 +4108,6 @@ function resetMatch(mid) {
   }
   m.winner = null; m.score1 = null; m.score2 = null;
   m.r0p1 = null; m.r0p2 = null; m.r1p1 = null; m.r1p2 = null;
-  m.sdRounds = [];
   if (g.champion) { g.champion = null; g.phase = 'bracket'; document.getElementById('champ-bar').classList.remove('on'); }
   save(); renderBracket(); renderRanking(); renderDash();
 }
@@ -5095,13 +4849,13 @@ function saveTournament() {
   save(); renderHistory();
   toast('Guardando stats...', 'green');
   syncToSupabase().then(async () => {
-    // Capture the Supabase tournament id into the snap for later deletion
     try {
-      const tRows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id`);
-      if (tRows?.[0]?.id) {
-        snap.supabase_tid = tRows[0].id;
-        // Also mark tournament as archived in Supabase so it doesn't get overwritten
-        await safe(dbUpdate('tournaments', `id=eq.${tRows[0].id}`, { status: 'archived' }));
+      const resolvedTid = ADMIN.__tid
+        || (await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id`))?.[0]?.id;
+      if (resolvedTid) {
+        snap.supabase_tid = resolvedTid;
+        await safe(dbUpdate('tournaments', `id=eq.${resolvedTid}`, { status: 'archived' }));
+        ADMIN.__tid = null;
         localStorage.setItem(gk(), JSON.stringify(ADMIN));
       }
     } catch(e) { /* silent */ }
@@ -5209,6 +4963,18 @@ async function setTournamentStatus(tid, newStatus) {
   } catch(e) {
     toast('Error: ' + e.message, 'red');
   }
+}
+
+function renderActiveTournamentCard() {
+  const nameEl = document.getElementById('active-t-name');
+  const infoEl = document.getElementById('active-t-info');
+  if (!nameEl || !infoEl) return;
+  nameEl.textContent = ADMIN.tName || 'Torneo sin nombre';
+  const date = ADMIN.tDate ? new Date(ADMIN.tDate).toLocaleDateString('es-ES', { day:'numeric', month:'long', year:'numeric' }) : 'Sin fecha';
+  const proC  = ADMIN.pro?.players?.length  || 0;
+  const semiC = ADMIN.semi?.players?.length || 0;
+  const pStr  = [proC ? `⚡ ${proC} PRO` : '', semiC ? `🎯 ${semiC} SEMI` : ''].filter(Boolean).join(' · ') || 'Sin jugadores';
+  infoEl.textContent = date + ' · ' + pStr;
 }
 
 function renderHistory() {
@@ -5468,50 +5234,49 @@ async function handleLogo(evt) {
 }
 
 function newTournament() {
-  if (!confirm('¿Crear nuevo torneo? El torneo actual quedará archivado y visible en Live como "Finalizado".')) return;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('nt-name').value = 'Torneo ' + new Date().getFullYear();
+  document.getElementById('nt-date').value = today;
+  document.getElementById('nt-err').textContent = '';
+  openModal('m-new-tournament');
+}
+
+async function confirmNewTournament() {
+  const name = document.getElementById('nt-name').value.trim();
+  const date = document.getElementById('nt-date').value;
+  if (!name) { document.getElementById('nt-err').textContent = 'El nombre es obligatorio'; return; }
+  closeModal('m-new-tournament');
 
   (async () => {
-    // 1. Archivar el torneo activo en Supabase — solo cambia status, NO borra datos
+    // 1. Archivar torneo activo
     try {
-      const tRows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id`);
-      if (tRows?.[0]?.id) {
-        await dbUpdate('tournaments', `id=eq.${tRows[0].id}`, {
-          status:     'archived',
-          updated_at: new Date().toISOString()
-        });
-        console.log('[newTournament] torneo anterior archivado:', tRows[0].id);
-      }
-    } catch(e) {
-      console.warn('[newTournament] archive error:', e.message);
-    }
+      const tid = ADMIN.__tid
+        || (await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id`))?.[0]?.id;
+      if (tid) await dbUpdate('tournaments', `id=eq.${tid}`, { status: 'archived', updated_at: new Date().toISOString() });
+    } catch(e) { console.warn('[newTournament] archive error:', e.message); }
 
-    // 2. Resetear estado local (SIN llamar a save() para no sobreescribir el archivado)
+    // 2. Resetear local — limpiar __tid para que _doSync cree fila nueva
     ADMIN.pro   = defGroup();
     ADMIN.semi  = defGroup();
-    ADMIN.tName = 'Torneo ' + new Date().getFullYear();
-    ADMIN.tDate = new Date().toISOString().split('T')[0];
+    ADMIN.tName = name;
+    ADMIN.tDate = date;
+    ADMIN.__tid = null;
     ADMIN.__savedAt = Date.now();
     localStorage.setItem(gk(), JSON.stringify(ADMIN));
 
-    // 3. Insertar fila NUEVA en Supabase para el nuevo torneo
+    // 3. Insertar nueva fila en Supabase
     try {
-      await dbInsert('tournaments', {
-        user_id:    DB_USER_ID,
-        name:       ADMIN.tName,
-        date:       ADMIN.tDate,
-        status:     'active',
+      const t = await dbInsert('tournaments', {
+        user_id: DB_USER_ID, name, date, status: 'active',
         updated_at: new Date().toISOString(),
         state_json: JSON.stringify(ADMIN)
       });
-      console.log('[newTournament] nueva fila activa creada');
-    } catch(e) {
-      console.warn('[newTournament] insert error:', e.message);
-    }
+      if (t?.[0]?.id) { ADMIN.__tid = t[0].id; localStorage.setItem(gk(), JSON.stringify(ADMIN)); }
+    } catch(e) { console.warn('[newTournament] insert error:', e.message); }
 
     document.getElementById('champ-bar').classList.remove('on');
-    renderAll();
-    showPage('dashboard');
-    toast('Nuevo torneo creado', 'green');
+    renderAll(); showPage('dashboard');
+    toast('✓ Torneo "' + name + '" creado', 'green');
   })();
 }
 
