@@ -674,7 +674,7 @@ async function init() {
         <div class="state-title">Sin torneos disponibles</div>
         <div class="state-sub">Aún no hay torneos publicados.<br>Vuelve cuando haya uno en curso.</div>
       </div>`;
-    setTimeout(init, 10000);
+    setTimeout(init, 30000);
     return;
   }
 
@@ -700,7 +700,10 @@ async function init() {
     renderOrgList(activos, finalizados, cerrados);
   }
 
-  _pollTimer = setInterval(() => { if (!CUR_ORG) init(); }, 20000);
+  // Re-check la lista solo si hay torneos activos (cada 30s)
+  if (activos.length) {
+    _pollTimer = setInterval(() => { if (!CUR_ORG) init(); }, 30000);
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -1212,7 +1215,7 @@ function startLiveSync(userId, tid) {
       if (JSON.stringify(state) === JSON.stringify(CUR_STATE)) return;
       applyUpdate(state, rows[0].status);
     } catch(e) {}
-  }, 20000);
+  }, 30000);
 }
 
 function stopSync() {
