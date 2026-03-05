@@ -2743,9 +2743,13 @@ function launchApp() {
 }
 
 async function doLogout() {
-  save();
+  // Limpiar localStorage de este usuario
+  if (CUR_USER) localStorage.removeItem(gk());
+  localStorage.removeItem('novuraxe_users');
+  localStorage.removeItem('axeclash_users');
+  localStorage.removeItem('axeclash_admin');
   await sb.auth.signOut();
-  CUR_USER = null; ADMIN = null;
+  CUR_USER = null; ADMIN = null; DB_USER_ID = null;
   document.getElementById('scr-app').classList.remove('on');
   document.getElementById('scr-login').classList.add('on');
 }
@@ -2953,22 +2957,19 @@ async function renderFollowers() {
 
   try {
     // Fetch follows
-    const raw = await supa(`follows?following_id=eq.${DB_USER_ID}&select=follower_id,player_tag`);
-    const follows = Array.isArray(raw) ? raw : [];
+    const follows = await supa(`follows?following_id=eq.${DB_USER_ID}&select=follower_id,player_tag`) || [];
     if (!follows.length) { FOLLOWERS_CACHE = []; renderFollowerList(); return; }
 
     // Fetch user info for each follower
     const ids = follows.map(f => f.follower_id).join(',');
-    const rawUsers = await supa(`users?id=in.(${ids})&select=id,username,club_name,avatar_url`);
-    const users = Array.isArray(rawUsers) ? rawUsers : [];
+    const users = await supa(`users?id=in.(${ids})&select=id,username,club_name,avatar_url`) || [];
     const userMap = {};
     users.forEach(u => { userMap[u.id] = u; });
 
     FOLLOWERS_CACHE = follows.map(f => ({ ...f, users: userMap[f.follower_id] || {} }));
     renderFollowerList();
   } catch(e) {
-    console.error('[renderFollowers]', e);
-    container.innerHTML = `<div class="card" style="color:var(--red);padding:2rem;text-align:center">Error al cargar seguidores: ${e.message}</div>`;
+    container.innerHTML = `<div class="card" style="color:var(--red);padding:2rem;text-align:center">Error: ${e.message}</div>`;
   }
 }
 
@@ -5629,7 +5630,6 @@ async function loadFollowersBanner() {
   if (!countEl || !DB_USER_ID) return;
 
   try {
-    // follows table: following_id = DB_USER_ID (organizer's auth.uid)
     const follows = await supa(`follows?following_id=eq.${DB_USER_ID}&select=follower_id`);
     const list = Array.isArray(follows) ? follows : [];
     countEl.textContent = list.length;
@@ -5639,7 +5639,6 @@ async function loadFollowersBanner() {
       return;
     }
 
-    // Load usernames of first 5 followers
     const ids = list.slice(0, 5).map(f => f.follower_id).join(',');
     const users = await supa(`users?id=in.(${ids})&select=username`);
     const userList = Array.isArray(users) ? users : [];
@@ -5648,7 +5647,7 @@ async function loadFollowersBanner() {
   } catch(e) {
     console.error('[loadFollowersBanner]', e);
     countEl.textContent = '—';
-    if (namesEl) namesEl.textContent = 'Error al cargar seguidores: ' + e.message;
+    if (namesEl) namesEl.textContent = 'Error al cargar: ' + e.message;
   }
 }
 
