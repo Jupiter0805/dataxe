@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NOVURAXE · Live</title>
-  <link rel="icon" href="dataxe-simple.png">
+  <link rel="icon" href="public/dataxe-simple.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -422,11 +422,22 @@
       background: var(--border);
       flex-shrink: 0;
     }
-    .b-winner-badge {
-      display: flex; align-items: center; gap: 8px;
+    .b-winner-badge {      display: flex; align-items: center; gap: 8px;
       padding: 7px 12px; font-size: 11px; font-weight: 700;
       color: var(--green); background: rgba(76,217,138,0.06);
       border-top: 1px solid rgba(76,217,138,0.1);
+    }
+    .b-sd-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 9px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #e05555;
+      background: rgba(184,64,64,0.12);
+      border: 1px solid rgba(184,64,64,0.3);
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-left: 4px;
+      vertical-align: middle;
     }
 
     /* ── CHAMPION CARD ── */
@@ -1139,7 +1150,10 @@ function renderBracketView() {
           <span class="b-row-name">${m.p2 || 'Por definir'}</span>
           ${m.score2 !== null && m.score2 !== undefined ? `<span class="b-row-score">${m.score2}</span>` : ''}
         </div>
-        ${m.winner ? `<div class="b-winner-badge">✓ ${m.winner}</div>` : (m.bye ? `<div class="b-winner-badge" style="color:var(--ink4)">BYE</div>` : '')}
+        ${m.winner
+          ? `<div class="b-winner-badge">✓ ${m.winner}${(m.sdRounds?.length) ? `<span class="b-sd-badge">💀 MS×${m.sdRounds.length}</span>` : ''}</div>`
+          : (m.bye ? `<div class="b-winner-badge" style="color:var(--ink4)">BYE</div>` : '')
+        }
       </div>`;
     });
 
