@@ -30,8 +30,10 @@
   --green:   #4a7c59;
 
   --f-display: 'Bebas Neue', sans-serif;
-  --f-body:    'Crimson Pro', serif;
+  --f-body:    'Segoe UI', system-ui, sans-serif;
   --f-mono:    'DM Mono', monospace;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body:    'Segoe UI', system-ui, sans-serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1786,7 +1788,7 @@ footer {
         <textarea class="cf-textarea" id="cf-message" placeholder="Cuéntanos tu consulta..."></textarea>
       </div>
       <button class="cf-submit" onclick="sendContact()">Enviar mensaje →</button>
-      <div class="cf-success" id="cf-success">✓ Mensaje enviado — te responderemos en support@novuraxe.com</div>
+      <div class="cf-success" id="cf-success">✓ Mensaje enviado — te responderemos en <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3c4f494c4c534e487c52534a494e5d4459125f5351">[email&#160;protected]</a></div>
     </div>
   </div>
 </section>
@@ -1823,7 +1825,7 @@ footer {
   </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ── Cursor ──
 const cursor     = document.getElementById('cursor');
 const cursorRing = document.getElementById('cursor-ring');
@@ -2069,12 +2071,4 @@ function closeRoleModal() {
   document.getElementById('role-modal').style.display = 'none';
 }
 // Close on backdrop click
-document.getElementById('role-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeRoleModal();
-});
-// Close on Escape
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRoleModal(); });
-</script>
-
-</body>
-</html>
+document.getElementById('role-
