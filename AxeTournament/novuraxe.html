@@ -2361,14 +2361,22 @@ async function syncToSupabase() {
   try {
     const tRows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id`);
     tid = tRows?.[0]?.id;
+
     if (!tid) {
+      // Solo crear fila nueva si realmente hay datos (evita crear torneo vacío por error de timing)
+      const hasData = (ADMIN.pro?.players?.length || 0) + (ADMIN.semi?.players?.length || 0) > 0
+                   || ADMIN.tName;
+      if (!hasData) {
+        console.warn('[sync] sin tid y sin datos — abortando para no crear fila vacía');
+        return;
+      }
       const t = await dbInsert('tournaments', {
         user_id:    DB_USER_ID,
         name:       ADMIN.tName || 'Torneo',
         date:       ADMIN.tDate || new Date().toISOString().split('T')[0],
         updated_at: new Date().toISOString(),
         state_json: JSON.stringify(ADMIN),
-        status:  'active'
+        status:     'active'
       });
       tid = t?.[0]?.id;
     } else {
@@ -4980,15 +4988,17 @@ function renderSettings() {
 }
 
 function saveSettings() {
-  ADMIN.club  = document.getElementById('cfg-club').value.trim();
-  ADMIN.tName = document.getElementById('cfg-tname').value.trim();
-  ADMIN.tDate = document.getElementById('cfg-tdate').value;
+  const newClub  = document.getElementById('cfg-club').value.trim();
+  const newTName = document.getElementById('cfg-tname').value.trim();
+  const newTDate = document.getElementById('cfg-tdate').value;
+
+  ADMIN.club  = newClub  || ADMIN.club;
+  ADMIN.tName = newTName || ADMIN.tName;
+  ADMIN.tDate = newTDate || ADMIN.tDate;
+
   document.getElementById('t-club-name').textContent = ADMIN.club || CUR_USER;
-  // Persist immediately to localStorage with correct key
   localStorage.setItem(gk(), JSON.stringify(ADMIN));
-  // Also push club/logo to Supabase
   syncToSupabase().catch(e => console.warn('sync error', e));
-  // Refresh dashboard to show updated tournament name
   renderDash();
   toast('Configuración guardada ✓', 'green');
 }
