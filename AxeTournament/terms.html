@@ -4,9 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Política de Privacidad y Términos de Uso — NOVURAXE</title>
-<link rel="icon" type="image/png" href="dataxe-simple.png">
+<link rel="icon" type="image/png" href="public/dataxe-simple.png">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;700&display=swap');
   :root {
     --accent:#C4873A; --accent2:#e0a84f;
     --bg0:#111009; --bg1:#1a1410; --bg2:#22190f; --bg3:#2c2418; 
@@ -19,31 +19,59 @@
   body{background:var(--bg0);color:var(--ink2);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.75;min-height:100vh;overflow-x:hidden}
   body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 800px 500px at 80% 10%,rgba(196,135,58,0.06) 0%,transparent 70%),radial-gradient(ellipse 600px 400px at 10% 80%,rgba(196,135,58,0.04) 0%,transparent 70%);pointer-events:none;z-index:0}
 
+  /* ─── CURSOR ─── */
+  .cursor {
+    position: fixed;
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, width 0.2s, height 0.2s, background 0.2s;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    position: fixed;
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--accent);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: all 0.12s ease;
+    opacity: 0.6;
+  }
+  .cursor.hover { width: 18px; height: 18px; }
+  .cursor-ring.hover { width: 54px; height: 54px; opacity: 0.3; }
+
   /* ─── NAV ─── */
   nav {
     position: fixed;
     top: 0; left: 0; right: 0;
     z-index: 100;
     padding: 0 2.5rem;
-    height: 64px;
+    height: 88px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     transition: all 0.3s;
-    background: rgba(17,16,9,0.85);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(196,135,58,0.12);
   }
   nav.scrolled {
-    background: rgba(17,16,9,0.96);
-    border-bottom-color: rgba(196,135,58,0.2);
+    background: rgba(26,20,16,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(196,135,58,0.15);
   }
   .t-logo {
     display: inline-flex;
     align-items: center;
     justify-content: center;
   }
-  .logo-img { height: 36px; width: auto; object-fit: contain; }
+  .logo-img {
+    height: 56px; width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(196,135,58,0.2));
+  }
   .nav-links {
     display: flex;
     align-items: center;
@@ -51,12 +79,12 @@
     list-style: none;
   }
   .nav-links a {
-    font-family: 'DM Sans', sans-serif;
+    font-family: 'DM Mono', monospace;
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.55);
+    color: rgba(255,255,255,0.5);
     text-decoration: none;
     padding: 6px 14px;
     border-radius: 4px;
@@ -66,9 +94,8 @@
   .nav-cta {
     background: var(--accent) !important;
     color: #1a1410 !important;
-    font-weight: 700 !important;
+    font-weight: 500 !important;
     padding: 8px 20px !important;
-    border-radius: 4px !important;
   }
   .nav-cta:hover { background: var(--accent2) !important; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(196,135,58,0.35); }
   .nav-mobile-btn {
@@ -84,43 +111,40 @@
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(17,16,9,0.98);
+    background: rgba(26,20,16,0.97);
     z-index: 99;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 2rem;
+    backdrop-filter: blur(20px);
   }
   .mobile-menu.open { display: flex; }
   .mobile-menu a {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.7);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.85);
     text-decoration: none;
     transition: color 0.2s;
   }
   .mobile-menu a:hover { color: var(--accent); }
   .mobile-menu-close {
     position: absolute;
-    top: 1.5rem; right: 2rem;
+    top: 1.5rem; right: 1.5rem;
     background: none; border: none;
-    color: rgba(255,255,255,0.5);
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
+    color: rgba(255,255,255,0.4);
+    font-size: 1rem; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    cursor: pointer; font-family: 'DM Mono', monospace;
   }
   @media(max-width:768px) {
     .nav-links { display: none; }
     .nav-mobile-btn { display: block; }
+    nav { padding: 0 1.5rem; }
   }
 
-  .hero{position:relative;z-index:1;padding:8rem 2rem 3rem;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05)}
+  .hero{position:relative;z-index:1;padding:9.5rem 2rem 3rem;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05)}
   .hero-inner{max-width:860px;width:100%;margin:0 auto;box-sizing:border-box}
   .hero-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);background:rgba(196,135,58,0.1);border:1px solid rgba(196,135,58,0.2);padding:5px 16px;border-radius:20px;margin-bottom:1.5rem}
   .hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,6vw,4.5rem);letter-spacing:4px;color:var(--ink1);line-height:1.05;margin-bottom:1rem}
@@ -199,10 +223,25 @@
 </head>
 <body>
 
+<!-- Cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobile-menu">
+  <button class="mobile-menu-close" onclick="toggleMenu()">✕ CERRAR</button>
+  <a href="index.html#features" onclick="toggleMenu()">Funciones</a>
+  <a href="index.html#how" onclick="toggleMenu()">Como funciona</a>
+  <a href="index.html#about" onclick="toggleMenu()">Quienes somos</a>
+  <a href="index.html#gear" onclick="toggleMenu()">Equipamiento</a>
+  <a href="novuraxe.html" onclick="toggleMenu()" style="color:var(--accent)">Iniciar sesion →</a>
+</div>
+
+<!-- NAV -->
 <nav id="nav">
-  <div class="t-logo">
+  <a href="index.html" class="t-logo" style="text-decoration:none">
     <img src="public/novuraxe-logo.png" alt="NOVURAXE" class="logo-img">
-  </div>
+  </a>
   <ul class="nav-links">
     <li><a href="index.html#features">Funciones</a></li>
     <li><a href="index.html#how">Como funciona</a></li>
@@ -212,14 +251,6 @@
   </ul>
   <button class="nav-mobile-btn" onclick="toggleMenu()">☰</button>
 </nav>
-<div class="mobile-menu" id="mobile-menu">
-  <button class="mobile-menu-close" onclick="toggleMenu()">✕ Cerrar</button>
-  <a href="index.html#features" onclick="toggleMenu()">Funciones</a>
-  <a href="index.html#how" onclick="toggleMenu()">Como funciona</a>
-  <a href="index.html#about" onclick="toggleMenu()">Quienes somos</a>
-  <a href="index.html#gear" onclick="toggleMenu()">Equipamiento</a>
-  <a href="novuraxe.html" style="padding:10px 28px;border-radius:4px;background:var(--accent);color:#1a1410;font-weight:700;letter-spacing:1.5px;font-size:11px;text-transform:uppercase">Iniciar sesion →</a>
-</div>
 
 <div class="hero">
   <div class="hero-inner">
@@ -235,7 +266,7 @@
     <div class="disclaimer-icon">⚠️</div>
     <div class="disclaimer-text">
       <strong>AVISO — Titularidad y marco legal</strong><br>
-      Novuraxe es una plataforma web gestionada por <strong>Juan Ignacio Moreno Cordido</strong> como persona física, sin actividad comercial ni ánimo de lucro. El tratamiento de datos se realiza conforme al <strong>RGPD (UE) 2016/679</strong> y la <strong>LOPDGDD 3/2018</strong>. Contacto: <a href="mailto:privacy@novuraxe.com" style="color:var(--accent)">privacy@novuraxe.com</a>
+      Novuraxe es una plataforma web gestionada por <strong>Juan Ignacio Moreno Cordido</strong> como persona física, sin actividad comercial ni ánimo de lucro. El tratamiento de datos se realiza conforme al <strong>RGPD (UE) 2016/679</strong> y la <strong>LOPDGDD 3/2018</strong>. Contacto: <a href="/cdn-cgi/l/email-protection#c6b6b4afb0a7a5bf86a8a9b0b3b4a7bea3e8a5a9ab" style="color:var(--accent)"><span class="__cf_email__" data-cfemail="abdbd9c2ddcac8d2ebc5c4ddded9cad3ce85c8c4c6">[email&#160;protected]</span></a>
     </div>
   </div>
 
@@ -277,7 +308,7 @@
         </div>
         <div class="responsible-row">
           <span class="responsible-label">Email de contacto</span>
-          <span class="responsible-value"><a href="mailto:privacy@novuraxe.com" style="color:var(--accent)">privacy@novuraxe.com</a></span>
+          <span class="responsible-value"><a href="/cdn-cgi/l/email-protection#daaaa8b3acbbb9a39ab4b5acafa8bba2bff4b9b5b7" style="color:var(--accent)"><span class="__cf_email__" data-cfemail="e494968d9285879da48a8b929196859c81ca878b89">[email&#160;protected]</span></a></span>
         </div>
         <div class="responsible-row">
           <span class="responsible-label">País de residencia</span>
@@ -352,7 +383,7 @@
     <span class="section-num">06 —</span>
     <h2>Protección de Datos — Base Legal y Finalidad del Tratamiento</h2>
     <p>Novuraxe trata datos personales de conformidad con el <strong>Reglamento (UE) 2016/679 (RGPD)</strong> y la <strong>Ley Orgánica 3/2018 (LOPDGDD)</strong>. A continuación se detalla la base legal que ampara cada finalidad de tratamiento.</p>
-    <p><strong>Responsable del tratamiento:</strong> Juan Ignacio Moreno Cordido — <a href="mailto:privacy@novuraxe.com" style="color:var(--accent)">privacy@novuraxe.com</a></p>
+    <p><strong>Responsable del tratamiento:</strong> Juan Ignacio Moreno Cordido — <a href="/cdn-cgi/l/email-protection#8ffffde6f9eeecf6cfe1e0f9fafdeef7eaa1ece0e2" style="color:var(--accent)"><span class="__cf_email__" data-cfemail="95e5e7fce3f4f6ecd5fbfae3e0e7f4edf0bbf6faf8">[email&#160;protected]</span></a></p>
 
     <div class="rgpd-table-wrap"><table class="rgpd-table">
       <thead>
@@ -523,26 +554,43 @@
       <p>Para agilizar la gestión, incluye en tu mensaje: (1) tipo de solicitud (acceso, supresión, portabilidad…), (2) nombre de usuario o email con el que estás registrado, (3) descripción breve de lo solicitado. No es necesario aportar documentación acreditativa adicional salvo que existan dudas razonables sobre tu identidad.</p>
     </div>
     <hr class="divider">
-    <p style="font-size:13px;color:var(--ink4)">Este documento ha sido redactado conforme al RGPD y la LOPDGDD. Para cualquier consulta sobre privacidad: <a href="mailto:privacy@novuraxe.com" style="color:var(--accent)">privacy@novuraxe.com</a></p>
+    <p style="font-size:13px;color:var(--ink4)">Este documento ha sido redactado conforme al RGPD y la LOPDGDD. Para cualquier consulta sobre privacidad: <a href="/cdn-cgi/l/email-protection#8afaf8e3fcebe9f3cae4e5fcfff8ebf2efa4e9e5e7" style="color:var(--accent)"><span class="__cf_email__" data-cfemail="c4b4b6adb2a5a7bd84aaabb2b1b6a5bca1eaa7aba9">[email&#160;protected]</span></a></p>
   </div>
 
 </div>
 
 <div class="footer">
   <strong><span>NOVURAXE</span></strong> &nbsp;·&nbsp; Plataforma de Gestión de Torneos de Lanzamiento de Hacha<br>
-  Responsable: Juan Ignacio Moreno Cordido · <a href="mailto:privacy@novuraxe.com" style="color:var(--accent);text-decoration:none">privacy@novuraxe.com</a><br><br>
-  <span style="color:var(--ink4)">© 2026 Novuraxe · Todos los derechos reservados sobre diseño y código.</span>
+  Responsable: Juan Ignacio Moreno Cordido · <a href="mailto:support@novuraxe.com" style="color:var(--accent)">support@novuraxe.com</a>
 </div>
 
 <script>
+// ── Cursor ──
+const cursor     = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top  = e.clientY + 'px';
+  setTimeout(() => {
+    cursorRing.style.left = e.clientX + 'px';
+    cursorRing.style.top  = e.clientY + 'px';
+  }, 60);
+});
+document.querySelectorAll('a, button').forEach(el => {
+  el.addEventListener('mouseenter', () => { cursor.classList.add('hover'); cursorRing.classList.add('hover'); });
+  el.addEventListener('mouseleave', () => { cursor.classList.remove('hover'); cursorRing.classList.remove('hover'); });
+});
+
+// ── Sticky nav ──
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ── Mobile menu ──
 function toggleMenu() {
   document.getElementById('mobile-menu').classList.toggle('open');
 }
-// Nav scroll effect
-window.addEventListener('scroll', function() {
-  const nav = document.getElementById('nav');
-  if (nav) nav.classList.toggle('scrolled', window.scrollY > 20);
-});
 </script>
 </body>
 </html>
