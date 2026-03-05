@@ -1324,8 +1324,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   background: var(--bg3);
 }
 .post-img-wrap img {
-  width: 100%; height: auto;
-  display: block;
+  width: 100%; height: auto; max-height: 600px; object-fit: contain; display: block;
 }
 .post-tags {
   display: flex; flex-wrap: wrap; gap: 6px;
@@ -5790,7 +5789,7 @@ function viewPost(id) {
     : null;
 
   document.getElementById('m-post-view-body').innerHTML = `
-    ${p.image_url ? `<img src="${p.image_url}" style="width:100%;height:auto;display:block">` : ''}
+    ${p.image_url ? `<img src="${p.image_url}" style="width:100%;height:auto;max-height:600px;object-fit:contain;display:block">` : ''}
     <div style="padding:1.5rem">
       ${(() => {
         const t = p.post_type || 'torneo';
