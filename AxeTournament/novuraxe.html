@@ -2396,7 +2396,7 @@ async function syncToSupabase() {
       });
       tid = t?.[0]?.id;
     } else {
-      await safe(dbUpdate('tournaments', `id=eq.${tid}`, {
+      await safe(dbUpdate('tournaments', `id=eq.${tid}&user_id=eq.${DB_USER_ID}`, {
         name:       ADMIN.tName || 'Torneo',
         date:       ADMIN.tDate || new Date().toISOString().split('T')[0],
         updated_at: new Date().toISOString(),
@@ -3198,10 +3198,9 @@ async function loadFollowerTags() {
     rows.forEach(r => { if (r.player_tag) FOLLOWER_TAG_MAP[r.follower_id] = r.player_tag; });
     const ids = rows.map(r => r.follower_id).filter(Boolean);
     if (ids.length) {
-      const users = await supa(`users?id=in.(${ids.join(',')})&select=id,username,full_name`) || [];
+      const users = await supa(`users?id=in.(${ids.join(',')})&select=id,username`) || [];
       users.forEach(u => {
-        if (u.username)  FOLLOWER_NAME_MAP[u.username.toLowerCase()]  = u.id;
-        if (u.full_name) FOLLOWER_NAME_MAP[u.full_name.toLowerCase()] = u.id;
+        if (u.username) FOLLOWER_NAME_MAP[u.username.toLowerCase()] = u.id;
       });
     }
   } catch(e) { /* silent */ }
@@ -4801,7 +4800,7 @@ function saveTournament() {
       if (tRows?.[0]?.id) {
         snap.supabase_tid = tRows[0].id;
         // Also mark tournament as archived in Supabase so it doesn't get overwritten
-        await safe(dbUpdate('tournaments', `id=eq.${tRows[0].id}`, { status: 'archived' }));
+        await safe(dbUpdate('tournaments', `id=eq.${tRows[0].id}&user_id=eq.${DB_USER_ID}`, { status: 'archived' }));
         localStorage.setItem(gk(), JSON.stringify(ADMIN));
       }
     } catch(e) { /* silent */ }
@@ -4890,7 +4889,7 @@ function confirmCloseTournament(tid, name) {
 
 async function setTournamentStatus(tid, newStatus) {
   try {
-    await dbUpdate('tournaments', `id=eq.${tid}`, {
+    await dbUpdate('tournaments', `id=eq.${tid}&user_id=eq.${DB_USER_ID}`, {
       status:     newStatus,
       updated_at: new Date().toISOString()
     });
@@ -5170,7 +5169,7 @@ function newTournament() {
     try {
       const tRows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id`);
       if (tRows?.[0]?.id) {
-        await dbUpdate('tournaments', `id=eq.${tRows[0].id}`, {
+        await dbUpdate('tournaments', `id=eq.${tRows[0].id}&user_id=eq.${DB_USER_ID}`, {
           status:     'archived',
           updated_at: new Date().toISOString()
         });
@@ -6089,7 +6088,7 @@ function startPolling() {
       console.warn('[poll]', e);
       _syncLock = false;
     }
-  }, 15000); // every 15 seconds
+  }, 30000); // every 30 seconds
 }
 
 function stopRealtimeSync() {
