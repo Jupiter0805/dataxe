@@ -195,6 +195,21 @@
       background: rgba(76,217,138,0.1); color: var(--green);
       border: 1px solid rgba(76,217,138,0.2);
     }
+    .org-done-badge {
+      margin-left: auto; flex-shrink: 0;
+      font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; padding: 3px 8px; border-radius: 20px;
+      background: rgba(255,255,255,0.04); color: var(--ink4);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .org-card-done {
+      opacity: 0.75;
+    }
+    .org-card-done:hover { opacity: 1; }
+    .org-champ {
+      font-size: 11px; color: var(--amber);
+      margin-top: 4px; font-weight: 600;
+    }
 
     /* ── SECTION HEADER ── */
     .section-hdr {
@@ -593,52 +608,51 @@ async function get(path) {
 //  INIT
 // ═══════════════════════════════════════════
 async function init() {
-  // 1. Get all active tournaments (sin join, sin filtros complejos)
+  // 1. Traer activos Y archivados con state_json
   let rows;
   try {
-    rows = await get(`tournaments?status=eq.active&select=id,name,date,updated_at,state_json,user_id`);
+    const [active, archived] = await Promise.all([
+      get(`tournaments?status=eq.active&select=id,name,date,updated_at,state_json,user_id,status`),
+      get(`tournaments?status=eq.archived&select=id,name,date,updated_at,state_json,user_id,status&order=updated_at.desc&limit=20`)
+    ]);
+    rows = [...(active || []), ...(archived || [])].filter(r => r.state_json);
   } catch(e) {
-    console.error('[live] error fetching tournaments:', e);
+    console.error('[live] error:', e);
     renderEmpty(); return;
   }
 
-  console.log('[live] torneos activos encontrados:', rows?.length, rows);
+  console.log('[live] torneos con state_json:', rows.length);
 
-  if (!rows?.length) { renderEmpty(); return; }
-
-  // 2. Solo los que tienen state_json
-  const withState = rows.filter(r => r.state_json);
-  console.log('[live] torneos con state_json:', withState.length);
-
-  if (!withState.length) {
-    // Mostrar aviso útil
+  if (!rows.length) {
     document.getElementById('main-wrap').innerHTML = `
       <div class="state-center fade-in">
         <div class="state-icon">⏳</div>
-        <div class="state-title">Torneo iniciándose</div>
-        <div class="state-sub">Hay un torneo activo pero aún no se han guardado datos.<br>En cuanto el organizador registre algo aparecerá aquí.</div>
+        <div class="state-title">Sin torneos disponibles</div>
+        <div class="state-sub">Aún no hay torneos publicados.<br>Vuelve cuando haya uno en curso.</div>
       </div>`;
-    setTimeout(init, 10000); // reintentar en 10s
+    setTimeout(init, 10000);
     return;
   }
 
-  // 3. Obtener info del organizador por separado (evita problemas de FK)
-  const enriched = await Promise.all(withState.map(async t => {
+  // 2. Organizer info por separado
+  const enriched = await Promise.all(rows.map(async t => {
     try {
       const orgs = await get(`organizers?id=eq.${t.user_id}&select=id,club_name,logo_url,username`);
       return { ...t, organizers: orgs?.[0] || null };
-    } catch(e) {
-      return { ...t, organizers: null };
-    }
+    } catch(e) { return { ...t, organizers: null }; }
   }));
 
   ALL_ORGS = enriched;
   stampTime();
 
-  if (ALL_ORGS.length === 1) {
-    selectOrg(ALL_ORGS[0]);
+  const activos     = enriched.filter(t => t.status === 'active');
+  const finalizados = enriched.filter(t => t.status === 'archived');
+
+  // Si solo hay 1 activo y ningún finalizado → entrar directo
+  if (activos.length === 1 && finalizados.length === 0) {
+    selectOrg(activos[0]);
   } else {
-    renderOrgList();
+    renderOrgList(activos, finalizados);
   }
 
   _pollTimer = setInterval(() => { if (!CUR_ORG) init(); }, 20000);
@@ -647,32 +661,67 @@ async function init() {
 // ═══════════════════════════════════════════
 //  ORG LIST VIEW
 // ═══════════════════════════════════════════
-function renderOrgList() {
+function renderOrgList(activos, finalizados) {
+  if (!activos)     activos     = ALL_ORGS.filter(t => t.status === 'active');
+  if (!finalizados) finalizados = ALL_ORGS.filter(t => t.status === 'archived');
+
   const wrap = document.getElementById('main-wrap');
-  const html = `
-    <div class="fade-in">
-      <div style="margin-bottom:2rem">
+
+  const orgCard = (t, isLive) => {
+    const org = t.organizers;
+    const logoHtml = org?.logo_url ? `<img src="${org.logo_url}" alt="">` : '🏟';
+    const badge = isLive
+      ? `<div class="org-live-badge">● Live</div>`
+      : `<div class="org-done-badge">✓ Finalizado</div>`;
+    let champ = '';
+    try {
+      const s = typeof t.state_json === 'string' ? JSON.parse(t.state_json) : t.state_json;
+      const c = [s?.pro?.champion, s?.semi?.champion].filter(Boolean);
+      if (c.length) champ = `<div class="org-champ">🏆 ${c.join(' · ')}</div>`;
+    } catch(e) {}
+    return `
+      <div class="org-card ${isLive ? '' : 'org-card-done'}" onclick="selectOrgById('${t.id}')">
+        <div class="org-logo">${logoHtml}</div>
+        <div style="flex:1;min-width:0">
+          <div class="org-name">${org?.club_name || org?.username || 'Organizador'}</div>
+          <div class="org-meta">${t.name || 'Torneo'}${t.date ? ' · ' + fmtDate(t.date) : ''}</div>
+          ${champ}
+        </div>
+        ${badge}
+      </div>`;
+  };
+
+  let html = `<div class="fade-in">`;
+
+  if (activos.length) {
+    html += `
+      <div style="margin-bottom:1.5rem">
         <div class="section-eyebrow">En directo ahora</div>
         <div class="section-title">Torneos activos</div>
       </div>
-      <div class="orgs-grid">
-        ${ALL_ORGS.map(t => {
-          const org = t.organizers;
-          const logoHtml = org?.logo_url
-            ? `<img src="${org.logo_url}" alt="">`
-            : '🏟';
-          return `
-            <div class="org-card" onclick="selectOrgById('${t.id}')">
-              <div class="org-logo">${logoHtml}</div>
-              <div>
-                <div class="org-name">${org?.club_name || org?.username || 'Organizador'}</div>
-                <div class="org-meta">${t.name || 'Torneo activo'}${t.date ? ' · ' + fmtDate(t.date) : ''}</div>
-              </div>
-              <div class="org-live-badge">● Live</div>
-            </div>`;
-        }).join('')}
+      <div class="orgs-grid" style="margin-bottom:3rem">
+        ${activos.map(t => orgCard(t, true)).join('')}
+      </div>`;
+  }
+
+  if (finalizados.length) {
+    html += `
+      <div style="margin-bottom:1.5rem${activos.length ? ';padding-top:2rem;border-top:1px solid var(--border)' : ''}">
+        <div class="section-eyebrow" style="color:var(--ink4)">Resultados</div>
+        <div class="section-title" style="font-size:1.6rem;color:var(--ink3)">Torneos finalizados</div>
       </div>
-    </div>`;
+      <div class="orgs-grid">
+        ${finalizados.map(t => orgCard(t, false)).join('')}
+      </div>`;
+  }
+
+  if (!activos.length && !finalizados.length) {
+    html += `<div class="state-center"><div class="state-icon">🪓</div>
+      <div class="state-title">Sin torneos</div>
+      <div class="state-sub">Vuelve más tarde.</div></div>`;
+  }
+
+  html += `</div>`;
   wrap.innerHTML = html;
 }
 
@@ -680,8 +729,8 @@ function renderEmpty() {
   document.getElementById('main-wrap').innerHTML = `
     <div class="state-center fade-in">
       <div class="state-icon">🪓</div>
-      <div class="state-title">Sin torneos activos</div>
-      <div class="state-sub">En este momento no hay ningún torneo en curso.<br>Vuelve más tarde.</div>
+      <div class="state-title">Sin torneos</div>
+      <div class="state-sub">Aún no hay torneos disponibles.<br>Vuelve más tarde.</div>
     </div>`;
 }
 
@@ -700,7 +749,8 @@ function selectOrg(tournament) {
   CUR_TAB   = 'qualify';
   CUR_GROUP = hasPro() ? 'pro' : 'semi';
   renderTournament();
-  startLiveSync(tournament.user_id);
+  // Solo sync en tiempo real si está activo
+  if (tournament.status === 'active') startLiveSync(tournament.user_id);
 }
 
 // ═══════════════════════════════════════════
@@ -720,8 +770,13 @@ function renderTournament() {
     : '🏟';
 
   const phase = G().phase || 'qualify';
+  const isFinished = CUR_ORG.status === 'archived';
   const phaseLabel = { qualify: 'Clasificación', elim: 'Eliminatorias', done: 'Finalizado' };
-  const phasePill  = `<div class="pill pill-phase-${phase}">${phaseLabel[phase] || phase}</div>`;
+
+  // Si el torneo está archivado, mostrar siempre "Finalizado"
+  const phasePill = isFinished
+    ? `<div class="pill pill-phase-done">✓ Finalizado</div>`
+    : `<div class="pill pill-phase-${phase}">${phaseLabel[phase] || phase}</div>`;
 
   // Build group pills
   const groupPills = [
@@ -765,6 +820,12 @@ function renderTournament() {
         </div>
         <div class="t-info-pills">${phasePill}${groupPills}</div>
       </div>
+
+      ${isFinished && (s?.pro?.champion || s?.semi?.champion) ? `
+      <div class="champion-card" style="margin-bottom:1.75rem">
+        <div class="champion-label">🏆 ${[s?.pro?.champion && 'Campeón PRO', s?.semi?.champion && 'Campeón SEMI PRO'].filter(Boolean).join(' · ')}</div>
+        <div class="champion-name">${[s?.pro?.champion, s?.semi?.champion].filter(Boolean).join(' &amp; ')}</div>
+      </div>` : ''}
 
       ${tabs}
       ${groupTabsHtml}
@@ -813,10 +874,11 @@ function renderQualifyView() {
     const rounds = g.qualCfg?.rounds || 2;
     const throwsPerRound = g.qualCfg?.throws || 10;
 
-    // Build throws mini — todas las rondas
+    // Build throws mini — todas las rondas con datos
     let throwsMini = '';
     for (let r = 0; r < rounds; r++) {
       const sc = (g.qualScores?.[pl.id] || {})['r' + r] || [];
+      if (!sc.some(v => v !== null)) continue; // saltar ronda sin datos
       const rTotal = sc.reduce((s, v) => s + (v || 0), 0);
       const cells = Array.from({ length: throwsPerRound }, (_, t) => {
         const v = sc[t] ?? null;
