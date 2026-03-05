@@ -838,6 +838,69 @@ input, textarea, select { font-family: inherit; }
   .g3 { grid-template-columns: 1fr 1fr; }
   .g2 { grid-template-columns: 1fr; }
 }
+
+/* ── SETTINGS ── */
+.settings-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--r2);
+  padding: 1.375rem;
+}
+.settings-card-danger {
+  border-color: rgba(212,99,90,0.2);
+  background: rgba(212,99,90,0.04);
+}
+.settings-card-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 1rem;
+}
+.settings-field { margin-bottom: 0.875rem; }
+.settings-avatar-wrap {
+  position: relative;
+  width: 72px; height: 72px;
+  cursor: pointer; flex-shrink: 0;
+}
+.settings-avatar {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: var(--bg3);
+  border: 2px solid var(--accent-ln);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 800; color: var(--accent);
+  overflow: hidden;
+}
+.settings-avatar-overlay {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.settings-avatar-wrap:hover .settings-avatar-overlay { opacity: 1; }
+.btn-link {
+  background: none; border: none;
+  color: var(--accent); font-size: 12px;
+  font-weight: 600; cursor: pointer; padding: 0;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.btn-link:hover { color: var(--accent2); }
+.pass-wrap { position: relative; display: flex; align-items: center; }
+.pass-wrap .f-input { padding-right: 2.5rem; }
+.pass-eye {
+  position: absolute; right: 0;
+  width: 36px; height: 100%;
+  background: none; border: none;
+  cursor: pointer; font-size: 14px;
+  color: var(--ink3); opacity: 0.6;
+  display: flex; align-items: center; justify-content: center;
+}
+.pass-eye:hover { opacity: 1; }
 </style>
 </head>
 <body>
@@ -944,6 +1007,7 @@ input, textarea, select { font-family: inherit; }
     </nav>
     <div class="t-right">
       <span class="t-username" id="t-username"></span>
+      <button class="btn btn-ghost btn-sm" onclick="showPage('settings')" style="border-color:rgba(255,255,255,0.1)">⚙️</button>
       <button class="btn btn-ghost btn-sm" onclick="doLogout()">Salir</button>
     </div>
   </div>
@@ -961,6 +1025,9 @@ input, textarea, select { font-family: inherit; }
     </button>
     <button class="mob-btn" data-page="history" onclick="showPage('history')">
       <span class="icon">📁</span>Historial
+    </button>
+    <button class="mob-btn" data-page="settings" onclick="showPage('settings')">
+      <span class="icon">⚙️</span>Ajustes
     </button>
   </nav>
 
@@ -1034,6 +1101,102 @@ input, textarea, select { font-family: inherit; }
 
       <div id="history-list">
         <div class="loading"><div class="spinner"></div> Cargando historial...</div>
+      </div>
+    </div>
+
+    <!-- ── AJUSTES ── -->
+    <div class="page" id="pg-settings">
+      <div class="pg-eyebrow">Cuenta</div>
+      <h1 class="pg-title">Ajus<em>tes.</em></h1>
+      <p class="pg-sub">Gestiona tu perfil y preferencias</p>
+
+      <div style="max-width:560px;display:flex;flex-direction:column;gap:1.25rem">
+
+        <!-- FOTO DE PERFIL -->
+        <div class="settings-card">
+          <div class="settings-card-title">Foto de perfil</div>
+          <div style="display:flex;align-items:center;gap:1.25rem">
+            <div class="settings-avatar-wrap" onclick="document.getElementById('settings-avatar-input').click()">
+              <div class="settings-avatar" id="settings-avatar-preview">
+                <span id="settings-avatar-initials">?</span>
+                <img id="settings-avatar-img" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%">
+              </div>
+              <div class="settings-avatar-overlay">📷</div>
+              <input type="file" id="settings-avatar-input" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="handleSettingsAvatar(event)">
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--ink2)" id="settings-display-name">—</div>
+              <div style="font-size:12px;color:var(--ink4);margin-top:2px" id="settings-display-username">—</div>
+              <button class="btn-link" onclick="document.getElementById('settings-avatar-input').click()" style="margin-top:6px">Cambiar foto</button>
+            </div>
+          </div>
+          <div id="settings-avatar-status" style="font-size:12px;margin-top:10px;display:none"></div>
+        </div>
+
+        <!-- NOMBRE Y USUARIO -->
+        <div class="settings-card">
+          <div class="settings-card-title">Información personal</div>
+          <div class="settings-field">
+            <label class="f-label">Nombre completo</label>
+            <input class="f-input" type="text" id="settings-fullname" placeholder="Tu nombre">
+          </div>
+          <div class="settings-field">
+            <label class="f-label">Nombre de usuario</label>
+            <div style="position:relative">
+              <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink4);font-size:14px">@</span>
+              <input class="f-input" type="text" id="settings-username" placeholder="usuario" style="padding-left:26px">
+            </div>
+          </div>
+          <div id="settings-profile-err" style="font-size:12px;color:var(--red);display:none;margin-bottom:8px"></div>
+          <button class="btn btn-accent btn-sm" onclick="saveSettingsProfile()">Guardar cambios</button>
+        </div>
+
+        <!-- CONTRASEÑA -->
+        <div class="settings-card">
+          <div class="settings-card-title">Contraseña</div>
+          <div class="settings-field">
+            <label class="f-label">Nueva contraseña</label>
+            <div class="pass-wrap">
+              <input class="f-input" type="password" id="settings-pass" placeholder="Mínimo 6 caracteres">
+              <button class="pass-eye" type="button" onclick="togglePassVis('settings-pass', this)">👁</button>
+            </div>
+          </div>
+          <div class="settings-field">
+            <label class="f-label">Confirmar contraseña</label>
+            <div class="pass-wrap">
+              <input class="f-input" type="password" id="settings-pass2" placeholder="Repite la contraseña">
+              <button class="pass-eye" type="button" onclick="togglePassVis('settings-pass2', this)">👁</button>
+            </div>
+          </div>
+          <div id="settings-pass-err" style="font-size:12px;color:var(--red);display:none;margin-bottom:8px"></div>
+          <div id="settings-pass-ok" style="font-size:12px;color:var(--green);display:none;margin-bottom:8px">✓ Contraseña actualizada</div>
+          <button class="btn btn-accent btn-sm" onclick="saveSettingsPassword()">Cambiar contraseña</button>
+        </div>
+
+        <!-- SESIÓN -->
+        <div class="settings-card">
+          <div class="settings-card-title">Sesión</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--ink2)">Cerrar sesión</div>
+              <div style="font-size:12px;color:var(--ink4);margin-top:2px">Salir de tu cuenta en este dispositivo</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="doLogout()">Cerrar sesión</button>
+          </div>
+        </div>
+
+        <!-- ZONA PELIGROSA -->
+        <div class="settings-card settings-card-danger">
+          <div class="settings-card-title" style="color:var(--red)">Zona peligrosa</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--ink2)">Eliminar cuenta</div>
+              <div style="font-size:12px;color:var(--ink4);margin-top:2px">Esta acción es permanente e irreversible</div>
+            </div>
+            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-ln)" onclick="confirmDeleteAccount()">Eliminar cuenta</button>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1355,10 +1518,11 @@ function showPage(p) {
 }
 
 function renderPage(p) {
-  if (p === 'feed')    renderFeed();
-  if (p === 'orgs')    renderOrgs();
-  if (p === 'stats')   renderStats();
-  if (p === 'history') renderHistory();
+  if (p === 'feed')     renderFeed();
+  if (p === 'orgs')     renderOrgs();
+  if (p === 'stats')    renderStats();
+  if (p === 'history')  renderHistory();
+  if (p === 'settings') renderSettings();
 }
 
 // ══════════════════════════════
@@ -2049,6 +2213,154 @@ async function renderHistory() {
         </tbody>
       </table>
     </div>`;
+}
+
+// ══════════════════════════════
+//  AJUSTES
+// ══════════════════════════════
+function renderSettings() {
+  if (!PROFILE) return;
+
+  // Name and username
+  document.getElementById('settings-fullname').value  = PROFILE.club_name || '';
+  document.getElementById('settings-username').value  = PROFILE.username  || '';
+  document.getElementById('settings-display-name').textContent     = PROFILE.club_name || PROFILE.username || '—';
+  document.getElementById('settings-display-username').textContent = '@' + (PROFILE.username || '—');
+
+  // Avatar
+  const img      = document.getElementById('settings-avatar-img');
+  const initials = document.getElementById('settings-avatar-initials');
+  if (PROFILE.avatar_url) {
+    img.src = PROFILE.avatar_url;
+    img.style.display = 'block';
+    initials.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    initials.style.display = '';
+    initials.textContent = (PROFILE.username || '?')[0].toUpperCase();
+  }
+
+  // Clear pass fields and messages
+  ['settings-pass','settings-pass2'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('settings-pass-err').style.display = 'none';
+  document.getElementById('settings-pass-ok').style.display  = 'none';
+  document.getElementById('settings-profile-err').style.display = 'none';
+}
+
+async function saveSettingsProfile() {
+  const fullname = document.getElementById('settings-fullname').value.trim();
+  const username = document.getElementById('settings-username').value.trim().toLowerCase().replace(/\s+/g,'');
+  const errEl    = document.getElementById('settings-profile-err');
+  errEl.style.display = 'none';
+
+  if (!username) { errEl.textContent = 'El nombre de usuario es obligatorio'; errEl.style.display = 'block'; return; }
+  if (username.length < 3) { errEl.textContent = 'El usuario debe tener al menos 3 caracteres'; errEl.style.display = 'block'; return; }
+
+  // Check username taken (exclude self)
+  const existing = await dbGet(`users?username=eq.${encodeURIComponent(username)}&id=neq.${CUR_USER.id}&select=id`);
+  if (existing.length) { errEl.textContent = 'Ese nombre de usuario ya está en uso'; errEl.style.display = 'block'; return; }
+
+  await dbPatch('users', `id=eq.${CUR_USER.id}`, { username, club_name: fullname });
+  PROFILE.username  = username;
+  PROFILE.club_name = fullname;
+
+  document.getElementById('t-username').textContent = username;
+  document.getElementById('settings-display-name').textContent     = fullname || username;
+  document.getElementById('settings-display-username').textContent = '@' + username;
+  document.getElementById('settings-avatar-initials').textContent  = username[0].toUpperCase();
+
+  toast('✓ Perfil actualizado');
+}
+
+async function saveSettingsPassword() {
+  const p1    = document.getElementById('settings-pass').value;
+  const p2    = document.getElementById('settings-pass2').value;
+  const errEl = document.getElementById('settings-pass-err');
+  const okEl  = document.getElementById('settings-pass-ok');
+  errEl.style.display = 'none';
+  okEl.style.display  = 'none';
+
+  if (!p1) { errEl.textContent = 'Escribe una contraseña nueva'; errEl.style.display = 'block'; return; }
+  if (p1.length < 6) { errEl.textContent = 'La contraseña debe tener al menos 6 caracteres'; errEl.style.display = 'block'; return; }
+  if (p1 !== p2) { errEl.textContent = 'Las contraseñas no coinciden'; errEl.style.display = 'block'; return; }
+
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
+
+  document.getElementById('settings-pass').value  = '';
+  document.getElementById('settings-pass2').value = '';
+  okEl.style.display = 'block';
+  toast('✓ Contraseña actualizada');
+}
+
+async function handleSettingsAvatar(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { toast('La imagen no puede superar 2MB'); return; }
+
+  const statusEl = document.getElementById('settings-avatar-status');
+  statusEl.textContent = 'Subiendo foto...';
+  statusEl.style.color = 'var(--ink3)';
+  statusEl.style.display = 'block';
+
+  try {
+    const path = `${CUR_USER.id}/avatar.jpg`;
+    await sb.storage.from('avatars').remove([path]);
+    const { error } = await sb.storage.from('avatars').upload(path, file, { contentType: file.type, upsert: true });
+    if (error) throw error;
+
+    const { data } = sb.storage.from('avatars').getPublicUrl(path);
+    const cleanUrl  = data.publicUrl;
+    const avatarUrl = cleanUrl + '?t=' + Date.now();
+
+    await dbPatch('users', `id=eq.${CUR_USER.id}`, { avatar_url: cleanUrl });
+    PROFILE.avatar_url = avatarUrl;
+
+    const img      = document.getElementById('settings-avatar-img');
+    const initials = document.getElementById('settings-avatar-initials');
+    img.src = avatarUrl;
+    img.style.display = 'block';
+    initials.style.display = 'none';
+
+    statusEl.textContent = '✓ Foto actualizada';
+    statusEl.style.color = 'var(--green)';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+    toast('✓ Foto de perfil actualizada');
+  } catch(e) {
+    statusEl.textContent = 'Error: ' + e.message;
+    statusEl.style.color = 'var(--red)';
+  }
+}
+
+function togglePassVis(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') { input.type = 'text';     btn.textContent = '🙈'; }
+  else                           { input.type = 'password'; btn.textContent = '👁';  }
+}
+
+async function confirmDeleteAccount() {
+  const confirmed = confirm('¿Seguro que quieres eliminar tu cuenta? Esta acción es PERMANENTE e irreversible. Se borrarán todos tus datos.');
+  if (!confirmed) return;
+
+  const confirmed2 = confirm('Última confirmación: ¿eliminar la cuenta definitivamente?');
+  if (!confirmed2) return;
+
+  try {
+    // Delete follows, then user row, then auth account
+    await dbDelete('follows', `follower_id=eq.${CUR_USER.id}`);
+    await dbDelete('users',   `id=eq.${CUR_USER.id}`);
+    // Call Supabase edge function or admin API to delete auth user
+    // As fallback: sign out and show message
+    await sb.auth.signOut();
+    CUR_USER = PROFILE = null;
+    FOLLOWS.clear();
+    document.getElementById('scr-app').classList.remove('on');
+    document.getElementById('scr-login').classList.add('on');
+    switchTab('login');
+    toast('Cuenta eliminada');
+  } catch(e) {
+    toast('Error al eliminar la cuenta: ' + e.message);
+  }
 }
 </script>
 </body>
