@@ -1916,7 +1916,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
           </div>
           <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--line)">
             <div class="sec-title" style="margin-bottom:0.5rem">Zona peligrosa</div>
-            <button class="btn btn-danger btn-sm" onclick="newTournament()">🆕 Nuevo torneo (borra todo)</button>
+            <button class="btn btn-danger btn-sm" onclick="newTournament()">🆕 Nuevo torneo</button>
           </div>
         </div>
       </div>
@@ -5043,11 +5043,51 @@ async function handleLogo(evt) {
 }
 
 function newTournament() {
-  if (!confirm('¿Crear nuevo torneo? Se perderán todos los datos actuales.')) return;
-  ADMIN.pro  = defGroup();
-  ADMIN.semi = defGroup();
-  document.getElementById('champ-bar').classList.remove('on');
-  save(); renderAll(); showPage('dashboard'); toast('Nuevo torneo iniciado', 'green');
+  if (!confirm('¿Crear nuevo torneo? El torneo actual quedará archivado y visible en Live como "Finalizado".')) return;
+
+  (async () => {
+    // 1. Archivar el torneo activo en Supabase — solo cambia status, NO borra datos
+    try {
+      const tRows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id`);
+      if (tRows?.[0]?.id) {
+        await dbUpdate('tournaments', `id=eq.${tRows[0].id}`, {
+          status:     'archived',
+          updated_at: new Date().toISOString()
+        });
+        console.log('[newTournament] torneo anterior archivado:', tRows[0].id);
+      }
+    } catch(e) {
+      console.warn('[newTournament] archive error:', e.message);
+    }
+
+    // 2. Resetear estado local (SIN llamar a save() para no sobreescribir el archivado)
+    ADMIN.pro   = defGroup();
+    ADMIN.semi  = defGroup();
+    ADMIN.tName = 'Torneo ' + new Date().getFullYear();
+    ADMIN.tDate = new Date().toISOString().split('T')[0];
+    ADMIN.__savedAt = Date.now();
+    localStorage.setItem(gk(), JSON.stringify(ADMIN));
+
+    // 3. Insertar fila NUEVA en Supabase para el nuevo torneo
+    try {
+      await dbInsert('tournaments', {
+        user_id:    DB_USER_ID,
+        name:       ADMIN.tName,
+        date:       ADMIN.tDate,
+        status:     'active',
+        updated_at: new Date().toISOString(),
+        state_json: JSON.stringify(ADMIN)
+      });
+      console.log('[newTournament] nueva fila activa creada');
+    } catch(e) {
+      console.warn('[newTournament] insert error:', e.message);
+    }
+
+    document.getElementById('champ-bar').classList.remove('on');
+    renderAll();
+    showPage('dashboard');
+    toast('Nuevo torneo creado', 'green');
+  })();
 }
 
 // ─────────────────────────────────
