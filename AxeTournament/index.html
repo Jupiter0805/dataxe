@@ -371,6 +371,200 @@ section {
   padding: 0 2.5rem;
 }
 
+
+/* ─── METRICS ─── */
+#metrics {
+  padding: 80px 0 60px;
+  background: var(--ink);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  position: relative;
+  overflow: hidden;
+}
+#metrics::before {
+  content: '';
+  position: absolute;
+  top: -120px; left: 50%;
+  transform: translateX(-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(196,135,58,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.metrics-label {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 3rem;
+  opacity: 0.8;
+}
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  overflow: hidden;
+  max-width: 900px;
+  margin: 0 auto;
+}
+.metric-card {
+  background: var(--ink);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  position: relative;
+  transition: background 0.3s;
+}
+.metric-card:hover { background: var(--ink2); }
+.metric-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 0; height: 2px;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+.metric-card:hover::after { width: 60%; }
+.metric-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+  display: block;
+  opacity: 0.7;
+}
+.metric-value {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: var(--cream);
+  line-height: 1;
+  margin-bottom: 0.4rem;
+  letter-spacing: -1px;
+}
+.metric-value .metric-suffix {
+  font-size: 1.4rem;
+  color: var(--accent);
+  vertical-align: super;
+}
+.metric-name {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+}
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.metric-value.animate { animation: countUp 0.6s ease forwards; }
+
+
+/* ─── CONTACT ─── */
+#contact {
+  padding: 100px 0;
+  background: var(--ink2);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  position: relative;
+}
+.contact-inner {
+  max-width: 580px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 0 2rem;
+}
+.contact-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+.contact-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  color: var(--cream);
+  line-height: 1.1;
+  margin-bottom: 0.75rem;
+}
+.contact-title em { color: var(--accent); font-style: normal; }
+.contact-sub {
+  font-size: 15px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+}
+.contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+}
+.contact-row { display: flex; gap: 14px; }
+.contact-row .cf-field { flex: 1; }
+.cf-field { display: flex; flex-direction: column; gap: 6px; }
+.cf-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+}
+.cf-input, .cf-textarea {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 13px 16px;
+  color: var(--cream);
+  font-size: 14px;
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.cf-input:focus, .cf-textarea:focus {
+  border-color: var(--accent);
+  background: rgba(196,135,58,0.05);
+}
+.cf-input::placeholder, .cf-textarea::placeholder { color: rgba(255,255,255,0.2); }
+.cf-textarea { resize: vertical; min-height: 120px; }
+.cf-submit {
+  background: var(--accent);
+  color: var(--ink);
+  border: none;
+  border-radius: 10px;
+  padding: 14px 28px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  align-self: flex-end;
+}
+.cf-submit:hover {
+  background: var(--accent2);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(196,135,58,0.35);
+}
+.cf-submit:active { transform: translateY(0); }
+.cf-success {
+  display: none;
+  background: rgba(76,217,138,0.08);
+  border: 1px solid rgba(76,217,138,0.2);
+  border-radius: 10px;
+  padding: 16px;
+  color: #4cd98a;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 8px;
+}
+
 /* ─── FEATURES ─── */
 #features {
   padding: 120px 0;
@@ -1037,6 +1231,7 @@ footer {
   .hero-title { font-size: clamp(3rem, 14vw, 6rem); }
   .hero-stats { gap: 2rem; }
   .features-header { grid-template-columns: 1fr; gap: 1.5rem; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
   .features-grid { grid-template-columns: 1fr 1fr; }
   .steps-container { grid-template-columns: 1fr; gap: 3rem; }
   .about-grid { grid-template-columns: 1fr; gap: 3rem; }
@@ -1045,6 +1240,8 @@ footer {
   #hero { padding: 100px 1.5rem 60px; }
 }
 @media (max-width: 600px) {
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+  .contact-row { flex-direction: column; gap: 14px; }
   .features-grid { grid-template-columns: 1fr; }
   .hero-stats { flex-direction: column; gap: 1.5rem; }
   .gear-categories { grid-template-columns: 1fr; }
@@ -1061,6 +1258,7 @@ footer {
 <!-- Mobile Menu -->
 <div class="mobile-menu" id="mobile-menu">
   <button class="mobile-menu-close" onclick="toggleMenu()">✕ CERRAR</button>
+  <a href="#metrics" onclick="toggleMenu()">Estadísticas</a>
   <a href="#features" onclick="toggleMenu()">Funciones</a>
   <a href="#how" onclick="toggleMenu()">Como funciona</a>
   <a href="#about" onclick="toggleMenu()">Quienes somos</a>
@@ -1071,16 +1269,16 @@ footer {
 
 <!-- NAV -->
 <nav id="nav">
-  <div class="t-logo">
-  <img src="public/novuraxe-logo.png" 
-       alt="NOVURAXE"
-       class="logo-img">
-</div>
+  <a href="#hero" class="t-logo" style="text-decoration:none;cursor:pointer">
+    <img src="public/novuraxe-logo.png" alt="NOVURAXE" class="logo-img">
+  </a>
   <ul class="nav-links">
+    <li><a href="#metrics">Estadísticas</a></li>
     <li><a href="#features">Funciones</a></li>
     <li><a href="#how">Como funciona</a></li>
     <li><a href="#about">Quienes somos</a></li>
     <li><a href="#gear">Equipamiento</a></li>
+    <li><a href="#contact">Contacto</a></li>
     <li><a href="live.html" style="display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:#4cd98a;box-shadow:0 0 6px #4cd98a;display:inline-block"></span>Live</a></li>
     <li><a href="#" class="nav-cta" onclick="openRoleModal(event)">Iniciar sesion →</a></li>
   </ul>
@@ -1134,6 +1332,35 @@ footer {
   <div class="scroll-indicator">
     <div class="scroll-line"></div>
     <div class="scroll-label">Scroll</div>
+  </div>
+</section>
+
+<!-- ══ MÉTRICAS ══ -->
+<section id="metrics">
+  <div class="section-inner">
+    <div class="metrics-label reveal">La comunidad en números</div>
+    <div class="metrics-grid">
+      <div class="metric-card reveal">
+        <span class="metric-icon">🪓</span>
+        <div class="metric-value" id="m-players">—</div>
+        <div class="metric-name">Jugadores</div>
+      </div>
+      <div class="metric-card reveal reveal-delay-1">
+        <span class="metric-icon">🏆</span>
+        <div class="metric-value" id="m-tournaments">—</div>
+        <div class="metric-name">Torneos</div>
+      </div>
+      <div class="metric-card reveal reveal-delay-2">
+        <span class="metric-icon">🏟</span>
+        <div class="metric-value" id="m-orgs">—</div>
+        <div class="metric-name">Organizadores</div>
+      </div>
+      <div class="metric-card reveal reveal-delay-3">
+        <span class="metric-icon">⚔️</span>
+        <div class="metric-value" id="m-matches">—</div>
+        <div class="metric-name">Partidas jugadas</div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1530,6 +1757,40 @@ footer {
   </div>
 </section>
 
+
+<!-- ══ CONTACTO ══ -->
+<section id="contact">
+  <div class="contact-inner">
+    <div class="contact-eyebrow reveal">¿Tienes alguna duda?</div>
+    <h2 class="contact-title reveal reveal-delay-1">Escríbenos,<br><em>respondemos.</em></h2>
+    <p class="contact-sub reveal reveal-delay-2">
+      Estamos aquí para ayudarte con cualquier consulta sobre torneos, cuentas o funcionamiento de la plataforma.
+    </p>
+    <div class="contact-form reveal reveal-delay-3">
+      <div class="contact-row">
+        <div class="cf-field">
+          <label class="cf-label">Nombre</label>
+          <input class="cf-input" id="cf-name" type="text" placeholder="Tu nombre">
+        </div>
+        <div class="cf-field">
+          <label class="cf-label">Email</label>
+          <input class="cf-input" id="cf-email" type="email" placeholder="tu@email.com">
+        </div>
+      </div>
+      <div class="cf-field">
+        <label class="cf-label">Asunto</label>
+        <input class="cf-input" id="cf-subject" type="text" placeholder="¿En qué podemos ayudarte?">
+      </div>
+      <div class="cf-field">
+        <label class="cf-label">Mensaje</label>
+        <textarea class="cf-textarea" id="cf-message" placeholder="Cuéntanos tu consulta..."></textarea>
+      </div>
+      <button class="cf-submit" onclick="sendContact()">Enviar mensaje →</button>
+      <div class="cf-success" id="cf-success">✓ Mensaje enviado — te responderemos en support@novuraxe.com</div>
+    </div>
+  </div>
+</section>
+
 <!-- ══ CTA ══ -->
 <section id="cta">
   <div class="section-inner">
@@ -1555,6 +1816,7 @@ footer {
       <li><a href="#about">Quiénes somos</a></li>
       <li><a href="#gear">Equipamiento</a></li>
       <li><a href="live.html">Live</a></li>
+      <li><a href="#contact">Contacto</a></li>
       <li><a href="novuraxe.html">Acceder</a></li>
     </ul>
     <div class="footer-copy">© 2026 NOVURAXE — novuraxe.com</div>
@@ -1608,6 +1870,88 @@ document.querySelector('.gear-submit').addEventListener('click', () => {
     setTimeout(() => { inp.placeholder = 'tu@email.com'; inp.style.color = ''; }, 3000);
   }
 });
+
+
+// ── Metrics from Supabase ──
+(async () => {
+  const SUPA_URL = 'https://ofdxzysrjswalekwjazl.supabase.co';
+  const SUPA_KEY = 'sb_publishable_ec6m8rEqcPSZyMvf7SMYag_-8GMIAc3';
+  const h = { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY };
+
+  const animateCount = (el, target) => {
+    el.classList.add('animate');
+    const dur = 1200, step = 16;
+    const steps = dur / step;
+    let cur = 0;
+    const inc = target / steps;
+    const t = setInterval(() => {
+      cur = Math.min(cur + inc, target);
+      el.textContent = Math.round(cur).toLocaleString('es-ES');
+      if (cur >= target) clearInterval(t);
+    }, step);
+  };
+
+  try {
+    const [pRes, tRes, oRes, mRes] = await Promise.all([
+      fetch(`${SUPA_URL}/rest/v1/players?select=id&limit=1`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
+      fetch(`${SUPA_URL}/rest/v1/tournaments?select=id&limit=1`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
+      fetch(`${SUPA_URL}/rest/v1/organizers?select=id&limit=1`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
+      fetch(`${SUPA_URL}/rest/v1/matches?select=id&limit=1`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
+    ]);
+
+    const getCount = r => {
+      const cr = r.headers.get('content-range');
+      if (!cr) return 0;
+      const m = cr.match(/\/([0-9]+)/);
+      return m ? parseInt(m[1]) : 0;
+    };
+
+    // Observe metrics section to trigger animation on scroll
+    const metricsEl = document.getElementById('metrics');
+    const metricObs = new IntersectionObserver(entries => {
+      if (!entries[0].isIntersecting) return;
+      metricObs.disconnect();
+      animateCount(document.getElementById('m-players'),     getCount(pRes));
+      animateCount(document.getElementById('m-tournaments'), getCount(tRes));
+      animateCount(document.getElementById('m-orgs'),        getCount(oRes));
+      animateCount(document.getElementById('m-matches'),     getCount(mRes));
+    }, { threshold: 0.3 });
+    if (metricsEl) metricObs.observe(metricsEl);
+
+  } catch(e) {
+    // Fallback silencioso si Supabase no responde
+    ['m-players','m-tournaments','m-orgs','m-matches'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '—';
+    });
+  }
+})();
+
+// ── Contact form → mailto ──
+function sendContact() {
+  const name    = document.getElementById('cf-name').value.trim();
+  const email   = document.getElementById('cf-email').value.trim();
+  const subject = document.getElementById('cf-subject').value.trim();
+  const message = document.getElementById('cf-message').value.trim();
+
+  if (!email || !message) {
+    alert('Por favor rellena al menos el email y el mensaje.');
+    return;
+  }
+
+  const body = encodeURIComponent(
+    `Nombre: ${name || '—'}\nEmail: ${email}\n\n${message}`
+  );
+  const sub = encodeURIComponent(subject || 'Consulta desde novuraxe.com');
+  window.location.href = `mailto:support@novuraxe.com?subject=${sub}&body=${body}`;
+
+  // Show success
+  document.getElementById('cf-success').style.display = 'block';
+  document.getElementById('cf-name').value    = '';
+  document.getElementById('cf-email').value   = '';
+  document.getElementById('cf-subject').value = '';
+  document.getElementById('cf-message').value = '';
+}
 
 // ── Smooth anchor ──
 document.querySelectorAll('a[href^="#"]').forEach(a => {
