@@ -2272,7 +2272,8 @@ async function supa(path, method = 'GET', body = null, extra = {}) {
   const res = await fetch(SUPA_URL + '/rest/v1/' + path, opts);
   if (!res.ok) {
     const e = await res.json().catch(() => ({}));
-    throw new Error(e.message || res.statusText);
+    console.error('[supa error]', method, path, res.status, JSON.stringify(e));
+    throw new Error(e.message || e.hint || e.details || res.statusText);
   }
   const text = await res.text();
   return text ? JSON.parse(text) : null;
@@ -2396,7 +2397,7 @@ async function syncToSupabase() {
       });
       tid = t?.[0]?.id;
     } else {
-      await safe(dbUpdate('tournaments', `id=eq.${tid}&user_id=eq.${DB_USER_ID}`, {
+      await safe(dbUpdate('tournaments', `id=eq.${tid}`, {
         name:       ADMIN.tName || 'Torneo',
         date:       ADMIN.tDate || new Date().toISOString().split('T')[0],
         updated_at: new Date().toISOString(),
@@ -4800,7 +4801,7 @@ function saveTournament() {
       if (tRows?.[0]?.id) {
         snap.supabase_tid = tRows[0].id;
         // Also mark tournament as archived in Supabase so it doesn't get overwritten
-        await safe(dbUpdate('tournaments', `id=eq.${tRows[0].id}&user_id=eq.${DB_USER_ID}`, { status: 'archived' }));
+        await safe(dbUpdate('tournaments', `id=eq.${tRows[0].id}`, { status: 'archived' }));
         localStorage.setItem(gk(), JSON.stringify(ADMIN));
       }
     } catch(e) { /* silent */ }
@@ -4888,11 +4889,16 @@ function confirmCloseTournament(tid, name) {
 }
 
 async function setTournamentStatus(tid, newStatus) {
+  if (!DB_USER_ID) { toast('No autenticado', 'red'); return; }
   try {
-    await dbUpdate('tournaments', `id=eq.${tid}&user_id=eq.${DB_USER_ID}`, {
-      status:     newStatus,
-      updated_at: new Date().toISOString()
-    });
+    // RLS policy verifica auth.uid()=user_id automáticamente con el JWT
+    // Solo filtramos por id — añadir user_id en el filtro causa 400 en algunas versiones de PostgREST
+    const result = await supa(
+      `tournaments?id=eq.${tid}`,
+      'PATCH',
+      { status: newStatus, updated_at: new Date().toISOString() },
+      { 'Prefer': 'return=representation' }
+    );
     toast(
       newStatus === 'closed'   ? '✕ Torneo cerrado'    :
       newStatus === 'archived' ? '✓ Torneo archivado'  :
@@ -5169,7 +5175,7 @@ function newTournament() {
     try {
       const tRows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id`);
       if (tRows?.[0]?.id) {
-        await dbUpdate('tournaments', `id=eq.${tRows[0].id}&user_id=eq.${DB_USER_ID}`, {
+        await dbUpdate('tournaments', `id=eq.${tRows[0].id}`, {
           status:     'archived',
           updated_at: new Date().toISOString()
         });
