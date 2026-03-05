@@ -2071,4 +2071,10 @@ function closeRoleModal() {
   document.getElementById('role-modal').style.display = 'none';
 }
 // Close on backdrop click
-document.getElementById('role-
+document.getElementById('role-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeRoleModal();
+});
+</script>
+
+</body>
+</html>
