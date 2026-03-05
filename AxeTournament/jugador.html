@@ -1078,10 +1078,10 @@ input, textarea, select { font-family: inherit; }
     <div class="t-role-badge">Jugador</div>
     <div class="t-sep"></div>
     <nav class="t-nav">
-      <button class="t-nav-btn on" data-page="feed" onclick="showPage('feed')">🏆 Feed</button>
-      <button class="t-nav-btn" data-page="orgs" onclick="showPage('orgs')">🏟 Organizadores</button>
-      <button class="t-nav-btn" data-page="stats" onclick="showPage('stats')">📊 Mis stats</button>
-      <button class="t-nav-btn" data-page="history" onclick="showPage('history')">📁 Historial</button>
+      <button class="t-nav-btn on" data-page="feed" onclick="showPage('feed')">Feed</button>
+      <button class="t-nav-btn" data-page="orgs" onclick="showPage('orgs')">Organizadores</button>
+      <button class="t-nav-btn" data-page="stats" onclick="showPage('stats')">Mis stats</button>
+      <button class="t-nav-btn" data-page="history" onclick="showPage('history')">Historial</button>
     </nav>
     <div class="t-right">
       <span class="t-username" id="t-username"></span>
@@ -1261,6 +1261,18 @@ input, textarea, select { font-family: inherit; }
               <div style="font-size:12px;color:var(--ink4);margin-top:2px">Salir de tu cuenta en este dispositivo</div>
             </div>
             <button class="btn btn-ghost btn-sm" onclick="doLogout()">Cerrar sesión</button>
+          </div>
+        </div>
+
+        <!-- TÉRMINOS Y CONDICIONES -->
+        <div class="settings-card">
+          <div class="settings-card-title">Legal</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--ink2)">Términos y condiciones</div>
+              <div style="font-size:12px;color:var(--ink4);margin-top:2px">Consulta los términos de uso de la plataforma</div>
+            </div>
+            <a href="https://novuraxe.com/terms.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">Leer →</a>
           </div>
         </div>
 
