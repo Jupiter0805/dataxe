@@ -839,6 +839,96 @@ input, textarea, select { font-family: inherit; }
   .g2 { grid-template-columns: 1fr; }
 }
 
+/* ── FEED POST CARDS (social style) ── */
+.feed-stream {
+  display: flex; flex-direction: column; gap: 0;
+  max-width: 620px;
+}
+.event-grid-single { margin-bottom: 1rem; }
+.feed-post-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--r2);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  margin-bottom: 1rem;
+}
+.feed-post-card:hover {
+  border-color: rgba(196,135,58,0.25);
+  box-shadow: var(--sh2);
+}
+.feed-post-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.875rem 1rem 0.6rem;
+}
+.feed-post-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; flex-shrink: 0;
+}
+.feed-post-meta { flex: 1; min-width: 0; }
+.feed-post-club {
+  font-size: 14px; font-weight: 700; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.feed-post-date { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+.feed-post-more {
+  background: none; border: none;
+  color: rgba(255,255,255,0.3); font-size: 1.2rem;
+  padding: 4px 8px; border-radius: var(--r);
+  letter-spacing: 2px; transition: color 0.15s;
+  cursor: pointer;
+}
+.feed-post-more:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.06); }
+.feed-post-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase;
+  background: rgba(196,135,58,0.12);
+  color: var(--accent);
+  border: 1px solid rgba(196,135,58,0.25);
+  padding: 3px 10px; border-radius: 20px;
+}
+.feed-post-title {
+  font-size: 15px; font-weight: 800; color: #fff;
+  line-height: 1.3; margin-bottom: 0.4rem;
+}
+.feed-post-desc {
+  font-size: 13px; color: rgba(255,255,255,0.65);
+  line-height: 1.7;
+}
+.feed-post-img {
+  width: 100%; max-height: 320px;
+  object-fit: cover; display: block;
+}
+.feed-post-details {
+  padding: 0.6rem 1rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.feed-post-detail-row {
+  font-size: 12px; color: rgba(255,255,255,0.45);
+  display: flex; align-items: center; gap: 6px;
+}
+.feed-post-detail-row span { color: rgba(255,255,255,0.6); }
+.feed-post-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.6rem 1rem 0.75rem;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.feed-post-read-more {
+  background: none; border: none;
+  color: var(--accent); font-size: 12px; font-weight: 600;
+  cursor: pointer; padding: 0;
+  transition: color 0.15s;
+}
+.feed-post-read-more:hover { color: var(--accent2); }
+
 /* ── SETTINGS ── */
 .settings-card {
   background: rgba(255,255,255,0.04);
@@ -1652,9 +1742,13 @@ function renderFeedList() {
     return;
   }
 
-  container.innerHTML = '<div class="event-grid">' + merged.map(item =>
-    item._type === 'post' ? feedPostCard(item) : eventCard(item)
-  ).join('') + '</div>';
+  // Posts render as full-width social cards, events as grid
+  const html = merged.map(item =>
+    item._type === 'post'
+      ? feedPostCard(item)
+      : `<div class="event-grid-single">${eventCard(item)}</div>`
+  ).join('');
+  container.innerHTML = `<div class="feed-stream">${html}</div>`;
 }
 
 async function loadPosts() {
@@ -1663,35 +1757,67 @@ async function loadPosts() {
 }
 
 function feedPostCard(p) {
-  const club = p.organizers?.club_name || p.organizers?.username || 'Organizador';
+  const org        = p.organizers || {};
+  const club       = org.club_name || org.username || 'Organizador';
+  const username   = org.username  || '';
+  const logoUrl    = org.logo_url  || '';
   const isFollowing = FOLLOWS.has(p.user_id);
+
+  const createdLabel = new Date(p.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' });
+
+  const logoEl = logoUrl
+    ? `<img src="${logoUrl}" style="width:100%;height:100%;object-fit:contain;border-radius:50%">`
+    : `<span style="font-size:1rem">🏟</span>`;
+
+  const typeLabels = { torneo: { label: 'TORNEO', icon: '🏆' }, aviso: { label: 'AVISO', icon: '⚠️' }, info: { label: 'INFORMACIÓN', icon: 'ℹ️' } };
+  const typeInfo = typeLabels[p.post_type] || typeLabels.info;
+
   const dateLabel = p.date
     ? new Date(p.date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })
     : null;
 
+  const prizes = (() => {
+    try { return p.prizes ? JSON.parse(p.prizes) : null; } catch { return null; }
+  })();
+
   return `
-  <div class="event-card" onclick="openPostDetail(${p.id}, ${JSON.stringify(p).replace(/"/g,'&quot;')})">
-    ${p.image_url
-      ? `<img src="${p.image_url}" style="width:100%;height:180px;object-fit:cover;display:block" loading="lazy">`
-      : `<div style="height:4px;background:${isFollowing ? 'var(--accent)' : 'rgba(255,255,255,0.08)'}"></div>`
-    }
-    <div class="event-card-body">
-      <div class="event-card-top">
-        <div>
-          <div class="event-card-title">${p.title}</div>
-          <div class="event-card-club">🏟 ${club}</div>
-        </div>
-        <span class="badge" style="background:rgba(196,135,58,0.1);color:var(--accent);border:1px solid rgba(196,135,58,0.2)">Anuncio</span>
+  <div class="feed-post-card">
+    <!-- Header -->
+    <div class="feed-post-header">
+      <div class="feed-post-avatar">${logoEl}</div>
+      <div class="feed-post-meta">
+        <div class="feed-post-club">${club}</div>
+        <div class="feed-post-date">${createdLabel}</div>
       </div>
-      ${p.description ? `<div style="font-size:12px;color:var(--ink4);line-height:1.6;margin-top:0.5rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${p.description}</div>` : ''}
-      <div class="event-meta" style="margin-top:0.75rem">
-        ${dateLabel ? `<div class="event-meta-item">📅 <span>${dateLabel}${p.time ? ' · ' + p.time.slice(0,5) : ''}</span></div>` : ''}
-        ${p.location ? `<div class="event-meta-item">📍 <span>${p.location}</span></div>` : ''}
-      </div>
+      <button class="feed-post-more" onclick="event.stopPropagation();openPostDetail(${p.id}, ${JSON.stringify(p).replace(/"/g,'&quot;')})">···</button>
     </div>
-    <div class="event-card-footer">
-      <div style="font-size:10px;color:var(--ink4)">${new Date(p.created_at).toLocaleDateString('es-ES')}</div>
-      <span style="font-size:11px;color:var(--accent)">Leer más →</span>
+
+    <!-- Type badge -->
+    <div style="padding:0 1rem 0.6rem">
+      <span class="feed-post-badge">${typeInfo.icon} ${typeInfo.label}</span>
+    </div>
+
+    <!-- Title + body -->
+    <div style="padding:0 1rem ${p.image_url ? '0.75rem' : '0.5rem'}">
+      <div class="feed-post-title">${p.title}</div>
+      ${p.description ? `<div class="feed-post-desc">${p.description}</div>` : ''}
+    </div>
+
+    <!-- Image -->
+    ${p.image_url ? `<img src="${p.image_url}" class="feed-post-img" loading="lazy">` : ''}
+
+    <!-- Meta (fecha/lugar/premios) -->
+    ${(dateLabel || p.location || prizes) ? `
+    <div class="feed-post-details">
+      ${dateLabel ? `<div class="feed-post-detail-row">📅 <span>${dateLabel}${p.time ? ' · ' + p.time.slice(0,5) : ''}</span></div>` : ''}
+      ${p.location ? `<div class="feed-post-detail-row">📍 <span>${p.location}</span></div>` : ''}
+      ${prizes ? `<div class="feed-post-detail-row">🏅 <span>${prizes.slice(0,3).join(' · ')}</span></div>` : ''}
+    </div>` : ''}
+
+    <!-- Footer -->
+    <div class="feed-post-footer">
+      <div style="font-size:11px;color:var(--ink4)">${isFollowing ? '✓ Siguiendo' : ''}</div>
+      <button class="feed-post-read-more" onclick="openPostDetail(${p.id}, ${JSON.stringify(p).replace(/"/g,'&quot;')})">Leer más →</button>
     </div>
   </div>`;
 }
