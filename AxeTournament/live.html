@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>NOVURAXE · Live</title>
-  <link rel="icon" href="public/dataxe-simple.png">
+  <link rel="icon" href="dataxe-simple.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -651,34 +651,48 @@ async function get(path) {
 //  INIT
 // ═══════════════════════════════════════════
 async function init() {
-  // 1. Traer activos Y archivados con state_json
-  let rows;
+  // 1. Primero solo buscamos activos — si no hay, no cargamos nada más
+  let active;
   try {
-    const [active, archived, closed] = await Promise.all([
-      get(`tournaments?status=eq.active&select=id,name,date,updated_at,state_json,user_id,status`),
-      get(`tournaments?status=eq.archived&select=id,name,date,updated_at,state_json,user_id,status&order=updated_at.desc&limit=20`),
-      get(`tournaments?status=eq.closed&select=id,name,date,updated_at,state_json,user_id,status&order=updated_at.desc&limit=20`)
-    ]);
-    rows = [...(active || []), ...(archived || []), ...(closed || [])].filter(r => r.state_json);
+    active = await get(`tournaments?status=eq.active&select=id,name,date,updated_at,state_json,user_id,status`);
   } catch(e) {
     console.error('[live] error:', e);
     renderEmpty(); return;
   }
 
-  console.log('[live] torneos con state_json:', rows.length);
+  const hayActivos = (active || []).filter(r => r.state_json).length > 0;
 
-  if (!rows.length) {
-    document.getElementById('main-wrap').innerHTML = `
-      <div class="state-center fade-in">
-        <div class="state-icon">⏳</div>
-        <div class="state-title">Sin torneos disponibles</div>
-        <div class="state-sub">Aún no hay torneos publicados.<br>Vuelve cuando haya uno en curso.</div>
-      </div>`;
-    setTimeout(init, 30000);
+  // Sin activos → mostrar estado vacío y NO hacer más queries ni timers
+  if (!hayActivos) {
+    if (!ALL_ORGS.length) {
+      // Primera carga: mostrar pantalla de espera
+      document.getElementById('main-wrap').innerHTML = `
+        <div class="state-center fade-in">
+          <div class="state-icon">⏳</div>
+          <div class="state-title">Sin torneos en curso</div>
+          <div class="state-sub">No hay ningún torneo activo ahora mismo.<br>Vuelve cuando haya uno en curso.</div>
+        </div>`;
+    }
+    // Reintentar en 30s por si arranca uno
+    if (_pollTimer) clearInterval(_pollTimer);
+    _pollTimer = setTimeout(init, 30000);
     return;
   }
 
-  // 2. Organizer info por separado
+  // 2. Hay activos → cargar también archivados y cerrados para el historial
+  let archived, closed;
+  try {
+    [archived, closed] = await Promise.all([
+      get(`tournaments?status=eq.archived&select=id,name,date,updated_at,state_json,user_id,status&order=updated_at.desc&limit=20`),
+      get(`tournaments?status=eq.closed&select=id,name,date,updated_at,state_json,user_id,status&order=updated_at.desc&limit=20`)
+    ]);
+  } catch(e) {
+    archived = []; closed = [];
+  }
+
+  const rows = [...(active || []), ...(archived || []), ...(closed || [])].filter(r => r.state_json);
+
+  // 3. Enriquecer con info del organizador
   const enriched = await Promise.all(rows.map(async t => {
     try {
       const orgs = await get(`organizers?id=eq.${t.user_id}&select=id,club_name,logo_url,username`);
@@ -700,10 +714,9 @@ async function init() {
     renderOrgList(activos, finalizados, cerrados);
   }
 
-  // Re-check la lista solo si hay torneos activos (cada 30s)
-  if (activos.length) {
-    _pollTimer = setInterval(() => { if (!CUR_ORG) init(); }, 30000);
-  }
+  // Polling cada 30s solo mientras hay activos
+  if (_pollTimer) clearInterval(_pollTimer);
+  _pollTimer = setInterval(() => { if (!CUR_ORG) init(); }, 30000);
 }
 
 // ═══════════════════════════════════════════
