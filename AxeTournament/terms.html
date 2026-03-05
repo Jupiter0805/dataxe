@@ -1,631 +1,1239 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Política de Privacidad y Términos de Uso — NOVURAXE</title>
-<link rel="icon" type="image/png" href="public/dataxe-simple.png">
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap');
-  :root {
-    --accent:#C4873A; --accent2:#e0a84f;
-    --bg0:#111009; --bg1:#1a1410; --bg2:#22190f; --bg3:#2c2418; 
-    --ink1:#ffffff; --ink2:rgba(255,255,255,0.75);
-    --ink3:rgba(255,255,255,0.5); --ink4:rgba(255,255,255,0.3);
-    --r:8px; --r2:14px;
-  }
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{background:var(--bg0);color:var(--ink2);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.75;min-height:100vh;overflow-x:hidden}
-  body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 800px 500px at 80% 10%,rgba(196,135,58,0.06) 0%,transparent 70%),radial-gradient(ellipse 600px 400px at 10% 80%,rgba(196,135,58,0.04) 0%,transparent 70%);pointer-events:none;z-index:0}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NOVURAXE · Live</title>
+  <link rel="icon" href="dataxe-simple.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    :root {
+      --bg:      #0d0d0f;
+      --bg2:     #111114;
+      --bg3:     #18181c;
+      --border:  rgba(255,255,255,0.07);
+      --amber:   #c4873a;
+      --amber2:  #e8a84e;
+      --ink:     #f0ece6;
+      --ink3:    rgba(240,236,230,0.55);
+      --ink4:    rgba(240,236,230,0.3);
+      --green:   #4cd98a;
+      --red:     #e05555;
+      --r:       10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-  /* ─── NAV ─── */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    padding: 0 2.5rem;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: all 0.3s;
-    background: rgba(17,16,9,0.85);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(196,135,58,0.12);
-  }
-  nav.scrolled {
-    background: rgba(17,16,9,0.96);
-    border-bottom-color: rgba(196,135,58,0.2);
-  }
-  .t-logo {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .logo-img { height: 36px; width: auto; object-fit: contain; }
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    list-style: none;
-  }
-  .nav-links a {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.55);
-    text-decoration: none;
-    padding: 6px 14px;
-    border-radius: 4px;
-    transition: all 0.2s;
-  }
-  .nav-links a:hover { color: #fff; background: rgba(255,255,255,0.06); }
-  .nav-cta {
-    background: var(--accent) !important;
-    color: #1a1410 !important;
-    font-weight: 700 !important;
-    padding: 8px 20px !important;
-    border-radius: 4px !important;
-  }
-  .nav-cta:hover { background: var(--accent2) !important; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(196,135,58,0.35); }
-  .nav-mobile-btn {
-    display: none;
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 22px;
-    cursor: pointer;
-  }
-  /* Mobile menu */
-  .mobile-menu {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(17,16,9,0.98);
-    z-index: 99;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2rem;
-  }
-  .mobile-menu.open { display: flex; }
-  .mobile-menu a {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 1.4rem;
-    font-weight: 700;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.7);
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-  .mobile-menu a:hover { color: var(--accent); }
-  .mobile-menu-close {
-    position: absolute;
-    top: 1.5rem; right: 2rem;
-    background: none; border: none;
-    color: rgba(255,255,255,0.5);
-    font-size: 1rem;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-  }
-  @media(max-width:768px) {
-    .nav-links { display: none; }
-    .nav-mobile-btn { display: block; }
-  }
+    /* ── SCANLINE TEXTURE ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+    }
 
-  .hero{position:relative;z-index:1;padding:8rem 2rem 3rem;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05)}
-  .hero-inner{max-width:860px;width:100%;margin:0 auto;box-sizing:border-box}
-  .hero-tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--accent);background:rgba(196,135,58,0.1);border:1px solid rgba(196,135,58,0.2);padding:5px 16px;border-radius:20px;margin-bottom:1.5rem}
-  .hero h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.5rem,6vw,4.5rem);letter-spacing:4px;color:var(--ink1);line-height:1.05;margin-bottom:1rem}
-  .hero h1 span{color:var(--accent)}
-  .hero-meta{font-size:12px;color:var(--ink4);letter-spacing:1px;text-transform:uppercase}
+    /* ── NAV (igual que index.html) ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 0 2.5rem;
+      height: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(13,13,15,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(196,135,58,0.15);
+    }
+    .t-logo { display: inline-flex; align-items: center; justify-content: center; }
+    .logo-img {
+      height: 56px; width: auto; object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(196,135,58,0.2));
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 0.25rem; list-style: none;
+    }
+    .nav-links a {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px; font-weight: 500; letter-spacing: 1.5px;
+      text-transform: uppercase; color: rgba(240,236,230,0.5);
+      text-decoration: none; padding: 6px 14px; border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .nav-links a:hover { color: #f0ece6; background: rgba(255,255,255,0.06); }
+    .nav-cta {
+      background: var(--amber) !important; color: #0d0d0f !important;
+      font-weight: 500 !important; padding: 8px 20px !important;
+    }
+    .nav-cta:hover { background: #e8a84e !important; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(196,135,58,0.35); }
+    .nav-mobile-btn {
+      display: none; background: none; border: none;
+      color: #f0ece6; font-size: 22px; cursor: pointer;
+    }
+    /* LIVE badge integrado en nav */
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px; font-weight: 500; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--green);
+      border: 1px solid rgba(76,217,138,0.25);
+      padding: 5px 12px; border-radius: 20px;
+      background: rgba(76,217,138,0.07);
+    }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 6px var(--green);
+      animation: pulse-dot 1.4s ease-in-out infinite; flex-shrink: 0;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(0.7); }
+    }
+    .last-updated {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px; color: rgba(240,236,230,0.25);
+    }
+    /* Mobile menu (igual que index) */
+    .mobile-menu {
+      display: none; position: fixed; inset: 0;
+      background: rgba(13,13,15,0.97); z-index: 99;
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: 2rem; backdrop-filter: blur(20px);
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem;
+      letter-spacing: 2px; color: #f0ece6; text-decoration: none; transition: color 0.2s;
+    }
+    .mobile-menu a:hover { color: var(--amber); }
+    .mobile-menu-close {
+      position: absolute; top: 1.5rem; right: 1.5rem;
+      background: none; border: none; color: rgba(240,236,230,0.3);
+      font-size: 1.5rem; cursor: pointer; font-family: 'DM Mono', monospace;
+    }
+    @media (max-width: 900px) {
+      nav { padding: 0 1.5rem; }
+      .nav-links { display: none; }
+      .nav-mobile-btn { display: block; }
+    }
 
-  .page-wrap{position:relative;z-index:1;max-width:860px;width:100%;margin:0 auto;padding:2.5rem 2rem 6rem;box-sizing:border-box}
+    /* ── LAYOUT ── */
+    .wrap {
+      max-width: 1100px; margin: 0 auto;
+      padding: 7rem 1.5rem 6rem;
+      position: relative; z-index: 1;
+    }
 
-  .disclaimer-banner{background:rgba(196,135,58,0.06);border:1px solid rgba(196,135,58,0.25);border-radius:var(--r2);padding:1.25rem 1.75rem;display:flex;gap:1rem;align-items:flex-start;margin-bottom:2rem}
-  .disclaimer-icon{font-size:1.4rem;flex-shrink:0;margin-top:2px}
-  .disclaimer-text{font-size:13px;color:rgba(196,135,58,0.9);line-height:1.6}
-  .disclaimer-text strong{color:var(--accent2)}
+    /* ── EMPTY / LOADING STATES ── */
+    .state-center {
+      text-align: center; padding: 8rem 2rem;
+      display: flex; flex-direction: column; align-items: center; gap: 1rem;
+    }
+    .state-icon { font-size: 3rem; opacity: 0.25; }
+    .state-title { font-family: 'Bebas Neue',sans-serif; font-size: 2rem; letter-spacing: 2px; color: var(--ink3); }
+    .state-sub { font-size: 13px; color: var(--ink4); }
+    .spinner {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid rgba(196,135,58,0.15);
+      border-top-color: var(--amber);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-  .toc{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:var(--r2);padding:1.5rem 2rem;margin-bottom:3rem}
-  .toc-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1rem}
-  .toc ol{padding-left:1.25rem;display:grid;grid-template-columns:1fr 1fr;gap:0.35rem 2rem}
-  @media(max-width:600px){
-    .toc ol{grid-template-columns:1fr}
-    .page-wrap{padding:1.5rem 1.25rem 4rem}
-    .hero{padding:7rem 1.25rem 2.5rem}
-    .rgpd-table th,.rgpd-table td{padding:8px 10px;font-size:12px}
-    .section h2{font-size:1.4rem}
-    .rights-grid{grid-template-columns:1fr}
-  }
-  .toc a{font-size:13px;color:var(--ink3);text-decoration:none;transition:color 0.2s}
-  .toc a:hover{color:var(--accent)}
+    /* ── ACCORDION LIST ── */
+    .tournament-list {
+      display: flex; flex-direction: column; gap: 0;
+    }
 
-  .section{margin-bottom:3rem;scroll-margin-top:80px;overflow-wrap:break-word;word-break:break-word}
-  .section-num{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;color:var(--accent);margin-bottom:6px;display:block}
-  .section h2{font-family:'Bebas Neue',sans-serif;font-size:clamp(1.2rem,3vw,1.8rem);letter-spacing:2px;color:var(--ink1);margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid rgba(255,255,255,0.06);overflow-wrap:break-word}
-  .section p{margin-bottom:0.9rem;color:var(--ink2)}
-  .section ul,.section ol{padding-left:1.5rem;margin-bottom:0.9rem}
-  .section li{margin-bottom:0.4rem;color:var(--ink2)}
+    /* Banner / header row */
+    .t-banner {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1.1rem 1.5rem;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative; z-index: 1;
+      margin-bottom: 2px;
+      user-select: none;
+    }
+    .t-banner:hover {
+      border-color: rgba(196,135,58,0.3);
+      background: rgba(196,135,58,0.04);
+    }
+    .t-banner.open {
+      border-color: rgba(196,135,58,0.4);
+      background: rgba(196,135,58,0.06);
+      border-radius: var(--r) var(--r) 0 0;
+      margin-bottom: 0;
+    }
+    .t-banner-logo {
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+      overflow: hidden; background: rgba(196,135,58,0.1);
+      border: 1px solid rgba(196,135,58,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .t-banner-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .t-banner-info { flex: 1; min-width: 0; }
+    .t-banner-name { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .t-banner-meta { font-size: 11px; color: var(--ink4); margin-top: 2px; }
+    .t-banner-champ { font-size: 11px; color: var(--amber); margin-top: 3px; font-weight: 600; }
+    .t-banner-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .org-live-badge {
+      font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; padding: 3px 10px; border-radius: 20px;
+      background: rgba(76,217,138,0.1); color: var(--green);
+      border: 1px solid rgba(76,217,138,0.2);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .org-done-badge {
+      font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; padding: 3px 10px; border-radius: 20px;
+      background: rgba(255,255,255,0.04); color: var(--ink4);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .t-banner-chevron {
+      font-size: 11px; color: var(--ink4);
+      transition: transform 0.25s; flex-shrink: 0;
+    }
+    .t-banner.open .t-banner-chevron { transform: rotate(180deg); }
 
-  .alert-box{background:rgba(180,40,40,0.08);border:1px solid rgba(200,60,60,0.25);border-radius:var(--r);padding:1.25rem 1.5rem;margin:1.25rem 0}
-  .alert-box-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#e05555;margin-bottom:0.5rem;display:flex;align-items:center;gap:6px}
-  .alert-box p{color:rgba(255,180,180,0.85);font-size:14px;margin-bottom:0.5rem;overflow-wrap:break-word;word-break:break-word}
-  .alert-box p:last-child{margin-bottom:0}
+    /* Expandable panel */
+    .t-panel {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
+      background: var(--bg);
+      border: 1px solid rgba(196,135,58,0.25);
+      border-top: none;
+      border-radius: 0 0 var(--r) var(--r);
+      margin-bottom: 12px;
+    }
+    .t-panel.open {
+      max-height: 4000px;
+    }
+    .t-panel-inner {
+      padding: 1.5rem;
+    }
 
-  .info-box{background:rgba(196,135,58,0.05);border:1px solid rgba(196,135,58,0.2);border-radius:var(--r);padding:1.25rem 1.5rem;margin:1.25rem 0}
-  .info-box-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:0.5rem;display:flex;align-items:center;gap:6px}
-  .info-box p{color:var(--ink2);font-size:14px;margin-bottom:0.5rem}
-  .info-box p:last-child{margin-bottom:0}
+    /* Section labels */
+    .list-section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--ink4);
+      margin-bottom: 0.75rem; margin-top: 0;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .list-section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .org-champ { font-size: 11px; color: var(--amber); margin-top: 3px; font-weight: 600; }
 
-  /* RESPONSIBLE BOX */
-  .responsible-box{background:rgba(196,135,58,0.07);border:1px solid rgba(196,135,58,0.3);border-radius:var(--r2);padding:1.5rem 1.75rem;margin:1.25rem 0}
-  .responsible-title{font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:1rem;display:flex;align-items:center;gap:6px}
-  .responsible-grid{display:flex;flex-direction:column;gap:0}
-  .responsible-row{display:flex;gap:1rem;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,0.05);align-items:baseline}
-  .responsible-row:last-child{border-bottom:none}
-  .responsible-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink4);min-width:160px;flex-shrink:0}
-  .responsible-value{font-size:14px;color:var(--ink1)}
-  /* RGPD TABLES */
-  .rgpd-table-wrap{width:100%;overflow-x:auto;margin:1.25rem 0}.rgpd-table{width:100%;border-collapse:collapse;font-size:13px;min-width:480px}
-  .rgpd-table thead tr{background:rgba(196,135,58,0.1);border-bottom:2px solid rgba(196,135,58,0.25)}
-  .rgpd-table th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent)}
-  .rgpd-table td{padding:10px 14px;color:var(--ink2);border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:top;line-height:1.55}
-  .rgpd-table tbody tr:hover td{background:rgba(255,255,255,0.02)}
-  .rgpd-table tbody tr:last-child td{border-bottom:none}
-  /* RIGHTS GRID */
-  .rights-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1px;background:rgba(255,255,255,0.06);border-radius:var(--r2);overflow:hidden;margin:1.5rem 0}
-  .right-card{background:rgba(255,255,255,0.02);padding:1.25rem 1.5rem;transition:background 0.2s}
-  .right-card:hover{background:rgba(196,135,58,0.06)}
-  .right-icon{font-size:1.4rem;margin-bottom:8px}
-  .right-title{font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:1px;color:var(--ink1);margin-bottom:6px;display:flex;align-items:center;gap:8px}
-  .right-art{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;color:var(--accent);background:rgba(196,135,58,0.1);border:1px solid rgba(196,135,58,0.2);padding:2px 7px;border-radius:20px}
-  .right-desc{font-size:13px;color:var(--ink3);line-height:1.6}
+    /* ── SECTION HEADER ── */
+    .section-hdr {
+      display: flex; align-items: center; gap: 1rem;
+      margin-bottom: 1.5rem; padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--amber);
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; letter-spacing: 2px; line-height: 1;
+    }
+    .back-btn {
+      font-size: 12px; color: var(--ink4);
+      background: none; border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px 14px; cursor: pointer;
+      font-family: inherit; transition: all 0.15s; margin-left: auto;
+    }
+    .back-btn:hover { color: var(--ink); border-color: rgba(255,255,255,0.2); }
 
-  hr.divider{border:none;border-top:1px solid rgba(255,255,255,0.05);margin:2rem 0}
-  strong{color:var(--ink1);font-weight:700}
-  em{color:var(--accent);font-style:normal}
+    /* ── TABS ── */
+    .tabs {
+      display: flex; gap: 4px; margin-bottom: 1.75rem;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 4px;
+      width: fit-content;
+    }
+    .tab-btn {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+      padding: 8px 18px; border-radius: 7px; border: none;
+      background: none; color: var(--ink4); cursor: pointer;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .tab-btn:hover { color: var(--ink); }
+    .tab-btn.on {
+      background: rgba(196,135,58,0.15);
+      color: var(--amber);
+    }
 
-  .footer{position:relative;z-index:1;text-align:center;padding:2rem;border-top:1px solid rgba(255,255,255,0.05);font-size:12px;color:var(--ink4)}
-  .footer span{color:var(--accent)}
-</style>
+    /* ── TOURNAMENT INFO CARD ── */
+    .t-info-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 1.5rem;
+      margin-bottom: 1.75rem;
+      display: flex; align-items: center; gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .t-info-logo {
+      width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+      overflow: hidden; background: rgba(196,135,58,0.1);
+      border: 2px solid rgba(196,135,58,0.3);
+      display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+    }
+    .t-info-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .t-info-name { font-family: 'Bebas Neue',sans-serif; font-size: 1.6rem; letter-spacing: 2px; }
+    .t-info-meta { font-size: 12px; color: var(--ink4); margin-top: 3px; }
+    .t-info-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+    .pill {
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; padding: 4px 12px; border-radius: 20px;
+    }
+    .pill-phase-qualify { background: rgba(99,179,237,0.1); color: #63b3ed; border: 1px solid rgba(99,179,237,0.2); }
+    .pill-phase-elim    { background: rgba(196,135,58,0.1); color: var(--amber); border: 1px solid rgba(196,135,58,0.2); }
+    .pill-phase-done    { background: rgba(76,217,138,0.1); color: var(--green); border: 1px solid rgba(76,217,138,0.2); }
+    .pill-pro  { background: rgba(196,135,58,0.12); color: var(--amber); border: 1px solid rgba(196,135,58,0.25); }
+    .pill-semi { background: rgba(99,179,237,0.1);  color: #63b3ed;     border: 1px solid rgba(99,179,237,0.25); }
+
+    /* ── QUALIFY TABLE ── */
+    .qual-table-wrap { overflow-x: auto; border-radius: var(--r); border: 1px solid var(--border); }
+    table.qual-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px; min-width: 400px;
+    }
+    .qual-table thead tr { background: var(--bg2); }
+    .qual-table th {
+      padding: 10px 14px; text-align: left;
+      font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--ink4);
+      border-bottom: 1px solid var(--border);
+    }
+    .qual-table th.center, .qual-table td.center { text-align: center; }
+    .qual-table td { padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .qual-table tr:last-child td { border-bottom: none; }
+    .qual-table tr { background: var(--bg); transition: background 0.15s; }
+    .qual-table tr:hover { background: rgba(255,255,255,0.02); }
+    .rank-num {
+      font-family: 'DM Mono', monospace; font-size: 11px;
+      color: var(--ink4); font-weight: 500;
+    }
+    .rank-1 { color: #d4af37; }
+    .rank-2 { color: #a8a8b8; }
+    .rank-3 { color: #b06432; }
+    .player-name { font-weight: 700; font-size: 14px; }
+    .player-name.dq { opacity: 0.35; text-decoration: line-through; }
+    .score-pts {
+      font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500;
+      color: var(--amber);
+    }
+    .score-ks {
+      font-size: 10px; color: var(--ink4); margin-top: 1px;
+    }
+    .throws-mini {
+      display: flex; gap: 3px; flex-wrap: wrap;
+    }
+    .t-cell {
+      width: 20px; height: 20px; border-radius: 4px;
+      font-size: 9px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.04);
+      color: var(--ink4);
+    }
+    .t-cell.scored { background: rgba(196,135,58,0.12); color: var(--amber); }
+    .t-cell.is-ks  { background: rgba(76,217,138,0.15); color: var(--green); font-size: 8px; }
+    .t-cell.is-zero { background: rgba(224,85,85,0.1); color: var(--red); }
+
+    /* ── BRACKET ── */
+    .bracket-scroll { overflow-x: auto; padding-bottom: 1rem; }
+    .bracket-wrap {
+      display: flex; gap: 0; align-items: flex-start;
+      min-width: max-content; padding: 1rem;
+    }
+    .b-round { display: flex; flex-direction: column; }
+    .b-round-hdr {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px; font-weight: 500; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--ink4);
+      text-align: center; padding: 0 0 1rem; min-width: 180px;
+    }
+    .b-matches { display: flex; flex-direction: column; gap: 0; align-items: center; }
+    .b-match-wrap {
+      display: flex; align-items: center;
+      margin-bottom: 0;
+    }
+    .b-match {
+      width: 170px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+      margin: 8px 0;
+    }
+    .b-match.final {
+      border-color: rgba(196,135,58,0.35);
+      box-shadow: 0 0 20px rgba(196,135,58,0.08);
+    }
+    .b-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 12px; gap: 8px;
+      font-size: 13px; font-weight: 600;
+      transition: background 0.15s;
+    }
+    .b-row.b-winner {
+      background: rgba(76,217,138,0.08);
+      color: var(--green);
+    }
+    .b-row.b-loser { color: var(--ink4); }
+    .b-row.b-tbd { color: var(--ink4); font-style: italic; font-weight: 400; }
+    .b-row-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+    .b-row-score {
+      font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 700;
+      color: var(--amber); flex-shrink: 0;
+    }
+    .b-divider { height: 1px; background: var(--border); }
+    .b-connector {
+      width: 24px; height: 2px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .b-winner-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 12px; font-size: 11px; font-weight: 700;
+      color: var(--green); background: rgba(76,217,138,0.06);
+      border-top: 1px solid rgba(76,217,138,0.1);
+    }
+
+    /* ── CHAMPION CARD ── */
+    .champion-card {
+      background: linear-gradient(135deg, rgba(196,135,58,0.12), rgba(196,135,58,0.04));
+      border: 1px solid rgba(196,135,58,0.3);
+      border-radius: 14px; padding: 2rem;
+      text-align: center; margin-bottom: 2rem;
+      position: relative; overflow: hidden;
+    }
+    .champion-card::before {
+      content: '🏆'; font-size: 80px; opacity: 0.05;
+      position: absolute; top: -10px; right: -10px;
+    }
+    .champion-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--amber); margin-bottom: 8px;
+    }
+    .champion-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem; letter-spacing: 3px; color: #f0ece6;
+    }
+
+    /* ── GROUP TABS ── */
+    .group-selector {
+      display: flex; align-items: center; gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem 1.25rem;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .group-selector-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--ink4);
+      font-family: 'DM Mono', monospace; flex-shrink: 0;
+    }
+    .group-tabs {
+      display: flex; gap: 6px;
+    }
+    .group-tab {
+      display: flex; align-items: center; gap: 7px;
+      padding: 9px 20px; border-radius: 8px;
+      font-size: 13px; font-weight: 700; letter-spacing: 1px;
+      border: 1px solid var(--border); background: none; color: var(--ink4);
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s; text-transform: uppercase;
+    }
+    .group-tab:hover { color: var(--ink); border-color: rgba(255,255,255,0.2); }
+    .group-tab.on {
+      background: rgba(196,135,58,0.12);
+      border-color: rgba(196,135,58,0.4);
+      color: var(--amber);
+      box-shadow: 0 0 12px rgba(196,135,58,0.1);
+    }
+    .group-tab-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .pro-dot  { background: var(--amber); }
+    .semi-dot { background: #63b3ed; }
+    .group-tab.on .pro-dot  { box-shadow: 0 0 6px rgba(196,135,58,0.8); }
+    .group-tab.on .semi-dot { box-shadow: 0 0 6px rgba(99,179,237,0.8); }
+
+    /* ── FOOTER ── */
+    .live-footer {
+      text-align: center; padding: 3rem 1rem 2rem;
+      font-size: 11px; color: var(--ink4);
+      font-family: 'DM Mono', monospace;
+      border-top: 1px solid var(--border);
+      position: relative; z-index: 1;
+    }
+    .live-footer a { color: var(--amber); text-decoration: none; }
+
+    /* ── ANIMATIONS ── */
+    .fade-in { animation: fadeIn 0.4s ease both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      /* Nav */
+      nav { height: 64px; padding: 0 1rem; }
+      .logo-img { height: 40px; }
+      .wrap { padding: 5rem 1rem 4rem; }
+
+      /* Tournament info card — stack vertical */
+      .t-info-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 1rem;
+      }
+      .t-info-logo { width: 44px; height: 44px; font-size: 1.2rem; }
+      .t-info-name { font-size: 1.3rem; letter-spacing: 1px; }
+      .t-info-meta { font-size: 11px; }
+      .t-info-pills { margin-left: 0; }
+
+      /* Tabs — full width */
+      .tabs { width: 100%; }
+      .tab-btn { flex: 1; padding: 8px 10px; font-size: 11px; }
+
+      /* Group selector — stack */
+      .group-selector {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+      }
+      .group-tabs { width: 100%; }
+      .group-tab { flex: 1; justify-content: center; padding: 9px 12px; }
+
+      /* Qualify table */
+      .qual-table-wrap { border-radius: 8px; }
+      .qual-table th, .qual-table td { padding: 9px 10px; }
+      .qual-table th:last-child, .qual-table td:last-child { display: none; } /* hide throws col */
+      .score-pts { font-size: 13px; }
+      .player-name { font-size: 13px; }
+
+      /* Bracket */
+      .bracket-wrap { padding: 0.5rem; gap: 0; }
+      .b-round { min-width: 140px; }
+      .b-round-hdr { min-width: 140px; font-size: 8px; padding-bottom: 0.75rem; }
+      .b-match { width: 140px; }
+      .b-row { padding: 8px 10px; }
+      .b-row-name { font-size: 11px; }
+      .b-row-score { font-size: 12px; }
+      .b-winner-badge { font-size: 10px; padding: 5px 10px; }
+      .b-connector { width: 12px; }
+
+      /* Champion */
+      .champion-card { padding: 1.25rem; }
+      .champion-name { font-size: 2rem; }
+
+      /* Section header */
+      .section-hdr { flex-wrap: wrap; gap: 0.5rem; }
+      .section-title { font-size: 1.5rem; }
+      .back-btn { margin-left: 0; width: 100%; text-align: center; }
+    }
+  </style>
 </head>
 <body>
 
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobile-menu">
+  <button class="mobile-menu-close" onclick="toggleMenu()">✕ CERRAR</button>
+  <a href="index.html" onclick="toggleMenu()">Inicio</a>
+  <a href="index.html#features" onclick="toggleMenu()">Funciones</a>
+  <a href="index.html#how" onclick="toggleMenu()">Cómo funciona</a>
+  <a href="index.html#about" onclick="toggleMenu()">Quiénes somos</a>
+  <a href="index.html#gear" onclick="toggleMenu()">Equipamiento</a>
+</div>
+
+<!-- NAV -->
 <nav id="nav">
   <div class="t-logo">
     <img src="public/novuraxe-logo.png" alt="NOVURAXE" class="logo-img">
   </div>
   <ul class="nav-links">
     <li><a href="index.html#features">Funciones</a></li>
-    <li><a href="index.html#how">Como funciona</a></li>
-    <li><a href="index.html#about">Quienes somos</a></li>
+    <li><a href="index.html#how">Cómo funciona</a></li>
+    <li><a href="index.html#about">Quiénes somos</a></li>
     <li><a href="index.html#gear">Equipamiento</a></li>
-    <li><a href="novuraxe.html" class="nav-cta">Iniciar sesion →</a></li>
+    <li>
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        LIVE
+      </div>
+    </li>
+    <li><span class="last-updated" id="last-updated"></span></li>
   </ul>
   <button class="nav-mobile-btn" onclick="toggleMenu()">☰</button>
 </nav>
-<div class="mobile-menu" id="mobile-menu">
-  <button class="mobile-menu-close" onclick="toggleMenu()">✕ Cerrar</button>
-  <a href="index.html#features" onclick="toggleMenu()">Funciones</a>
-  <a href="index.html#how" onclick="toggleMenu()">Como funciona</a>
-  <a href="index.html#about" onclick="toggleMenu()">Quienes somos</a>
-  <a href="index.html#gear" onclick="toggleMenu()">Equipamiento</a>
-  <a href="novuraxe.html" style="padding:10px 28px;border-radius:4px;background:var(--accent);color:#1a1410;font-weight:700;letter-spacing:1.5px;font-size:11px;text-transform:uppercase">Iniciar sesion →</a>
-</div>
 
-<div class="hero">
-  <div class="hero-inner">
-    <div class="hero-tag">Documentación Legal</div>
-    <h1>Política de Privacidad<br>&amp; <span>Términos de Uso</span></h1>
-    <div class="hero-meta">Última actualización: Marzo 2025 &nbsp;·&nbsp; Versión 1.0</div>
+<div class="wrap" id="main-wrap">
+  <div class="state-center" id="loading-state">
+    <div class="spinner"></div>
+    <div class="state-sub">Cargando torneos activos...</div>
   </div>
 </div>
 
-<div class="page-wrap">
+<footer class="live-footer">
+  NOVURAXE · Plataforma de gestión de torneos de lanzamiento de hacha ·
+  <a href="terms.html" target="_blank">Privacidad</a>
+</footer>
 
-  <div class="disclaimer-banner">
-    <div class="disclaimer-icon">⚠️</div>
-    <div class="disclaimer-text">
-      <strong>AVISO — Titularidad y marco legal</strong><br>
-      Novuraxe es una plataforma web gestionada por <strong>Juan Ignacio Moreno Cordido</strong> como persona física, sin actividad comercial ni ánimo de lucro. El tratamiento de datos se realiza conforme al <strong>RGPD (UE) 2016/679</strong> y la <strong>LOPDGDD 3/2018</strong>. Contacto: <a href="mailto:support@novuraxe.com" style="color:var(--accent)"><span class="__cf_email__" data-cfemail="c7b7b5aeb1a6a4be87a9a8b1b2b5a6bfa2e9a4a8aa">support@novuraxe.com</span></a>
-    </div>
-  </div>
+<script>
+// ═══════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════
+const SUPA_URL  = 'https://ofdxzysrjswalekwjazl.supabase.co';
+const SUPA_KEY  = 'sb_publishable_ec6m8rEqcPSZyMvf7SMYag_-8GMIAc3';
+const QUAL_KS_VAL = 8;
 
-  <div class="toc">
-    <div class="toc-title">Índice de contenidos</div>
-    <ol>
-      <li><a href="#s1">Identificación y naturaleza del proyecto</a></li>
-      <li><a href="#s2">Aceptación de los términos</a></li>
-      <li><a href="#s3">Descripción del servicio</a></li>
-      <li><a href="#s4">Exención de responsabilidad — Seguridad</a></li>
-      <li><a href="#s5">Responsabilidad de los organizadores</a></li>
-      <li><a href="#s6">Protección de datos — Base legal y finalidad</a></li>
-      <li><a href="#s7">Datos recogidos y plazo de conservación</a></li>
-      <li><a href="#s8">Derechos RGPD (ARCO+)</a></li>
-      <li><a href="#s9">Seguridad de los datos</a></li>
-      <li><a href="#s10">Cookies y almacenamiento local</a></li>
-      <li><a href="#s11">Transferencias internacionales</a></li>
-      <li><a href="#s12">Menores de edad</a></li>
-      <li><a href="#s13">Uso aceptable y conductas prohibidas</a></li>
-      <li><a href="#s14">Propiedad intelectual</a></li>
-      <li><a href="#s15">Ley aplicable y jurisdicción</a></li>
-      <li><a href="#s16">Modificaciones de los términos</a></li>
-      <li><a href="#s17">Limitación de responsabilidad general</a></li>
-      <li><a href="#s18">Contacto y reclamaciones</a></li>
-    </ol>
-  </div>
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
-  <div class="section" id="s1">
-    <span class="section-num">01 —</span>
-    <h2>Identificación y Naturaleza del Proyecto</h2>
-    <p><strong>Novuraxe</strong> es una plataforma web de gestión de torneos de lanzamiento de hacha. El presente documento constituye la Política de Privacidad y los Términos de Uso del servicio, de conformidad con el <strong>Reglamento (UE) 2016/679 (RGPD)</strong> y la <strong>Ley Orgánica 3/2018 de Protección de Datos Personales y garantía de los derechos digitales (LOPDGDD)</strong>.</p>
-    <div class="responsible-box">
-      <div class="responsible-title">👤 Responsable del Tratamiento</div>
-      <div class="responsible-grid">
-        <div class="responsible-row">
-          <span class="responsible-label">Titular</span>
-          <span class="responsible-value">Juan Ignacio Moreno Cordido</span>
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let ALL_ORGS    = [];  // organizers with active tournaments
+let CUR_ORG     = null;
+let CUR_STATE   = null; // ADMIN object from state_json
+let CUR_TAB     = 'qualify'; // qualify | bracket
+let CUR_GROUP   = 'pro';     // pro | semi
+let _rtChannel  = null;
+let _pollTimer  = null;
+
+// ═══════════════════════════════════════════
+//  API HELPERS
+// ═══════════════════════════════════════════
+async function get(path) {
+  const res = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('[live] API error', res.status, path, err);
+    return [];
+  }
+  return res.json();
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+async function init() {
+  // 1. Traer activos Y archivados con state_json
+  let rows;
+  try {
+    const [active, archived] = await Promise.all([
+      get(`tournaments?status=eq.active&select=id,name,date,updated_at,state_json,user_id,status`),
+      get(`tournaments?status=eq.archived&select=id,name,date,updated_at,state_json,user_id,status&order=updated_at.desc&limit=20`)
+    ]);
+    rows = [...(active || []), ...(archived || [])].filter(r => r.state_json);
+  } catch(e) {
+    console.error('[live] error:', e);
+    renderEmpty(); return;
+  }
+
+  console.log('[live] torneos con state_json:', rows.length);
+
+  if (!rows.length) {
+    document.getElementById('main-wrap').innerHTML = `
+      <div class="state-center fade-in">
+        <div class="state-icon">⏳</div>
+        <div class="state-title">Sin torneos disponibles</div>
+        <div class="state-sub">Aún no hay torneos publicados.<br>Vuelve cuando haya uno en curso.</div>
+      </div>`;
+    setTimeout(init, 10000);
+    return;
+  }
+
+  // 2. Organizer info por separado
+  const enriched = await Promise.all(rows.map(async t => {
+    try {
+      const orgs = await get(`organizers?id=eq.${t.user_id}&select=id,club_name,logo_url,username`);
+      return { ...t, organizers: orgs?.[0] || null };
+    } catch(e) { return { ...t, organizers: null }; }
+  }));
+
+  ALL_ORGS = enriched;
+  stampTime();
+
+  const activos     = enriched.filter(t => t.status === 'active');
+  const finalizados = enriched.filter(t => t.status === 'archived');
+
+  // Si solo hay 1 activo y ningún finalizado → entrar directo
+  if (activos.length === 1 && finalizados.length === 0) {
+    selectOrg(activos[0]);
+  } else {
+    renderOrgList(activos, finalizados);
+  }
+
+  _pollTimer = setInterval(() => { if (!CUR_ORG) init(); }, 20000);
+}
+
+// ═══════════════════════════════════════════
+//  ACCORDION LIST VIEW
+// ═══════════════════════════════════════════
+let OPEN_ID = null; // ID del torneo expandido actualmente
+
+function renderOrgList(activos, finalizados) {
+  if (!activos)     activos     = ALL_ORGS.filter(t => t.status === 'active');
+  if (!finalizados) finalizados = ALL_ORGS.filter(t => t.status === 'archived');
+
+  const wrap = document.getElementById('main-wrap');
+
+  const buildBanner = (t, isLive) => {
+    const org = t.organizers;
+    const logoHtml = org?.logo_url ? `<img src="${org.logo_url}" alt="">` : '🏟';
+    const badge = isLive
+      ? `<div class="org-live-badge"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 1.4s infinite"></span> Live</div>`
+      : `<div class="org-done-badge">✓ Finalizado</div>`;
+    let champ = '';
+    try {
+      const s = typeof t.state_json === 'string' ? JSON.parse(t.state_json) : t.state_json;
+      const c = [s?.pro?.champion, s?.semi?.champion].filter(Boolean);
+      if (c.length) champ = `<div class="t-banner-champ">🏆 ${c.join(' · ')}</div>`;
+    } catch(e) {}
+    return `
+      <div class="t-banner" id="banner-${t.id}" onclick="toggleAccordion('${t.id}')">
+        <div class="t-banner-logo">${logoHtml}</div>
+        <div class="t-banner-info">
+          <div class="t-banner-name">${t.name || org?.club_name || 'Torneo'}</div>
+          <div class="t-banner-meta">${org?.club_name || org?.username || ''}${t.date ? ' · ' + fmtDate(t.date) : ''}</div>
+          ${champ}
         </div>
-        <div class="responsible-row">
-          <span class="responsible-label">Servicio</span>
-          <span class="responsible-value">Novuraxe — Plataforma de gestión de torneos de lanzamiento de hacha</span>
-        </div>
-        <div class="responsible-row">
-          <span class="responsible-label">Email de contacto</span>
-          <span class="responsible-value"><a href="mailto:support@novuraxe.com" style="color:var(--accent)"><span class="__cf_email__" data-cfemail="7c0c0e150a1d1f053c12130a090e1d0419521f1311">support@novuraxe.com</span></a></span>
-        </div>
-        <div class="responsible-row">
-          <span class="responsible-label">País de residencia</span>
-          <span class="responsible-value">España</span>
-        </div>
-        <div class="responsible-row">
-          <span class="responsible-label">Marco legal aplicable</span>
-          <span class="responsible-value">RGPD (UE) 2016/679 · LOPDGDD 3/2018</span>
+        <div class="t-banner-right">
+          ${badge}
+          <span class="t-banner-chevron">▼</span>
         </div>
       </div>
-    </div>
-    <div class="info-box">
-      <div class="info-box-title">ℹ️ Sobre el servicio</div>
-      <p>El servicio Novuraxe se ofrece como herramienta comunitaria gratuita. No se garantiza disponibilidad continua ni se asume responsabilidad por el uso del servicio.</p>
-    </div>
-  </div>
+      <div class="t-panel" id="panel-${t.id}">
+        <div class="t-panel-inner" id="panel-inner-${t.id}"></div>
+      </div>`;
+  };
 
-  <div class="section" id="s2">
-    <span class="section-num">02 —</span>
-    <h2>Aceptación de los Términos</h2>
-    <p>Al <strong>crear una cuenta</strong> en Novuraxe — ya sea como jugador o como organizador — se entenderá automáticamente que el usuario <em>ha leído, comprendido y aceptado</em> íntegramente los presentes Términos de Uso y la Política de Privacidad.</p>
-    <p>El uso continuado de la plataforma tras cualquier actualización de estos términos implica igualmente la aceptación de dichas modificaciones. Si el usuario no está de acuerdo, deberá abstenerse de utilizar la plataforma y podrá solicitar la eliminación de su cuenta en cualquier momento.</p>
-  </div>
+  let html = `<div class="fade-in"><div class="tournament-list">`;
 
-  <div class="section" id="s3">
-    <span class="section-num">03 —</span>
-    <h2>Descripción del Servicio</h2>
-    <p>Novuraxe proporciona a organizadores de torneos las siguientes funcionalidades:</p>
-    <ul>
-      <li>Creación y gestión de torneos con bracket de clasificación y eliminación directa</li>
-      <li>Registro de participantes y estadísticas de lanzamiento</li>
-      <li>Rankings individuales y globales por club</li>
-      <li>Feed de anuncios y resultados visible para jugadores registrados</li>
-      <li>Exportación de datos en formato PDF</li>
-    </ul>
-    <p>Novuraxe actúa exclusivamente como <strong>plataforma de anuncio y gestión</strong>. No organiza, dirige ni supervisa los torneos físicos. Toda la actividad deportiva y logística real corresponde en exclusiva a los organizadores.</p>
-  </div>
+  if (activos.length) {
+    html += `<div class="list-section-label">En directo</div>`;
+    html += activos.map(t => buildBanner(t, true)).join('');
+  }
+  if (finalizados.length) {
+    html += `<div class="list-section-label" style="margin-top:${activos.length ? '1.5rem' : '0'}">Finalizados</div>`;
+    html += finalizados.map(t => buildBanner(t, false)).join('');
+  }
+  if (!activos.length && !finalizados.length) {
+    html += `<div class="state-center"><div class="state-icon">🪓</div>
+      <div class="state-title">Sin torneos</div>
+      <div class="state-sub">Vuelve más tarde.</div></div>`;
+  }
 
-  <div class="section" id="s4">
-    <span class="section-num">04 —</span>
-    <h2>Exención de Responsabilidad — Seguridad en Torneos</h2>
-    <div class="alert-box">
-      <div class="alert-box-title">⚠️ Actividad de riesgo — Exención expresa</div>
-      <p>El lanzamiento de hacha es una actividad que implica el manejo de <strong>herramientas cortantes y potencialmente peligrosas</strong>. Novuraxe no tiene control alguno sobre la celebración, el desarrollo ni las condiciones de seguridad de los torneos anunciados en la plataforma.</p>
-      <p><strong>Novuraxe no se hace responsable, en ningún caso, de los daños físicos, materiales o de cualquier otra naturaleza</strong> que puedan sufrir los participantes, organizadores, espectadores o cualquier tercero con motivo de la práctica del lanzamiento de hacha en torneos anunciados, gestionados o difundidos a través de esta plataforma.</p>
-    </div>
-    <p>Los organizadores que publiquen torneos en Novuraxe son los <strong>únicos responsables</strong> de garantizar:</p>
-    <ul>
-      <li>Que el recinto cuenta con las medidas de seguridad adecuadas (zonas de lanzamiento, protecciones, señalización).</li>
-      <li>Que los participantes son informados de los riesgos inherentes antes de su participación.</li>
-      <li>El cumplimiento de la normativa local, autonómica o nacional aplicable a deportes de lanzamiento.</li>
-      <li>La disponibilidad de seguros de responsabilidad civil si así lo requiere la normativa o la prudencia.</li>
-      <li>Que los participantes menores de edad cuentan con autorización de sus tutores legales.</li>
-    </ul>
-    <p>Los jugadores participan en torneos anunciados en Novuraxe <em>bajo su propia responsabilidad</em>, asumiendo voluntariamente los riesgos derivados de la actividad.</p>
-    <div class="info-box">
-      <div class="info-box-title">🪓 Equipamiento</div>
-      <p>Novuraxe no verifica ni avala la calidad, estado ni idoneidad de las hachas u otros materiales. La responsabilidad sobre el equipamiento recae íntegramente en organizadores y participantes.</p>
-    </div>
-  </div>
+  html += `</div></div>`;
+  wrap.innerHTML = html;
 
-  <div class="section" id="s5">
-    <span class="section-num">05 —</span>
-    <h2>Responsabilidad de los Organizadores</h2>
-    <p>Los usuarios registrados como <strong>organizadores</strong> son responsables exclusivos del contenido que publican: anuncios de torneos, resultados y comunicaciones. Se comprometen a no publicar información fraudulenta, falsa o contraria a la legislación vigente.</p>
-    <p>Novuraxe se reserva el derecho de suspender cuentas que hagan un uso abusivo o fraudulento de la plataforma.</p>
-  </div>
+  // Auto-abrir el primero activo si existe
+  if (activos.length === 1) toggleAccordion(activos[0].id);
+}
 
-  <!-- ═══ BLOQUE RGPD ═══ -->
+function toggleAccordion(tid) {
+  const t = ALL_ORGS.find(x => x.id === tid);
+  if (!t) return;
 
-  <div class="section" id="s6">
-    <span class="section-num">06 —</span>
-    <h2>Protección de Datos — Base Legal y Finalidad del Tratamiento</h2>
-    <p>Novuraxe trata datos personales de conformidad con el <strong>Reglamento (UE) 2016/679 (RGPD)</strong> y la <strong>Ley Orgánica 3/2018 (LOPDGDD)</strong>. A continuación se detalla la base legal que ampara cada finalidad de tratamiento.</p>
-    <p><strong>Responsable del tratamiento:</strong> Juan Ignacio Moreno Cordido — <a href="/cdn-cgi/l/email-protection#9dedeff4ebfcfee4ddf3f2ebe8effce5f8b3fef2f0" style="color:var(--accent)"><span class="__cf_email__" data-cfemail="2e5e5c47584f4d576e4041585b5c4f564b004d4143">[email&#160;protected]</span></a></p>
+  const banner = document.getElementById('banner-' + tid);
+  const panel  = document.getElementById('panel-' + tid);
 
-    <div class="rgpd-table-wrap"><table class="rgpd-table">
-      <thead>
-        <tr><th>Finalidad</th><th>Base legal (Art. RGPD)</th><th>Necesidad</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Gestión de cuenta y autenticación</td><td>Art. 6.1.b — Ejecución de contrato / relación de servicio</td><td>Obligatoria</td></tr>
-        <tr><td>Mostrar perfil público (nombre, avatar)</td><td>Art. 6.1.a — Consentimiento del usuario</td><td>Opcional</td></tr>
-        <tr><td>Registro y publicación de estadísticas deportivas</td><td>Art. 6.1.b — Ejecución del servicio solicitado</td><td>Inherente al uso</td></tr>
-        <tr><td>Envío de emails transaccionales (reset de contraseña)</td><td>Art. 6.1.b — Prestación del servicio</td><td>Obligatoria</td></tr>
-        <tr><td>Seguimiento de organizadores (follows)</td><td>Art. 6.1.a — Consentimiento explícito</td><td>Voluntaria</td></tr>
-      </tbody>
-    </table></div>
+  // Cerrar el anterior si es diferente
+  if (OPEN_ID && OPEN_ID !== tid) {
+    const prevBanner = document.getElementById('banner-' + OPEN_ID);
+    const prevPanel  = document.getElementById('panel-' + OPEN_ID);
+    if (prevBanner) prevBanner.classList.remove('open');
+    if (prevPanel)  prevPanel.classList.remove('open');
+    stopSync();
+  }
 
-    <div class="info-box">
-      <div class="info-box-title">✅ Principio de minimización de datos</div>
-      <p>Solo se recogen los datos estrictamente necesarios para cada finalidad declarada. No se realizan perfilados comerciales, puntuaciones de crédito, ni ningún tratamiento automatizado con efectos jurídicos o significativos sobre el usuario (Art. 22 RGPD).</p>
-    </div>
-    <p><strong>No se ceden, venden ni comparten datos con terceros</strong> salvo con el proveedor de infraestructura técnica (Supabase, véase sección 9). No existe ningún acuerdo comercial con terceros que implique el acceso a datos de usuarios.</p>
-  </div>
+  const isOpening = !banner.classList.contains('open');
 
-  <div class="section" id="s7">
-    <span class="section-num">07 —</span>
-    <h2>Datos Recogidos, Categorías y Plazo de Conservación</h2>
+  if (isOpening) {
+    banner.classList.add('open');
+    panel.classList.add('open');
+    OPEN_ID = tid;
+    // Cargar contenido del panel
+    renderPanelContent(t);
+    // Sync solo si activo
+    if (t.status === 'active') startLiveSync(t.user_id, tid);
+    // Scroll suave al banner
+    setTimeout(() => banner.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  } else {
+    banner.classList.remove('open');
+    panel.classList.remove('open');
+    OPEN_ID = null;
+    stopSync();
+  }
+}
 
-    <div class="rgpd-table-wrap"><table class="rgpd-table">
-      <thead>
-        <tr><th>Dato</th><th>Categoría</th><th>Origen</th><th>Plazo de conservación</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Dirección de email</td><td>Identificativo</td><td>Registro voluntario</td><td>Hasta eliminación de cuenta</td></tr>
-        <tr><td>Nombre y nombre de usuario</td><td>Identificativo</td><td>Registro voluntario</td><td>Hasta eliminación de cuenta</td></tr>
-        <tr><td>Foto de perfil (avatar)</td><td>Imagen personal</td><td>Carga voluntaria</td><td>Hasta eliminación o sustitución</td></tr>
-        <tr><td>Rol en la plataforma (jugador/organizador)</td><td>Funcional</td><td>Selección en registro</td><td>Hasta eliminación de cuenta</td></tr>
-        <tr><td>Estadísticas deportivas (puntos, victorias, KS, bulls)</td><td>Datos de actividad</td><td>Generado por uso de la plataforma</td><td>Hasta eliminación de cuenta</td></tr>
-        <tr><td>Historial de torneos creados / participados</td><td>Datos de actividad</td><td>Generado por uso</td><td>Hasta eliminación de cuenta</td></tr>
-        <tr><td>Relaciones de seguimiento (follows)</td><td>Asociativo</td><td>Acción voluntaria del usuario</td><td>Hasta eliminación o acción contraria</td></tr>
-        <tr><td>Metadatos de sesión (token de autenticación)</td><td>Técnico</td><td>Autogenerado por Supabase Auth</td><td>Duración de la sesión activa</td></tr>
-      </tbody>
-    </table></div>
+function renderPanelContent(tournament) {
+  CUR_ORG   = tournament;
+  const state = tournament.state_json;
+  CUR_STATE = typeof state === 'string' ? JSON.parse(state) : state;
+  CUR_TAB   = 'qualify';
+  CUR_GROUP = hasPro() ? 'pro' : 'semi';
 
-    <div class="alert-box">
-      <div class="alert-box-title">⚠️ Dato especialmente sensible — Imagen personal</div>
-      <p>La fotografía de perfil puede constituir un dato biométrico si permite identificar al titular. Su aportación es <strong>completamente voluntaria</strong>. El usuario puede eliminarla en cualquier momento desde su perfil. No se realiza ningún tratamiento de reconocimiento facial ni análisis biométrico sobre estas imágenes.</p>
-    </div>
+  const inner = document.getElementById('panel-inner-' + tournament.id);
+  if (!inner) return;
 
-    <p>Tras la eliminación de la cuenta, los datos serán borrados de los sistemas activos en un plazo máximo de <strong>30 días</strong>. Pueden persistir en copias de seguridad técnicas de la infraestructura durante un período adicional de hasta 90 días, tras el cual se eliminan definitivamente.</p>
-  </div>
+  const s = CUR_STATE;
+  const isFinished = tournament.status === 'archived';
 
-  <div class="section" id="s8">
-    <span class="section-num">08 —</span>
-    <h2>Derechos RGPD — Acceso, Rectificación, Cancelación, Oposición y Portabilidad (ARCO+)</h2>
-    <p>De conformidad con el <strong>Capítulo III del RGPD</strong> (Arts. 15 a 22), el usuario tiene los siguientes derechos sobre sus datos personales:</p>
+  // Phase pill
+  const phase = (hasPro() ? s?.pro?.phase : s?.semi?.phase) || 'qualify';
+  const phaseLabel = { qualify: 'Clasificación', elim: 'Eliminatorias', done: 'Finalizado' };
+  const phasePill = isFinished
+    ? `<div class="pill pill-phase-done">✓ Finalizado</div>`
+    : `<div class="pill pill-phase-${phase}">${phaseLabel[phase] || phase}</div>`;
 
-    <div class="rights-grid">
-      <div class="right-card">
-        <div class="right-icon">👁</div>
-        <div class="right-title">Acceso <span class="right-art">Art. 15</span></div>
-        <div class="right-desc">Obtener confirmación de qué datos tuyos tratamos y una copia completa de los mismos.</div>
+  const groupPills = [
+    hasPro()  ? `<div class="pill pill-pro">PRO</div>`      : '',
+    hasSemi() ? `<div class="pill pill-semi">SEMI PRO</div>` : '',
+  ].join('');
+
+  // Champion banner
+  const champHtml = (isFinished && (s?.pro?.champion || s?.semi?.champion)) ? `
+    <div class="champion-card" style="margin-bottom:1.25rem">
+      <div class="champion-label">🏆 ${[s?.pro?.champion && 'Campeón PRO', s?.semi?.champion && 'Campeón SEMI PRO'].filter(Boolean).join(' · ')}</div>
+      <div class="champion-name">${[s?.pro?.champion, s?.semi?.champion].filter(Boolean).join(' & ')}</div>
+    </div>` : '';
+
+  // Group selector
+  const showGroupTabs = hasPro() && hasSemi();
+  const groupTabsHtml = showGroupTabs ? `
+    <div class="group-selector">
+      <div class="group-selector-label">Categoría</div>
+      <div class="group-tabs">
+        <button class="group-tab ${CUR_GROUP==='pro' ? 'on':''}" data-group="pro" onclick="switchGroup('pro')">
+          <span class="group-tab-dot pro-dot"></span> PRO
+        </button>
+        <button class="group-tab ${CUR_GROUP==='semi' ? 'on':''}" data-group="semi" onclick="switchGroup('semi')">
+          <span class="group-tab-dot semi-dot"></span> SEMI PRO
+        </button>
       </div>
-      <div class="right-card">
-        <div class="right-icon">✏️</div>
-        <div class="right-title">Rectificación <span class="right-art">Art. 16</span></div>
-        <div class="right-desc">Corregir datos inexactos o completar datos incompletos. Puedes hacerlo directamente desde tu perfil.</div>
+    </div>` : '';
+
+  // Tabs
+  const tabs = `
+    <div class="tabs" style="margin-bottom:1.25rem">
+      <button class="tab-btn ${CUR_TAB==='qualify' ? 'on':''}" onclick="switchTab('qualify')">📊 Clasificación</button>
+      <button class="tab-btn ${CUR_TAB==='bracket' ? 'on':''}" onclick="switchTab('bracket')">🏆 Bracket</button>
+    </div>`;
+
+  // Pills row
+  const pillsRow = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem">${phasePill}${groupPills}</div>`;
+
+  inner.innerHTML = champHtml + pillsRow + tabs + groupTabsHtml + `<div id="tab-content"></div>`;
+  renderTabContent();
+}
+
+function renderEmpty() {
+  document.getElementById('main-wrap').innerHTML = `
+    <div class="state-center fade-in">
+      <div class="state-icon">🪓</div>
+      <div class="state-title">Sin torneos</div>
+      <div class="state-sub">Aún no hay torneos disponibles.<br>Vuelve más tarde.</div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  SELECT ORG (kept for direct-entry single-tournament case)
+// ═══════════════════════════════════════════
+function selectOrgById(tid) {
+  toggleAccordion(tid);
+}
+
+function selectOrg(tournament) {
+  // Used when there is only 1 active tournament — go directly
+  CUR_ORG   = tournament;
+  const state = tournament.state_json;
+  CUR_STATE = typeof state === 'string' ? JSON.parse(state) : state;
+  CUR_TAB   = 'qualify';
+  CUR_GROUP = hasPro() ? 'pro' : 'semi';
+  renderTournament();
+  if (tournament.status === 'active') startLiveSync(tournament.user_id, tournament.id);
+}
+
+// ═══════════════════════════════════════════
+//  TOURNAMENT VIEW
+// ═══════════════════════════════════════════
+function hasPro()  { return (CUR_STATE?.pro?.players?.length  || 0) > 0; }
+function hasSemi() { return (CUR_STATE?.semi?.players?.length || 0) > 0; }
+function G()       { return CUR_STATE?.[CUR_GROUP] || { players: [], qualScores: {}, matches: [], rounds: [], qualCfg: { rounds: 2, throws: 10 } }; }
+
+function renderTournament() {
+  const org = CUR_ORG.organizers;
+  const s   = CUR_STATE;
+  const wrap = document.getElementById('main-wrap');
+
+  const logoHtml = org?.logo_url
+    ? `<img src="${org.logo_url}" alt="">`
+    : '🏟';
+
+  const phase = G().phase || 'qualify';
+  const isFinished = CUR_ORG.status === 'archived';
+  const phaseLabel = { qualify: 'Clasificación', elim: 'Eliminatorias', done: 'Finalizado' };
+
+  // Si el torneo está archivado, mostrar siempre "Finalizado"
+  const phasePill = isFinished
+    ? `<div class="pill pill-phase-done">✓ Finalizado</div>`
+    : `<div class="pill pill-phase-${phase}">${phaseLabel[phase] || phase}</div>`;
+
+  // Build group pills
+  const groupPills = [
+    hasPro()  ? `<div class="pill pill-pro">PRO</div>`      : '',
+    hasSemi() ? `<div class="pill pill-semi">SEMI PRO</div>` : '',
+  ].join('');
+
+  // Tabs
+  const tabs = `
+    <div class="tabs">
+      <button class="tab-btn ${CUR_TAB==='qualify' ? 'on':''}"  onclick="switchTab('qualify')">📊 Clasificación</button>
+      <button class="tab-btn ${CUR_TAB==='bracket' ? 'on':''}"  onclick="switchTab('bracket')">🏆 Bracket</button>
+    </div>`;
+
+  // Group selector
+  const showGroupTabs = hasPro() && hasSemi();
+  const groupTabsHtml = showGroupTabs ? `
+    <div class="group-selector">
+      <div class="group-selector-label">Categoría</div>
+      <div class="group-tabs">
+        <button class="group-tab ${CUR_GROUP==='pro'  ? 'on':''}" data-group="pro"  onclick="switchGroup('pro')">
+          <span class="group-tab-dot pro-dot"></span> PRO
+        </button>
+        <button class="group-tab ${CUR_GROUP==='semi' ? 'on':''}" data-group="semi" onclick="switchGroup('semi')">
+          <span class="group-tab-dot semi-dot"></span> SEMI PRO
+        </button>
       </div>
-      <div class="right-card">
-        <div class="right-icon">🗑</div>
-        <div class="right-title">Supresión <span class="right-art">Art. 17</span></div>
-        <div class="right-desc">Solicitar el borrado definitivo de todos tus datos ("derecho al olvido") cuando ya no sean necesarios.</div>
+    </div>` : '';
+
+  wrap.innerHTML = `
+    <div class="fade-in">
+      <!-- Back -->
+      ${ALL_ORGS.length > 1 ? `<button class="back-btn" onclick="backToList()" style="float:right;margin-bottom:1rem">← Todos los torneos</button><div style="clear:both"></div>` : ''}
+
+      <!-- Tournament info -->
+      <div class="t-info-card">
+        <div class="t-info-logo">${logoHtml}</div>
+        <div>
+          <div class="t-info-name">${s?.tName || 'Torneo'}</div>
+          <div class="t-info-meta">${org?.club_name || org?.username || ''}${s?.tDate ? ' · ' + fmtDate(s.tDate) : ''}</div>
+        </div>
+        <div class="t-info-pills">${phasePill}${groupPills}</div>
       </div>
-      <div class="right-card">
-        <div class="right-icon">⏸</div>
-        <div class="right-title">Limitación <span class="right-art">Art. 18</span></div>
-        <div class="right-desc">Solicitar que se suspenda el tratamiento de tus datos mientras se resuelve una reclamación o se verifica su exactitud.</div>
-      </div>
-      <div class="right-card">
-        <div class="right-icon">📦</div>
-        <div class="right-title">Portabilidad <span class="right-art">Art. 20</span></div>
-        <div class="right-desc">Recibir tus datos en formato estructurado y legible por máquina (JSON/CSV) para trasladarlos a otro servicio.</div>
-      </div>
-      <div class="right-card">
-        <div class="right-icon">🚫</div>
-        <div class="right-title">Oposición <span class="right-art">Art. 21</span></div>
-        <div class="right-desc">Oponerte al tratamiento de tus datos para cualquier finalidad basada en interés legítimo o consentimiento.</div>
-      </div>
-    </div>
 
-    <p style="margin-top:1.5rem">Para ejercer cualquiera de estos derechos, contacta por los medios indicados en la sección 15. <strong>Tiempo de respuesta objetivo: 30 días naturales</strong> (plazo máximo legal: 1 mes prorrogable a 3 meses en casos complejos, Art. 12.3 RGPD).</p>
+      ${isFinished && (s?.pro?.champion || s?.semi?.champion) ? `
+      <div class="champion-card" style="margin-bottom:1.75rem">
+        <div class="champion-label">🏆 ${[s?.pro?.champion && 'Campeón PRO', s?.semi?.champion && 'Campeón SEMI PRO'].filter(Boolean).join(' · ')}</div>
+        <div class="champion-name">${[s?.pro?.champion, s?.semi?.champion].filter(Boolean).join(' &amp; ')}</div>
+      </div>` : ''}
 
-    <div class="info-box">
-      <div class="info-box-title">🏛 Derecho de reclamación ante la AEPD</div>
-      <p>Si consideras que el tratamiento de tus datos vulnera el RGPD, tienes derecho a presentar una reclamación ante la <strong>Agencia Española de Protección de Datos (AEPD)</strong>: <a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">www.aepd.es</a> — C/ Jorge Juan, 6, 28001 Madrid. Esto no afecta a otros recursos judiciales o administrativos disponibles (Art. 77 RGPD).</p>
-    </div>
-  </div>
+      ${tabs}
+      ${groupTabsHtml}
 
-  <div class="section" id="s9">
-    <span class="section-num">09 —</span>
-    <h2>Seguridad de los Datos</h2>
-    <p>Novuraxe utiliza <strong>Supabase</strong> como proveedor de base de datos e infraestructura de autenticación, que implementa medidas estándar del sector:</p>
-    <ul>
-      <li>Cifrado en tránsito mediante <strong>TLS/HTTPS</strong>.</li>
-      <li>Almacenamiento seguro de contraseñas mediante <strong>hashing bcrypt</strong> — nunca en texto plano.</li>
-      <li>Control de acceso a datos mediante <strong>Row Level Security (RLS)</strong>.</li>
-      <li>Infraestructura con certificaciones de seguridad reconocidas.</li>
-    </ul>
-    <div class="alert-box">
-      <div class="alert-box-title">⚠️ Limitación de garantías</div>
-      <p>No es posible garantizar una seguridad absoluta frente a cualquier incidente técnico. En caso de brecha de seguridad que afecte a datos personales, se notificará a los afectados por email en el menor plazo posible y, cuando proceda, a la Agencia Española de Protección de Datos en el plazo de 72 horas (Art. 33 RGPD).</p>
-    </div>
-  </div>
+      <div id="tab-content"></div>
+    </div>`;
 
-  <div class="section" id="s10">
-    <span class="section-num">10 —</span>
-    <h2>Cookies y Almacenamiento Local</h2>
-    <p>Novuraxe utiliza exclusivamente almacenamiento técnico en el navegador del usuario. No se utilizan cookies de rastreo, publicidad ni analítica de terceros.</p>
+  renderTabContent();
+}
 
-    <table class="rgpd-table-wrap"><table class="rgpd-table">
-      <thead>
-        <tr><th>Tecnología</th><th>Finalidad</th><th>Duración</th><th>¿Necesaria?</th></tr>
-      </thead>
-      <tbody>
-        <tr><td><code>localStorage</code></td><td>Guardar sesión del usuario (token de autenticación) y preferencias de interfaz</td><td>Hasta que el usuario cierra sesión o limpia el navegador</td><td>Sí — sin ella la sesión no funciona</td></tr>
-        <tr><td>Cookies de sesión (Supabase Auth)</td><td>Gestión técnica de la autenticación segura</td><td>Duración de la sesión activa</td><td>Sí — necesarias para el login</td></tr>
-        <tr><td>Cookies de terceros</td><td>—</td><td>—</td><td>No se usan</td></tr>
-        <tr><td>Píxeles de seguimiento / analítica</td><td>—</td><td>—</td><td>No se usan</td></tr>
-      </tbody>
-    </table></table>
+function renderTabContent() {
+  const el = document.getElementById('tab-content');
+  if (!el) return;
+  if (CUR_TAB === 'qualify') {
+    el.innerHTML = renderQualifyView();
+  } else {
+    el.innerHTML = renderBracketView();
+  }
+}
 
-    <p>Al tratarse exclusivamente de almacenamiento técnico necesario para la prestación del servicio, no se requiere consentimiento previo conforme al Art. 22.2 de la LSSI-CE. El usuario puede borrar estos datos en cualquier momento desde la configuración de su navegador, aunque esto cerrará su sesión activa.</p>
-    <div class="info-box">
-      <div class="info-box-title">🍪 Cómo gestionar el almacenamiento</div>
-      <p>Para borrar los datos almacenados: en Chrome/Firefox/Safari accede a <em>Ajustes → Privacidad → Borrar datos de navegación → Almacenamiento local y cookies</em>. Esto cerrará tu sesión en Novuraxe.</p>
-    </div>
-  </div>
+// ═══════════════════════════════════════════
+//  QUALIFY VIEW
+// ═══════════════════════════════════════════
+function renderQualifyView() {
+  const g = G();
+  const activePlayers = (g.players || []).filter(p => !p.disqualified);
 
-  <div class="section" id="s11">
-    <span class="section-num">11 —</span>
-    <h2>Transferencias Internacionales de Datos</h2>
-    <p>Novuraxe utiliza <strong>Supabase Inc.</strong> (EE.UU.) como proveedor de base de datos, autenticación y almacenamiento de archivos. Esta relación implica una <strong>transferencia internacional de datos</strong> a un país tercero.</p>
-    <p>Supabase actúa como <strong>encargado del tratamiento</strong> (Art. 28 RGPD) y se adhiere a los marcos de adecuación aplicables. La transferencia está amparada por:</p>
-    <ul>
-      <li><strong>Cláusulas Contractuales Tipo (SCC)</strong> aprobadas por la Comisión Europea — Decisión 2021/914.</li>
-      <li>Compromiso contractual de Supabase de no acceder a los datos de usuarios salvo instrucción expresa del responsable.</li>
-      <li>Cifrado TLS en tránsito y cifrado en reposo en los servidores de Supabase.</li>
-    </ul>
-    <div class="info-box">
-      <div class="info-box-title">🌍 Localización de los datos</div>
-      <p>Los datos se almacenan en la región de la Unión Europea (Frankfurt, AWS eu-central-1) configurada en el proyecto Supabase, minimizando así las transferencias fuera del EEE. Puedes consultar la política de privacidad de Supabase en <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">supabase.com/privacy</a>.</p>
-    </div>
-    <p>No se utilizan otros proveedores externos con acceso a datos de usuarios. No se integran servicios de analítica (Google Analytics, Mixpanel, etc.), publicidad, CDN de terceros con rastreo, ni SDKs de redes sociales.</p>
-  </div>
+  if (!activePlayers.length) {
+    return `<div class="state-center" style="padding:4rem"><div class="state-icon">📊</div>
+      <div class="state-sub">Sin jugadores en clasificación todavía</div></div>`;
+  }
 
-  <div class="section" id="s12">
-    <span class="section-num">12 —</span>
-    <h2>Menores de Edad</h2>
-    <p>Novuraxe está diseñada para usuarios mayores de <strong>16 años</strong>. Los menores no deben registrarse sin el consentimiento expreso de sus padres o tutores legales. La participación de menores en torneos físicos requiere siempre autorización de sus representantes, responsabilidad que recae sobre el organizador del evento.</p>
-  </div>
+  // Compute totals and sort
+  const ranked = activePlayers.map(pl => {
+    let total = 0, ks = 0;
+    for (let r = 0; r < (g.qualCfg?.rounds || 2); r++) {
+      const throws = (g.qualScores?.[pl.id] || {})['r' + r] || [];
+      throws.forEach(v => { if (v !== null) { total += v; if (v === QUAL_KS_VAL) ks++; } });
+    }
+    return { ...pl, total, ks };
+  }).sort((a, b) => b.total - a.total);
 
-  <div class="section" id="s13">
-    <span class="section-num">13 —</span>
-    <h2>Uso Aceptable y Conductas Prohibidas</h2>
-    <p>El acceso y uso de Novuraxe implica la aceptación de las siguientes normas de conducta. El incumplimiento puede resultar en la suspensión o eliminación permanente de la cuenta.</p>
-    <p><strong>Queda expresamente prohibido:</strong></p>
-    <ul>
-      <li>Registrarse con datos falsos, suplantar la identidad de otra persona o crear cuentas múltiples con fines fraudulentos.</li>
-      <li>Publicar resultados de torneos falsos, manipulados o que no se correspondan con la realidad.</li>
-      <li>Utilizar la plataforma para enviar comunicaciones no solicitadas (<em>spam</em>), contenido publicitario no autorizado o mensajes masivos.</li>
-      <li>Introducir, distribuir o ejecutar código malicioso, virus, exploits o cualquier elemento que pueda dañar la plataforma o a otros usuarios.</li>
-      <li>Intentar acceder sin autorización a cuentas ajenas, bases de datos o sistemas de infraestructura.</li>
-      <li>Publicar contenido ilegal, difamatorio, amenazante, discriminatorio o que vulnere derechos de terceros.</li>
-      <li>Hacer scraping automatizado, crawling o extracción masiva de datos sin autorización expresa por escrito.</li>
-      <li>Usar la plataforma para actividades que vulneren la legislación española o europea vigente.</li>
-    </ul>
-    <div class="alert-box">
-      <div class="alert-box-title">⚠️ Consecuencias del incumplimiento</div>
-      <p>Novuraxe se reserva el derecho de suspender o eliminar de forma inmediata cualquier cuenta que incumpla estas normas, sin necesidad de aviso previo y sin derecho a compensación. En casos graves, podrán adoptarse acciones legales.</p>
-    </div>
-  </div>
+  const rows = ranked.map((pl, i) => {
+    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+    const rounds = g.qualCfg?.rounds || 2;
+    const throwsPerRound = g.qualCfg?.throws || 10;
 
-  <div class="section" id="s14">
-    <span class="section-num">14 —</span>
-    <h2>Propiedad Intelectual</h2>
-    <p>Todos los elementos que integran Novuraxe — incluyendo el diseño visual, logotipos, código fuente, estructura, textos, gráficos y funcionalidades — son propiedad de <strong>Juan Ignacio Moreno Cordido</strong> o están licenciados para su uso por el titular, y están protegidos por la legislación española e internacional de propiedad intelectual.</p>
+    // Build throws mini — todas las rondas con datos
+    let throwsMini = '';
+    for (let r = 0; r < rounds; r++) {
+      const sc = (g.qualScores?.[pl.id] || {})['r' + r] || [];
+      if (!sc.some(v => v !== null)) continue; // saltar ronda sin datos
+      const rTotal = sc.reduce((s, v) => s + (v || 0), 0);
+      const cells = Array.from({ length: throwsPerRound }, (_, t) => {
+        const v = sc[t] ?? null;
+        if (v === null) return `<div class="t-cell"></div>`;
+        if (v === QUAL_KS_VAL) return `<div class="t-cell is-ks">KS</div>`;
+        if (v === 0) return `<div class="t-cell is-zero">0</div>`;
+        return `<div class="t-cell scored">${v}</div>`;
+      }).join('');
+      throwsMini += `
+        <div style="display:flex;flex-direction:column;gap:3px;${r < rounds-1 ? 'margin-bottom:5px;padding-bottom:5px;border-bottom:1px solid rgba(255,255,255,0.05)' : ''}">
+          <div style="font-size:9px;color:var(--ink4);font-family:'DM Mono',monospace;letter-spacing:1px;margin-bottom:2px">R${r+1} · ${rTotal}pts</div>
+          <div class="throws-mini">${cells}</div>
+        </div>`;
+    }
 
-    <table class="rgpd-table-wrap"><table class="rgpd-table">
-      <thead>
-        <tr><th>Elemento</th><th>Titular</th><th>Uso permitido a usuarios</th></tr>
-      </thead>
-      <tbody>
-        <tr><td>Diseño, interfaz y marca Novuraxe</td><td>Juan Ignacio Moreno Cordido</td><td>Solo visualización. Prohibida reproducción o uso externo.</td></tr>
-        <tr><td>Logotipo e identidad visual</td><td>Juan Ignacio Moreno Cordido</td><td>Prohibido uso sin autorización escrita.</td></tr>
-        <tr><td>Código fuente de la plataforma</td><td>Juan Ignacio Moreno Cordido</td><td>Prohibida copia, modificación o distribución.</td></tr>
-        <tr><td>Datos de torneos y estadísticas publicadas por el usuario</td><td>El usuario que los genera</td><td>El usuario concede a Novuraxe licencia de uso para mostrarlos en la plataforma.</td></tr>
-        <tr><td>Imágenes de perfil subidas por el usuario</td><td>El usuario</td><td>El usuario declara tener derechos sobre ellas y concede licencia de visualización a Novuraxe.</td></tr>
-      </tbody>
-    </table></table>
+    return `<tr>
+      <td><span class="rank-num ${rankClass}">${medal || '#' + (i+1)}</span></td>
+      <td><div class="player-name">${pl.name}</div></td>
+      <td class="center"><div class="score-pts">${pl.total}</div>${pl.ks ? `<div class="score-ks">${pl.ks} KS</div>` : ''}</td>
+      <td><div style="min-width:200px">${throwsMini}</div></td>
+    </tr>`;
+  }).join('');
 
-    <p>El usuario conserva la propiedad de los datos y contenidos que genera en la plataforma (resultados, estadísticas, imágenes de perfil). Al publicarlos, concede a Novuraxe una <strong>licencia no exclusiva, gratuita y revocable</strong> para mostrarlos dentro del servicio. Esta licencia finaliza cuando el usuario elimina el contenido o su cuenta.</p>
-    <div class="info-box">
-      <div class="info-box-title">©️ Uso de la marca</div>
-      <p>Queda prohibido el uso del nombre "Novuraxe", su logotipo o cualquier elemento de su identidad visual en otros proyectos, productos o comunicaciones sin autorización previa y escrita del titular. Para solicitudes de uso, contacta en <a href="mailto:privacy@novuraxe.com" style="color:var(--accent)">privacy@novuraxe.com</a>.</p>
-    </div>
-  </div>
+  const dqRows = (g.players || []).filter(p => p.disqualified).map(pl =>
+    `<tr><td colspan="4"><span class="rank-num">DQ</span> <span class="player-name dq">${pl.name}</span></td></tr>`
+  ).join('');
 
-  <div class="section" id="s15">
-    <span class="section-num">15 —</span>
-    <h2>Ley Aplicable y Jurisdicción</h2>
-    <p>Los presentes Términos de Uso y Política de Privacidad se rigen e interpretan conforme a la legislación española, y específicamente a:</p>
-    <ul>
-      <li><strong>Reglamento (UE) 2016/679 (RGPD)</strong> — protección de datos personales.</li>
-      <li><strong>Ley Orgánica 3/2018 (LOPDGDD)</strong> — protección de datos y derechos digitales.</li>
-      <li><strong>Ley 34/2002 (LSSI-CE)</strong> — servicios de la sociedad de la información.</li>
-      <li><strong>Real Decreto Legislativo 1/1996</strong> — propiedad intelectual.</li>
-      <li><strong>Código Civil español</strong> — obligaciones y contratos.</li>
-    </ul>
-    <p>Para cualquier controversia derivada del acceso o uso de Novuraxe, <strong>las partes se someten a la jurisdicción de los Juzgados y Tribunales españoles</strong>, renunciando expresamente a cualquier otro fuero que pudiera corresponderles, salvo que la normativa aplicable establezca un fuero imperativo distinto.</p>
-    <div class="info-box">
-      <div class="info-box-title">🇪🇸 Resolución extrajudicial de conflictos</div>
-      <p>Con carácter previo a cualquier acción judicial, se recomienda intentar resolver cualquier discrepancia de forma amistosa mediante comunicación directa a <a href="mailto:privacy@novuraxe.com" style="color:var(--accent)">privacy@novuraxe.com</a>. En materia de protección de datos, el usuario puede recurrir en todo caso a la <strong>Agencia Española de Protección de Datos (AEPD)</strong>.</p>
-    </div>
-  </div>
+  return `
+    <div class="qual-table-wrap">
+      <table class="qual-table">
+        <thead>
+          <tr>
+            <th style="width:50px">#</th>
+            <th>Jugador</th>
+            <th class="center">Puntos</th>
+            <th>Lanzamientos por ronda</th>
+          </tr>
+        </thead>
+        <tbody>${rows}${dqRows}</tbody>
+      </table>
+    </div>`;
+}
 
-  <div class="section" id="s16">
-    <span class="section-num">16 —</span>
-    <h2>Modificaciones de los Términos</h2>
-    <p>Novuraxe puede modificar los presentes Términos en cualquier momento, por ejemplo para adaptarse a cambios normativos, nuevas funcionalidades o mejoras en la política de privacidad.</p>
-    <p><strong>Procedimiento de notificación:</strong> Cuando se produzcan cambios sustanciales, se notificará a los usuarios registrados mediante un aviso visible en la plataforma o por email al menos <strong>15 días antes</strong> de que entren en vigor. Los cambios menores o de redacción podrán publicarse sin aviso previo.</p>
-    <p>Si el usuario no está de acuerdo con los nuevos términos, puede eliminar su cuenta antes de la fecha de entrada en vigor. El uso continuado de la plataforma tras esa fecha implica la aceptación de las modificaciones.</p>
-    <div class="info-box">
-      <div class="info-box-title">📌 Versión actual</div>
-      <p>La versión vigente siempre estará disponible en esta URL. La fecha de última actualización figura en el encabezado del documento.</p>
-    </div>
-  </div>
+// ═══════════════════════════════════════════
+//  BRACKET VIEW
+// ═══════════════════════════════════════════
+function renderBracketView() {
+  const g = G();
 
-  <div class="section" id="s17">
-    <span class="section-num">17 —</span>
-    <h2>Limitación de Responsabilidad General</h2>
-    <p>En la máxima medida permitida por la legislación, Novuraxe <strong>no será responsable</strong> de:</p>
-    <ul>
-      <li>Daños físicos, materiales o personales derivados del uso de hachas en torneos anunciados en la plataforma.</li>
-      <li>Pérdida de datos por fallos técnicos o incidentes de seguridad.</li>
-      <li>Contenidos publicados por organizadores o usuarios que resulten incorrectos, fraudulentos o ilegales.</li>
-      <li>Interrupciones del servicio por fallos en infraestructura de terceros.</li>
-      <li>Daños indirectos, consecuentes o incidentales de cualquier tipo.</li>
-    </ul>
-  </div>
+  if (!g.rounds?.length) {
+    return `<div class="state-center" style="padding:4rem">
+      <div class="state-icon">🏆</div>
+      <div class="state-sub">El bracket aún no ha sido generado</div>
+    </div>`;
+  }
 
-  <div class="section" id="s18">
-    <span class="section-num">18 —</span>
-    <h2>Contacto, Ejercicio de Derechos y Reclamaciones</h2>
-    <p>Para consultas sobre estos términos, ejercicio de derechos RGPD (acceso, rectificación, supresión, portabilidad, etc.), solicitudes de eliminación de cuenta o comunicación de incidencias de seguridad, contacta directamente con el responsable del tratamiento:</p>
-    <div class="responsible-box" style="margin:1rem 0 1.5rem">
-      <div class="responsible-title">📬 Contacto Legal y de Privacidad</div>
-      <div class="responsible-grid">
-        <div class="responsible-row"><span class="responsible-label">Responsable</span><span class="responsible-value">Juan Ignacio Moreno Cordido</span></div>
-        <div class="responsible-row"><span class="responsible-label">Email legal</span><span class="responsible-value"><a href="mailto:privacy@novuraxe.com" style="color:var(--accent)">privacy@novuraxe.com</a></span></div>
-        <div class="responsible-row"><span class="responsible-label">Plazo de respuesta</span><span class="responsible-value">Máximo 30 días naturales (Art. 12.3 RGPD)</span></div>
-        <div class="responsible-row"><span class="responsible-label">Autoridad de control</span><span class="responsible-value"><a href="https://www.aepd.es" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">AEPD — www.aepd.es</a></span></div>
-      </div>
-    </div>
-    <p>Nos comprometemos a responder en un plazo máximo de <strong>30 días naturales</strong> a cualquier solicitud relacionada con datos personales, conforme al Art. 12.3 RGPD.</p>
-    <div class="info-box">
-      <div class="info-box-title">📋 Información a incluir en tu solicitud RGPD</div>
-      <p>Para agilizar la gestión, incluye en tu mensaje: (1) tipo de solicitud (acceso, supresión, portabilidad…), (2) nombre de usuario o email con el que estás registrado, (3) descripción breve de lo solicitado. No es necesario aportar documentación acreditativa adicional salvo que existan dudas razonables sobre tu identidad.</p>
-    </div>
-    <hr class="divider">
-    <p style="font-size:13px;color:var(--ink4)">Este documento ha sido redactado conforme al RGPD y la LOPDGDD. Para cualquier consulta sobre privacidad: <a href="mailto:support@novuraxe.com" style="color:var(--accent)"><span class="__cf_email__" data-cfemail="1565677c6374766c557b7a636067746d703b767a78">support@novuraxe.com</span></a></p>
-  </div>
-</div>
+  // Champion
+  let champHtml = '';
+  if (g.champion) {
+    champHtml = `
+      <div class="champion-card">
+        <div class="champion-label">🏆 Campeón</div>
+        <div class="champion-name">${g.champion}</div>
+      </div>`;
+  }
 
-<div class="footer">
-  <strong><span>NOVURAXE</span></strong> &nbsp;·&nbsp; Plataforma de Gestión de Torneos de Lanzamiento de Hacha<br>
-  Responsable: Juan Ignacio Moreno Cordido · <a href=
+  // Build bracket
+  let bracketHtml = `<div class="bracket-scroll"><div class="bracket-wrap">`;
+  g.rounds.forEach((round, ri) => {
+    bracketHtml += `<div class="b-round">
+      <div class="b-round-hdr">${rndName(ri, g.rounds.length)}</div>
+      <div class="b-matches">`;
+
+    round.forEach(mid => {
+      const m = (g.matches || []).find(x => x.id === mid);
+      if (!m) return;
+      const isFin = ri === g.rounds.length - 1;
+      const p1W = m.winner && m.winner === m.p1;
+      const p2W = m.winner && m.winner === m.p2;
+
+      const c1 = p1W ? 'b-winner' : (p2W ? 'b-loser' : (!m.p1 ? 'b-tbd' : ''));
+      const c2 = p2W ? 'b-winner' : (p1W ? 'b-loser' : (!m.p2 ? 'b-tbd' : ''));
+
+      bracketHtml += `<div class="b-match${isFin ? ' final' : ''}">
+        <div class="b-row ${c1}">
+          <span class="b-row-name">${m.p1 || 'Por definir'}</span>
+          ${m.score1 !== null && m.score1 !== undefined ? `<span class="b-row-score">${m.score1}</span>` : ''}
+        </div>
+        <div class="b-divider"></div>
+        <div class="b-row ${c2}">
+          <span class="b-row-name">${m.p2 || 'Por definir'}</span>
+          ${m.score2 !== null && m.score2 !== undefined ? `<span class="b-row-score">${m.score2}</span>` : ''}
+        </div>
+        ${m.winner ? `<div class="b-winner-badge">✓ ${m.winner}</div>` : (m.bye ? `<div class="b-winner-badge" style="color:var(--ink4)">BYE</div>` : '')}
+      </div>`;
+    });
+
+    bracketHtml += `</div></div>`;
+
+    // Connector between rounds
+    if (ri < g.rounds.length - 1) {
+      bracketHtml += `<div style="display:flex;align-items:center;padding-top:3rem"><div class="b-connector"></div></div>`;
+    }
+  });
+  bracketHtml += `</div></div>`;
+
+  return champHtml + bracketHtml;
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
+function switchTab(tab) {
+  CUR_TAB = tab;
+  // Update tab buttons
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('on', b.textContent.toLowerCase().includes(tab === 'qualify' ? 'clas' : 'brack'));
+  });
+  renderTabContent();
+}
+
+function switchGroup(g) {
+  CUR_GROUP = g;
+  document.querySelectorAll('.group-tab').forEach(b => {
+    b.classList.toggle('on', b.dataset.group === g);
+  });
+  renderTabContent();
+}
+
+function backToList() {
+  stopSync();
+  CUR_ORG = null; CUR_STATE = null;
+  OPEN_ID = null;
+  renderOrgList();
+}
+
+// ═══════════════════════════════════════════
+//  LIVE SYNC (realtime + polling)
+// ═══════════════════════════════════════════
+function startLiveSync(userId, tid) {
+  stopSync();
+
+  const applyUpdate = (state, newStatus) => {
+    if (!state) return;
+    CUR_STATE = state;
+    if (CUR_ORG) CUR_ORG = { ...CUR_ORG, state_json: state, status: newStatus || CUR_ORG.status };
+    // update ALL_ORGS too
+    const idx = ALL_ORGS.findIndex(x => x.id === tid);
+    if (idx >= 0) ALL_ORGS[idx] = { ...ALL_ORGS[idx], state_json: state, status: newStatus || ALL_ORGS[idx].status };
+    if (newStatus === 'archived') stopSync();
+    stampTime();
+    // Re-render panel if still open
+    if (OPEN_ID === tid) {
+      const t = ALL_ORGS.find(x => x.id === tid);
+      if (t) renderPanelContent(t);
+    } else if (document.getElementById('tab-content')) {
+      renderTournament();
+    }
+  };
+
+  // Realtime
+  _rtChannel = sb.channel('live-' + userId)
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'tournaments',
+      filter: `user_id=eq.${userId}`
+    }, payload => {
+      const row = payload.new;
+      if (!row?.state_json) return;
+      const state = typeof row.state_json === 'string' ? JSON.parse(row.state_json) : row.state_json;
+      applyUpdate(state, row.status);
+    })
+    .subscribe();
+
+  // Polling every 20s as fallback
+  _pollTimer = setInterval(async () => {
+    try {
+      const rows = await get(`tournaments?user_id=eq.${userId}&status=eq.active&select=state_json,updated_at,status&order=updated_at.desc&limit=1`);
+      if (!rows?.[0]?.state_json) return;
+      const state = typeof rows[0].state_json === 'string' ? JSON.parse(rows[0].state_json) : rows[0].state_json;
+      if (JSON.stringify(state) === JSON.stringify(CUR_STATE)) return;
+      applyUpdate(state, rows[0].status);
+    } catch(e) {}
+  }, 20000);
+}
+
+function stopSync() {
+  if (_rtChannel) { sb.removeChannel(_rtChannel); _rtChannel = null; }
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+}
+
+// ═══════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════
+function rndName(ri, total) {
+  const r = total - ri;
+  if (r === 1) return 'FINAL';
+  if (r === 2) return 'SEMIFINAL';
+  if (r === 3) return 'CUARTOS';
+  return 'RONDA ' + (ri + 1);
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  return new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function stampTime() {
+  const el = document.getElementById('last-updated');
+  if (el) el.textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+// ═══════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════
+// Sticky nav
+const navEl = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  navEl.classList.toggle('scrolled', window.scrollY > 60);
+});
+// Mobile menu
+function toggleMenu() {
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+
+init();
+</script>
+</body>
+</html>
