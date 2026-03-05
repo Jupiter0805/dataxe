@@ -529,7 +529,11 @@ async function get(path) {
   const res = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
     headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
   });
-  if (!res.ok) return [];
+  if (!res.ok) {
+    const err = await res.text();
+    console.error('[live] API error', res.status, path, err);
+    return [];
+  }
   return res.json();
 }
 
@@ -537,27 +541,54 @@ async function get(path) {
 //  INIT
 // ═══════════════════════════════════════════
 async function init() {
-  // Load all organizers that have an active tournament with state_json
-  const rows = await get(
-    `tournaments?status=eq.active&state_json=not.is.null&select=id,name,date,updated_at,state_json,user_id,organizers(id,club_name,logo_url,username)`
-  );
+  // 1. Get all active tournaments (sin join, sin filtros complejos)
+  let rows;
+  try {
+    rows = await get(`tournaments?status=eq.active&select=id,name,date,updated_at,state_json,user_id`);
+  } catch(e) {
+    console.error('[live] error fetching tournaments:', e);
+    renderEmpty(); return;
+  }
 
-  ALL_ORGS = rows || [];
-  stampTime();
+  console.log('[live] torneos activos encontrados:', rows?.length, rows);
 
-  if (!ALL_ORGS.length) {
-    renderEmpty();
+  if (!rows?.length) { renderEmpty(); return; }
+
+  // 2. Solo los que tienen state_json
+  const withState = rows.filter(r => r.state_json);
+  console.log('[live] torneos con state_json:', withState.length);
+
+  if (!withState.length) {
+    // Mostrar aviso útil
+    document.getElementById('main-wrap').innerHTML = `
+      <div class="state-center fade-in">
+        <div class="state-icon">⏳</div>
+        <div class="state-title">Torneo iniciándose</div>
+        <div class="state-sub">Hay un torneo activo pero aún no se han guardado datos.<br>En cuanto el organizador registre algo aparecerá aquí.</div>
+      </div>`;
+    setTimeout(init, 10000); // reintentar en 10s
     return;
   }
 
-  // If only one, jump directly
+  // 3. Obtener info del organizador por separado (evita problemas de FK)
+  const enriched = await Promise.all(withState.map(async t => {
+    try {
+      const orgs = await get(`organizers?id=eq.${t.user_id}&select=id,club_name,logo_url,username`);
+      return { ...t, organizers: orgs?.[0] || null };
+    } catch(e) {
+      return { ...t, organizers: null };
+    }
+  }));
+
+  ALL_ORGS = enriched;
+  stampTime();
+
   if (ALL_ORGS.length === 1) {
     selectOrg(ALL_ORGS[0]);
   } else {
     renderOrgList();
   }
 
-  // Poll every 20s for org list updates
   _pollTimer = setInterval(() => { if (!CUR_ORG) init(); }, 20000);
 }
 
