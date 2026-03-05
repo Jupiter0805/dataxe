@@ -2953,19 +2953,22 @@ async function renderFollowers() {
 
   try {
     // Fetch follows
-    const follows = await supa(`follows?following_id=eq.${DB_USER_ID}&select=follower_id,player_tag`) || [];
+    const raw = await supa(`follows?following_id=eq.${DB_USER_ID}&select=follower_id,player_tag`);
+    const follows = Array.isArray(raw) ? raw : [];
     if (!follows.length) { FOLLOWERS_CACHE = []; renderFollowerList(); return; }
 
     // Fetch user info for each follower
     const ids = follows.map(f => f.follower_id).join(',');
-    const users = await supa(`users?id=in.(${ids})&select=id,username,club_name,avatar_url`) || [];
+    const rawUsers = await supa(`users?id=in.(${ids})&select=id,username,club_name,avatar_url`);
+    const users = Array.isArray(rawUsers) ? rawUsers : [];
     const userMap = {};
     users.forEach(u => { userMap[u.id] = u; });
 
     FOLLOWERS_CACHE = follows.map(f => ({ ...f, users: userMap[f.follower_id] || {} }));
     renderFollowerList();
   } catch(e) {
-    container.innerHTML = `<div class="card" style="color:var(--red);padding:2rem;text-align:center">Error: ${e.message}</div>`;
+    console.error('[renderFollowers]', e);
+    container.innerHTML = `<div class="card" style="color:var(--red);padding:2rem;text-align:center">Error al cargar seguidores: ${e.message}</div>`;
   }
 }
 
@@ -5625,20 +5628,28 @@ async function loadFollowersBanner() {
   const namesEl = document.getElementById('posts-followers-names');
   if (!countEl || !DB_USER_ID) return;
 
-  // follows table: organizer_id = DB_USER_ID
-  const follows = await supa(`follows?following_id=eq.${DB_USER_ID}&select=follower_id`) || [];
-  countEl.textContent = follows.length;
+  try {
+    // follows table: following_id = DB_USER_ID (organizer's auth.uid)
+    const follows = await supa(`follows?following_id=eq.${DB_USER_ID}&select=follower_id`);
+    const list = Array.isArray(follows) ? follows : [];
+    countEl.textContent = list.length;
 
-  if (!follows.length) {
-    namesEl.textContent = 'Aún nadie te sigue — comparte tu perfil';
-    return;
+    if (!list.length) {
+      if (namesEl) namesEl.textContent = 'Aún nadie te sigue — comparte tu perfil';
+      return;
+    }
+
+    // Load usernames of first 5 followers
+    const ids = list.slice(0, 5).map(f => f.follower_id).join(',');
+    const users = await supa(`users?id=in.(${ids})&select=username`);
+    const userList = Array.isArray(users) ? users : [];
+    const names = userList.map(u => '@' + (u.username || '?')).join(', ');
+    if (namesEl) namesEl.textContent = names + (list.length > 5 ? ` y ${list.length - 5} más` : '');
+  } catch(e) {
+    console.error('[loadFollowersBanner]', e);
+    countEl.textContent = '—';
+    if (namesEl) namesEl.textContent = 'Error al cargar seguidores: ' + e.message;
   }
-
-  // Load usernames of first 5 followers
-  const ids = follows.slice(0, 5).map(f => f.follower_id).join(',');
-  const users = await supa(`users?id=in.(${ids})&select=username`) || [];
-  const names = users.map(u => '@' + u.username).join(', ');
-  namesEl.textContent = names + (follows.length > 5 ? ` y ${follows.length - 5} más` : '');
 }
 
 async function renderPosts() {
