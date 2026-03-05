@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NOVURAXE · Live</title>
+  <link rel="icon" href="dataxe-simple.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <style>
+    :root {
+      --bg:      #0d0d0f;
+      --bg2:     #111114;
+      --bg3:     #18181c;
+      --border:  rgba(255,255,255,0.07);
+      --amber:   #c4873a;
+      --amber2:  #e8a84e;
+      --ink:     #f0ece6;
+      --ink3:    rgba(240,236,230,0.55);
+      --ink4:    rgba(240,236,230,0.3);
+      --green:   #4cd98a;
+      --red:     #e05555;
+      --r:       10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── SCANLINE TEXTURE ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+    }
+
+    /* ── NAV (igual que index.html) ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 0 2.5rem;
+      height: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(13,13,15,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(196,135,58,0.15);
+    }
+    .t-logo { display: inline-flex; align-items: center; justify-content: center; }
+    .logo-img {
+      height: 56px; width: auto; object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(196,135,58,0.2));
+    }
+    .nav-links {
+      display: flex; align-items: center; gap: 0.25rem; list-style: none;
+    }
+    .nav-links a {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px; font-weight: 500; letter-spacing: 1.5px;
+      text-transform: uppercase; color: rgba(240,236,230,0.5);
+      text-decoration: none; padding: 6px 14px; border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .nav-links a:hover { color: #f0ece6; background: rgba(255,255,255,0.06); }
+    .nav-cta {
+      background: var(--amber) !important; color: #0d0d0f !important;
+      font-weight: 500 !important; padding: 8px 20px !important;
+    }
+    .nav-cta:hover { background: #e8a84e !important; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(196,135,58,0.35); }
+    .nav-mobile-btn {
+      display: none; background: none; border: none;
+      color: #f0ece6; font-size: 22px; cursor: pointer;
+    }
+    /* LIVE badge integrado en nav */
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px; font-weight: 500; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--green);
+      border: 1px solid rgba(76,217,138,0.25);
+      padding: 5px 12px; border-radius: 20px;
+      background: rgba(76,217,138,0.07);
+    }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 6px var(--green);
+      animation: pulse-dot 1.4s ease-in-out infinite; flex-shrink: 0;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(0.7); }
+    }
+    .last-updated {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px; color: rgba(240,236,230,0.25);
+    }
+    /* Mobile menu (igual que index) */
+    .mobile-menu {
+      display: none; position: fixed; inset: 0;
+      background: rgba(13,13,15,0.97); z-index: 99;
+      flex-direction: column; align-items: center; justify-content: center;
+      gap: 2rem; backdrop-filter: blur(20px);
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      font-family: 'Bebas Neue', sans-serif; font-size: 2.5rem;
+      letter-spacing: 2px; color: #f0ece6; text-decoration: none; transition: color 0.2s;
+    }
+    .mobile-menu a:hover { color: var(--amber); }
+    .mobile-menu-close {
+      position: absolute; top: 1.5rem; right: 1.5rem;
+      background: none; border: none; color: rgba(240,236,230,0.3);
+      font-size: 1.5rem; cursor: pointer; font-family: 'DM Mono', monospace;
+    }
+    @media (max-width: 900px) {
+      nav { padding: 0 1.5rem; }
+      .nav-links { display: none; }
+      .nav-mobile-btn { display: block; }
+    }
+
+    /* ── LAYOUT ── */
+    .wrap {
+      max-width: 1100px; margin: 0 auto;
+      padding: 6.5rem 1.5rem 6rem;
+      position: relative; z-index: 1;
+    }
+
+    /* ── EMPTY / LOADING STATES ── */
+    .state-center {
+      text-align: center; padding: 8rem 2rem;
+      display: flex; flex-direction: column; align-items: center; gap: 1rem;
+    }
+    .state-icon { font-size: 3rem; opacity: 0.25; }
+    .state-title { font-family: 'Bebas Neue',sans-serif; font-size: 2rem; letter-spacing: 2px; color: var(--ink3); }
+    .state-sub { font-size: 13px; color: var(--ink4); }
+    .spinner {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 2px solid rgba(196,135,58,0.15);
+      border-top-color: var(--amber);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── ORG SELECTOR ── */
+    .orgs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem; margin-bottom: 2.5rem;
+    }
+    .org-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 1.25rem 1.5rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .org-card:hover {
+      border-color: rgba(196,135,58,0.35);
+      background: rgba(196,135,58,0.04);
+      transform: translateY(-1px);
+    }
+    .org-logo {
+      width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+      overflow: hidden; background: rgba(196,135,58,0.1);
+      border: 1px solid rgba(196,135,58,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+    }
+    .org-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .org-name { font-weight: 700; font-size: 15px; }
+    .org-meta { font-size: 11px; color: var(--ink4); margin-top: 2px; }
+    .org-live-badge {
+      margin-left: auto; flex-shrink: 0;
+      font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; padding: 3px 8px; border-radius: 20px;
+      background: rgba(76,217,138,0.1); color: var(--green);
+      border: 1px solid rgba(76,217,138,0.2);
+    }
+
+    /* ── SECTION HEADER ── */
+    .section-hdr {
+      display: flex; align-items: center; gap: 1rem;
+      margin-bottom: 1.5rem; padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-eyebrow {
+      font-size: 10px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--amber);
+    }
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem; letter-spacing: 2px; line-height: 1;
+    }
+    .back-btn {
+      font-size: 12px; color: var(--ink4);
+      background: none; border: 1px solid var(--border);
+      border-radius: 6px; padding: 6px 14px; cursor: pointer;
+      font-family: inherit; transition: all 0.15s; margin-left: auto;
+    }
+    .back-btn:hover { color: var(--ink); border-color: rgba(255,255,255,0.2); }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex; gap: 4px; margin-bottom: 1.75rem;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 4px;
+      width: fit-content;
+    }
+    .tab-btn {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+      padding: 8px 18px; border-radius: 7px; border: none;
+      background: none; color: var(--ink4); cursor: pointer;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .tab-btn:hover { color: var(--ink); }
+    .tab-btn.on {
+      background: rgba(196,135,58,0.15);
+      color: var(--amber);
+    }
+
+    /* ── TOURNAMENT INFO CARD ── */
+    .t-info-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 1.5rem;
+      margin-bottom: 1.75rem;
+      display: flex; align-items: center; gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .t-info-logo {
+      width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+      overflow: hidden; background: rgba(196,135,58,0.1);
+      border: 2px solid rgba(196,135,58,0.3);
+      display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+    }
+    .t-info-logo img { width: 100%; height: 100%; object-fit: cover; }
+    .t-info-name { font-family: 'Bebas Neue',sans-serif; font-size: 1.6rem; letter-spacing: 2px; }
+    .t-info-meta { font-size: 12px; color: var(--ink4); margin-top: 3px; }
+    .t-info-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+    .pill {
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; padding: 4px 12px; border-radius: 20px;
+    }
+    .pill-phase-qualify { background: rgba(99,179,237,0.1); color: #63b3ed; border: 1px solid rgba(99,179,237,0.2); }
+    .pill-phase-elim    { background: rgba(196,135,58,0.1); color: var(--amber); border: 1px solid rgba(196,135,58,0.2); }
+    .pill-phase-done    { background: rgba(76,217,138,0.1); color: var(--green); border: 1px solid rgba(76,217,138,0.2); }
+    .pill-pro  { background: rgba(196,135,58,0.12); color: var(--amber); border: 1px solid rgba(196,135,58,0.25); }
+    .pill-semi { background: rgba(99,179,237,0.1);  color: #63b3ed;     border: 1px solid rgba(99,179,237,0.25); }
+
+    /* ── QUALIFY TABLE ── */
+    .qual-table-wrap { overflow-x: auto; border-radius: var(--r); border: 1px solid var(--border); }
+    table.qual-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px; min-width: 400px;
+    }
+    .qual-table thead tr { background: var(--bg2); }
+    .qual-table th {
+      padding: 10px 14px; text-align: left;
+      font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--ink4);
+      border-bottom: 1px solid var(--border);
+    }
+    .qual-table th.center, .qual-table td.center { text-align: center; }
+    .qual-table td { padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .qual-table tr:last-child td { border-bottom: none; }
+    .qual-table tr { background: var(--bg); transition: background 0.15s; }
+    .qual-table tr:hover { background: rgba(255,255,255,0.02); }
+    .rank-num {
+      font-family: 'DM Mono', monospace; font-size: 11px;
+      color: var(--ink4); font-weight: 500;
+    }
+    .rank-1 { color: #d4af37; }
+    .rank-2 { color: #a8a8b8; }
+    .rank-3 { color: #b06432; }
+    .player-name { font-weight: 700; font-size: 14px; }
+    .player-name.dq { opacity: 0.35; text-decoration: line-through; }
+    .score-pts {
+      font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500;
+      color: var(--amber);
+    }
+    .score-ks {
+      font-size: 10px; color: var(--ink4); margin-top: 1px;
+    }
+    .throws-mini {
+      display: flex; gap: 3px; flex-wrap: wrap;
+    }
+    .t-cell {
+      width: 20px; height: 20px; border-radius: 4px;
+      font-size: 9px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.04);
+      color: var(--ink4);
+    }
+    .t-cell.scored { background: rgba(196,135,58,0.12); color: var(--amber); }
+    .t-cell.is-ks  { background: rgba(76,217,138,0.15); color: var(--green); font-size: 8px; }
+    .t-cell.is-zero { background: rgba(224,85,85,0.1); color: var(--red); }
+
+    /* ── BRACKET ── */
+    .bracket-scroll { overflow-x: auto; padding-bottom: 1rem; }
+    .bracket-wrap {
+      display: flex; gap: 0; align-items: flex-start;
+      min-width: max-content; padding: 1rem;
+    }
+    .b-round { display: flex; flex-direction: column; }
+    .b-round-hdr {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px; font-weight: 500; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--ink4);
+      text-align: center; padding: 0 0 1rem; min-width: 180px;
+    }
+    .b-matches { display: flex; flex-direction: column; gap: 0; align-items: center; }
+    .b-match-wrap {
+      display: flex; align-items: center;
+      margin-bottom: 0;
+    }
+    .b-match {
+      width: 170px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+      margin: 8px 0;
+    }
+    .b-match.final {
+      border-color: rgba(196,135,58,0.35);
+      box-shadow: 0 0 20px rgba(196,135,58,0.08);
+    }
+    .b-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 12px; gap: 8px;
+      font-size: 13px; font-weight: 600;
+      transition: background 0.15s;
+    }
+    .b-row.b-winner {
+      background: rgba(76,217,138,0.08);
+      color: var(--green);
+    }
+    .b-row.b-loser { color: var(--ink4); }
+    .b-row.b-tbd { color: var(--ink4); font-style: italic; font-weight: 400; }
+    .b-row-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+    .b-row-score {
+      font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 700;
+      color: var(--amber); flex-shrink: 0;
+    }
+    .b-divider { height: 1px; background: var(--border); }
+    .b-connector {
+      width: 24px; height: 2px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .b-winner-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 12px; font-size: 11px; font-weight: 700;
+      color: var(--green); background: rgba(76,217,138,0.06);
+      border-top: 1px solid rgba(76,217,138,0.1);
+    }
+
+    /* ── CHAMPION CARD ── */
+    .champion-card {
+      background: linear-gradient(135deg, rgba(196,135,58,0.12), rgba(196,135,58,0.04));
+      border: 1px solid rgba(196,135,58,0.3);
+      border-radius: 14px; padding: 2rem;
+      text-align: center; margin-bottom: 2rem;
+      position: relative; overflow: hidden;
+    }
+    .champion-card::before {
+      content: '🏆'; font-size: 80px; opacity: 0.05;
+      position: absolute; top: -10px; right: -10px;
+    }
+    .champion-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--amber); margin-bottom: 8px;
+    }
+    .champion-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem; letter-spacing: 3px; color: #f0ece6;
+    }
+
+    /* ── GROUP TABS ── */
+    .group-tabs {
+      display: flex; gap: 4px; margin-bottom: 1.5rem;
+    }
+    .group-tab {
+      padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 700;
+      border: 1px solid var(--border); background: none; color: var(--ink4);
+      cursor: pointer; font-family: inherit; transition: all 0.15s;
+    }
+    .group-tab:hover { color: var(--ink); }
+    .group-tab.on { background: rgba(196,135,58,0.12); border-color: rgba(196,135,58,0.3); color: var(--amber); }
+
+    /* ── FOOTER ── */
+    .live-footer {
+      text-align: center; padding: 3rem 1rem 2rem;
+      font-size: 11px; color: var(--ink4);
+      font-family: 'DM Mono', monospace;
+      border-top: 1px solid var(--border);
+      position: relative; z-index: 1;
+    }
+    .live-footer a { color: var(--amber); text-decoration: none; }
+
+    /* ── ANIMATIONS ── */
+    .fade-in { animation: fadeIn 0.4s ease both; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .header { padding: 0 1rem; }
+      .wrap { padding: 1.5rem 1rem 4rem; }
+      .t-info-pills { margin-left: 0; }
+      .b-round-hdr, .b-match { min-width: 150px; width: 150px; }
+      .b-row-name { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobile-menu">
+  <button class="mobile-menu-close" onclick="toggleMenu()">✕ CERRAR</button>
+  <a href="index.html" onclick="toggleMenu()">Inicio</a>
+  <a href="index.html#features" onclick="toggleMenu()">Funciones</a>
+  <a href="index.html#how" onclick="toggleMenu()">Cómo funciona</a>
+  <a href="index.html#about" onclick="toggleMenu()">Quiénes somos</a>
+  <a href="index.html#gear" onclick="toggleMenu()">Equipamiento</a>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="t-logo">
+    <img src="public/novuraxe-logo.png" alt="NOVURAXE" class="logo-img">
+  </div>
+  <ul class="nav-links">
+    <li><a href="index.html#features">Funciones</a></li>
+    <li><a href="index.html#how">Cómo funciona</a></li>
+    <li><a href="index.html#about">Quiénes somos</a></li>
+    <li><a href="index.html#gear">Equipamiento</a></li>
+    <li>
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        LIVE
+      </div>
+    </li>
+    <li><span class="last-updated" id="last-updated"></span></li>
+  </ul>
+  <button class="nav-mobile-btn" onclick="toggleMenu()">☰</button>
+</nav>
+
+<div class="wrap" id="main-wrap">
+  <div class="state-center" id="loading-state">
+    <div class="spinner"></div>
+    <div class="state-sub">Cargando torneos activos...</div>
+  </div>
+</div>
+
+<footer class="live-footer">
+  NOVURAXE · Plataforma de gestión de torneos de lanzamiento de hacha ·
+  <a href="terms.html" target="_blank">Privacidad</a>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════
+const SUPA_URL  = 'https://ofdxzysrjswalekwjazl.supabase.co';
+const SUPA_KEY  = 'sb_publishable_ec6m8rEqcPSZyMvf7SMYag_-8GMIAc3';
+const QUAL_KS_VAL = 8;
+
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+let ALL_ORGS    = [];  // organizers with active tournaments
+let CUR_ORG     = null;
+let CUR_STATE   = null; // ADMIN object from state_json
+let CUR_TAB     = 'qualify'; // qualify | bracket
+let CUR_GROUP   = 'pro';     // pro | semi
+let _rtChannel  = null;
+let _pollTimer  = null;
+
+// ═══════════════════════════════════════════
+//  API HELPERS
+// ═══════════════════════════════════════════
+async function get(path) {
+  const res = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+  });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+async function init() {
+  // Load all organizers that have an active tournament with state_json
+  const rows = await get(
+    `tournaments?status=eq.active&state_json=not.is.null&select=id,name,date,updated_at,state_json,user_id,organizers(id,club_name,logo_url,username)`
+  );
+
+  ALL_ORGS = rows || [];
+  stampTime();
+
+  if (!ALL_ORGS.length) {
+    renderEmpty();
+    return;
+  }
+
+  // If only one, jump directly
+  if (ALL_ORGS.length === 1) {
+    selectOrg(ALL_ORGS[0]);
+  } else {
+    renderOrgList();
+  }
+
+  // Poll every 20s for org list updates
+  _pollTimer = setInterval(() => { if (!CUR_ORG) init(); }, 20000);
+}
+
+// ═══════════════════════════════════════════
+//  ORG LIST VIEW
+// ═══════════════════════════════════════════
+function renderOrgList() {
+  const wrap = document.getElementById('main-wrap');
+  const html = `
+    <div class="fade-in">
+      <div style="margin-bottom:2rem">
+        <div class="section-eyebrow">En directo ahora</div>
+        <div class="section-title">Torneos activos</div>
+      </div>
+      <div class="orgs-grid">
+        ${ALL_ORGS.map(t => {
+          const org = t.organizers;
+          const logoHtml = org?.logo_url
+            ? `<img src="${org.logo_url}" alt="">`
+            : '🏟';
+          return `
+            <div class="org-card" onclick="selectOrgById('${t.id}')">
+              <div class="org-logo">${logoHtml}</div>
+              <div>
+                <div class="org-name">${org?.club_name || org?.username || 'Organizador'}</div>
+                <div class="org-meta">${t.name || 'Torneo activo'}${t.date ? ' · ' + fmtDate(t.date) : ''}</div>
+              </div>
+              <div class="org-live-badge">● Live</div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  wrap.innerHTML = html;
+}
+
+function renderEmpty() {
+  document.getElementById('main-wrap').innerHTML = `
+    <div class="state-center fade-in">
+      <div class="state-icon">🪓</div>
+      <div class="state-title">Sin torneos activos</div>
+      <div class="state-sub">En este momento no hay ningún torneo en curso.<br>Vuelve más tarde.</div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  SELECT ORG & LOAD TOURNAMENT
+// ═══════════════════════════════════════════
+function selectOrgById(tid) {
+  const t = ALL_ORGS.find(x => x.id === tid);
+  if (t) selectOrg(t);
+}
+
+function selectOrg(tournament) {
+  CUR_ORG = tournament;
+  const state = tournament.state_json;
+  CUR_STATE = typeof state === 'string' ? JSON.parse(state) : state;
+  CUR_TAB   = 'qualify';
+  CUR_GROUP = hasPro() ? 'pro' : 'semi';
+  renderTournament();
+  startLiveSync(tournament.user_id);
+}
+
+// ═══════════════════════════════════════════
+//  TOURNAMENT VIEW
+// ═══════════════════════════════════════════
+function hasPro()  { return (CUR_STATE?.pro?.players?.length  || 0) > 0; }
+function hasSemi() { return (CUR_STATE?.semi?.players?.length || 0) > 0; }
+function G()       { return CUR_STATE?.[CUR_GROUP] || { players: [], qualScores: {}, matches: [], rounds: [], qualCfg: { rounds: 2, throws: 10 } }; }
+
+function renderTournament() {
+  const org = CUR_ORG.organizers;
+  const s   = CUR_STATE;
+  const wrap = document.getElementById('main-wrap');
+
+  const logoHtml = org?.logo_url
+    ? `<img src="${org.logo_url}" alt="">`
+    : '🏟';
+
+  const phase = G().phase || 'qualify';
+  const phaseLabel = { qualify: 'Clasificación', elim: 'Eliminatorias', done: 'Finalizado' };
+  const phasePill  = `<div class="pill pill-phase-${phase}">${phaseLabel[phase] || phase}</div>`;
+
+  // Build group pills
+  const groupPills = [
+    hasPro()  ? `<div class="pill pill-pro">PRO</div>`      : '',
+    hasSemi() ? `<div class="pill pill-semi">SEMI PRO</div>` : '',
+  ].join('');
+
+  // Tabs
+  const tabs = `
+    <div class="tabs">
+      <button class="tab-btn ${CUR_TAB==='qualify' ? 'on':''}"  onclick="switchTab('qualify')">📊 Clasificación</button>
+      <button class="tab-btn ${CUR_TAB==='bracket' ? 'on':''}"  onclick="switchTab('bracket')">🏆 Bracket</button>
+    </div>`;
+
+  // Group selector
+  const showGroupTabs = hasPro() && hasSemi();
+  const groupTabsHtml = showGroupTabs ? `
+    <div class="group-tabs">
+      <button class="group-tab ${CUR_GROUP==='pro'  ? 'on':''}" onclick="switchGroup('pro')">PRO</button>
+      <button class="group-tab ${CUR_GROUP==='semi' ? 'on':''}" onclick="switchGroup('semi')">SEMI PRO</button>
+    </div>` : '';
+
+  wrap.innerHTML = `
+    <div class="fade-in">
+      <!-- Back -->
+      ${ALL_ORGS.length > 1 ? `<button class="back-btn" onclick="backToList()" style="float:right;margin-bottom:1rem">← Todos los torneos</button><div style="clear:both"></div>` : ''}
+
+      <!-- Tournament info -->
+      <div class="t-info-card">
+        <div class="t-info-logo">${logoHtml}</div>
+        <div>
+          <div class="t-info-name">${s?.tName || 'Torneo'}</div>
+          <div class="t-info-meta">${org?.club_name || org?.username || ''}${s?.tDate ? ' · ' + fmtDate(s.tDate) : ''}</div>
+        </div>
+        <div class="t-info-pills">${phasePill}${groupPills}</div>
+      </div>
+
+      ${tabs}
+      ${groupTabsHtml}
+
+      <div id="tab-content"></div>
+    </div>`;
+
+  renderTabContent();
+}
+
+function renderTabContent() {
+  const el = document.getElementById('tab-content');
+  if (!el) return;
+  if (CUR_TAB === 'qualify') {
+    el.innerHTML = renderQualifyView();
+  } else {
+    el.innerHTML = renderBracketView();
+  }
+}
+
+// ═══════════════════════════════════════════
+//  QUALIFY VIEW
+// ═══════════════════════════════════════════
+function renderQualifyView() {
+  const g = G();
+  const activePlayers = (g.players || []).filter(p => !p.disqualified);
+
+  if (!activePlayers.length) {
+    return `<div class="state-center" style="padding:4rem"><div class="state-icon">📊</div>
+      <div class="state-sub">Sin jugadores en clasificación todavía</div></div>`;
+  }
+
+  // Compute totals and sort
+  const ranked = activePlayers.map(pl => {
+    let total = 0, ks = 0;
+    for (let r = 0; r < (g.qualCfg?.rounds || 2); r++) {
+      const throws = (g.qualScores?.[pl.id] || {})['r' + r] || [];
+      throws.forEach(v => { if (v !== null) { total += v; if (v === QUAL_KS_VAL) ks++; } });
+    }
+    return { ...pl, total, ks };
+  }).sort((a, b) => b.total - a.total);
+
+  const rows = ranked.map((pl, i) => {
+    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+    const rounds = g.qualCfg?.rounds || 2;
+    const throwsPerRound = g.qualCfg?.throws || 10;
+
+    // Build throws mini for last round with any data
+    let throwsMini = '';
+    for (let r = rounds - 1; r >= 0; r--) {
+      const sc = (g.qualScores?.[pl.id] || {})['r' + r] || [];
+      const hasData = sc.some(v => v !== null);
+      if (hasData) {
+        throwsMini = sc.slice(0, throwsPerRound).map(v => {
+          if (v === null) return `<div class="t-cell"></div>`;
+          if (v === QUAL_KS_VAL) return `<div class="t-cell is-ks">KS</div>`;
+          if (v === 0) return `<div class="t-cell is-zero">0</div>`;
+          return `<div class="t-cell scored">${v}</div>`;
+        }).join('');
+        break;
+      }
+    }
+
+    return `<tr>
+      <td><span class="rank-num ${rankClass}">${medal || '#' + (i+1)}</span></td>
+      <td><div class="player-name">${pl.name}</div></td>
+      <td class="center"><div class="score-pts">${pl.total}</div>${pl.ks ? `<div class="score-ks">${pl.ks} KS</div>` : ''}</td>
+      <td><div class="throws-mini">${throwsMini}</div></td>
+    </tr>`;
+  }).join('');
+
+  const dqRows = (g.players || []).filter(p => p.disqualified).map(pl =>
+    `<tr><td colspan="4"><span class="rank-num">DQ</span> <span class="player-name dq">${pl.name}</span></td></tr>`
+  ).join('');
+
+  return `
+    <div class="qual-table-wrap">
+      <table class="qual-table">
+        <thead>
+          <tr>
+            <th style="width:50px">#</th>
+            <th>Jugador</th>
+            <th class="center">Puntos</th>
+            <th>Lanzamientos</th>
+          </tr>
+        </thead>
+        <tbody>${rows}${dqRows}</tbody>
+      </table>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════
+//  BRACKET VIEW
+// ═══════════════════════════════════════════
+function renderBracketView() {
+  const g = G();
+
+  if (!g.rounds?.length) {
+    return `<div class="state-center" style="padding:4rem">
+      <div class="state-icon">🏆</div>
+      <div class="state-sub">El bracket aún no ha sido generado</div>
+    </div>`;
+  }
+
+  // Champion
+  let champHtml = '';
+  if (g.champion) {
+    champHtml = `
+      <div class="champion-card">
+        <div class="champion-label">🏆 Campeón</div>
+        <div class="champion-name">${g.champion}</div>
+      </div>`;
+  }
+
+  // Build bracket
+  let bracketHtml = `<div class="bracket-scroll"><div class="bracket-wrap">`;
+  g.rounds.forEach((round, ri) => {
+    bracketHtml += `<div class="b-round">
+      <div class="b-round-hdr">${rndName(ri, g.rounds.length)}</div>
+      <div class="b-matches">`;
+
+    round.forEach(mid => {
+      const m = (g.matches || []).find(x => x.id === mid);
+      if (!m) return;
+      const isFin = ri === g.rounds.length - 1;
+      const p1W = m.winner && m.winner === m.p1;
+      const p2W = m.winner && m.winner === m.p2;
+
+      const c1 = p1W ? 'b-winner' : (p2W ? 'b-loser' : (!m.p1 ? 'b-tbd' : ''));
+      const c2 = p2W ? 'b-winner' : (p1W ? 'b-loser' : (!m.p2 ? 'b-tbd' : ''));
+
+      bracketHtml += `<div class="b-match${isFin ? ' final' : ''}">
+        <div class="b-row ${c1}">
+          <span class="b-row-name">${m.p1 || 'Por definir'}</span>
+          ${m.score1 !== null && m.score1 !== undefined ? `<span class="b-row-score">${m.score1}</span>` : ''}
+        </div>
+        <div class="b-divider"></div>
+        <div class="b-row ${c2}">
+          <span class="b-row-name">${m.p2 || 'Por definir'}</span>
+          ${m.score2 !== null && m.score2 !== undefined ? `<span class="b-row-score">${m.score2}</span>` : ''}
+        </div>
+        ${m.winner ? `<div class="b-winner-badge">✓ ${m.winner}</div>` : (m.bye ? `<div class="b-winner-badge" style="color:var(--ink4)">BYE</div>` : '')}
+      </div>`;
+    });
+
+    bracketHtml += `</div></div>`;
+
+    // Connector between rounds
+    if (ri < g.rounds.length - 1) {
+      bracketHtml += `<div style="display:flex;align-items:center;padding-top:3rem"><div class="b-connector"></div></div>`;
+    }
+  });
+  bracketHtml += `</div></div>`;
+
+  return champHtml + bracketHtml;
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
+function switchTab(tab) {
+  CUR_TAB = tab;
+  // Update tab buttons
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('on', b.textContent.toLowerCase().includes(tab === 'qualify' ? 'clas' : 'brack'));
+  });
+  renderTabContent();
+}
+
+function switchGroup(g) {
+  CUR_GROUP = g;
+  document.querySelectorAll('.group-tab').forEach(b => {
+    b.classList.toggle('on', b.textContent.includes(g === 'pro' ? 'PRO' : 'SEMI'));
+  });
+  renderTabContent();
+}
+
+function backToList() {
+  stopSync();
+  CUR_ORG = null; CUR_STATE = null;
+  renderOrgList();
+}
+
+// ═══════════════════════════════════════════
+//  LIVE SYNC (realtime + polling)
+// ═══════════════════════════════════════════
+function startLiveSync(userId) {
+  stopSync();
+
+  // Realtime
+  _rtChannel = sb.channel('live-' + userId)
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'tournaments',
+      filter: `user_id=eq.${userId}`
+    }, payload => {
+      const row = payload.new;
+      if (!row?.state_json) return;
+      const state = typeof row.state_json === 'string' ? JSON.parse(row.state_json) : row.state_json;
+      CUR_STATE = state;
+      CUR_ORG = { ...CUR_ORG, state_json: state };
+      stampTime();
+      renderTournament();
+    })
+    .subscribe();
+
+  // Polling every 20s as fallback
+  _pollTimer = setInterval(async () => {
+    if (!CUR_ORG) return;
+    try {
+      const rows = await get(`tournaments?user_id=eq.${userId}&status=eq.active&select=state_json,updated_at&order=updated_at.desc&limit=1`);
+      if (!rows?.[0]?.state_json) return;
+      const state = typeof rows[0].state_json === 'string' ? JSON.parse(rows[0].state_json) : rows[0].state_json;
+      // Only re-render if different
+      if (JSON.stringify(state) === JSON.stringify(CUR_STATE)) return;
+      CUR_STATE = state;
+      stampTime();
+      renderTournament();
+    } catch(e) {}
+  }, 20000);
+}
+
+function stopSync() {
+  if (_rtChannel) { sb.removeChannel(_rtChannel); _rtChannel = null; }
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+}
+
+// ═══════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════
+function rndName(ri, total) {
+  const r = total - ri;
+  if (r === 1) return 'FINAL';
+  if (r === 2) return 'SEMIFINAL';
+  if (r === 3) return 'CUARTOS';
+  return 'RONDA ' + (ri + 1);
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  return new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function stampTime() {
+  const el = document.getElementById('last-updated');
+  if (el) el.textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+// ═══════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════
+// Sticky nav
+const navEl = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  navEl.classList.toggle('scrolled', window.scrollY > 60);
+});
+// Mobile menu
+function toggleMenu() {
+  document.getElementById('mobile-menu').classList.toggle('open');
+}
+
+init();
+</script>
+</body>
+</html>
