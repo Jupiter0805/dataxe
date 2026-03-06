@@ -5019,27 +5019,41 @@ function confirmDeleteActiveTournament() {
   if (!confirm(`¿Borrar "${name}" permanentemente?${extraMsg}\n\nEsta acción no se puede deshacer.`)) return;
 
   (async () => {
-    const safe   = fn => fn.catch(e => { console.warn('[delete]', e.message); return null; });
+    const safe   = fn => Promise.resolve(fn).catch(e => { console.warn('[delete]', e.message); return null; });
     const tid    = ADMIN.__tid;
-    const postId = ADMIN.__post_id;
+    let   postId = ADMIN.__post_id;
 
-    try {
-      if (isPending && postId) {
-        // Borrar inscripciones del post
+    console.log('[delete] tid:', tid, '| postId:', postId, '| isPending:', isPending, '| __status:', ADMIN.__status);
+
+    // Si no tenemos __post_id en memoria, buscarlo en BD por tournament_id
+    if (isPending && !postId && tid) {
+      try {
+        const rows = await dbGet('posts', `tournament_id=eq.${tid}&select=id&limit=1`);
+        postId = rows?.[0]?.id || null;
+        console.log('[delete] postId from DB:', postId);
+      } catch(e) { console.warn('[delete] post lookup:', e.message); }
+    }
+
+    if (isPending) {
+      if (postId) {
+        console.log('[delete] deleting registrations for post:', postId);
         await safe(dbDelete('event_registrations', `event_id=eq.${postId}`));
-        // Borrar la publicación
+        console.log('[delete] deleting post:', postId);
         await safe(dbDelete('posts', `id=eq.${postId}`));
+      } else {
+        console.warn('[delete] no postId found — skipping post/registrations delete');
       }
-      // Marcar torneo como cerrado
-      if (tid) {
-        await safe(dbUpdate('tournaments', `id=eq.${tid}`, {
-          status: 'closed',
-          updated_at: new Date().toISOString()
-        }));
-      }
-    } catch(e) { console.warn('[delete]', e.message); }
+    }
 
-    // Resetear estado local — preservar perfil, historial y stats
+    if (tid) {
+      console.log('[delete] closing tournament:', tid);
+      await safe(dbUpdate('tournaments', `id=eq.${tid}`, {
+        status: 'closed',
+        updated_at: new Date().toISOString()
+      }));
+    }
+
+    // Resetear estado local
     const preserved = { club: ADMIN.club, logo: ADMIN.logo, history: ADMIN.history, global: ADMIN.global };
     ADMIN = { ...defAdmin(), ...preserved };
     localStorage.setItem(gk(), JSON.stringify(ADMIN));
@@ -5047,7 +5061,7 @@ function confirmDeleteActiveTournament() {
     document.getElementById('champ-bar').classList.remove('on');
     renderAll();
     showPage('dashboard');
-    renderPosts(); // refrescar publicaciones
+    renderPosts();
     toast('Torneo eliminado', 'red');
   })();
 }
