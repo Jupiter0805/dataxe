@@ -1825,7 +1825,7 @@ async function renderSidebar() {
   const followingHtml = followedOrgs.length ? `
     <div class="sidebar-divider"></div>
     <div class="sidebar-following">
-      <div class="sidebar-section-title">Siguiendo</div>
+      <div class="sidebar-section-title">${t_('jug_following','Siguiendo')}</div>
       ${followedOrgs.map(o => `
         <div class="sidebar-org-row" onclick="showPage('orgs')">
           <div class="sidebar-org-mini">
@@ -1852,15 +1852,15 @@ async function renderSidebar() {
     <div class="sidebar-stats">
       <div class="sidebar-stat" onclick="showPage('stats')">
         <div class="sidebar-stat-n">${totalTournaments}</div>
-        <div class="sidebar-stat-l">Torneos</div>
+        <div class="sidebar-stat-l">${t_('jug_sidebar_tournaments','Torneos')}</div>
       </div>
       <div class="sidebar-stat" onclick="showPage('stats')">
         <div class="sidebar-stat-n g">${totalWins}</div>
-        <div class="sidebar-stat-l">Victorias</div>
+        <div class="sidebar-stat-l">${t_('jug_sidebar_wins','Victorias')}</div>
       </div>
       <div class="sidebar-stat" onclick="showPage('stats')">
         <div class="sidebar-stat-n s">${totalPts}</div>
-        <div class="sidebar-stat-l">Puntos</div>
+        <div class="sidebar-stat-l">${t_('jug_sidebar_points','Puntos')}</div>
       </div>
       <div class="sidebar-stat" onclick="showPage('orgs')">
         <div class="sidebar-stat-n w">${FOLLOWS.size}</div>
@@ -1957,7 +1957,7 @@ function feedPostCard(p) {
   const dateLabel  = p.date ? new Date(p.date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' }) : null;
   const createdLabel = new Date(p.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' });
   const avatarHtml = logoUrl ? `<img src="${logoUrl}" alt="">` : `<span>🏟</span>`;
-  const typeLabels = { torneo: '🏆 TORNEO', aviso: '⚠️ AVISO', info: 'ℹ️ INFORMACIÓN' };
+  const typeLabels = { torneo: '🏆 '+t_('jug_type_tournament','TORNEO'), aviso: '⚠️ '+t_('jug_type_notice','AVISO'), info: 'ℹ️ '+t_('jug_type_info','INFORMACIÓN') };
   const t = p.post_type || 'torneo';
   const isTorneo = t === 'torneo';
 
@@ -2043,7 +2043,7 @@ async function openPostDetail(id, p) {
   const dateLabel = p.date ? new Date(p.date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' }) : null;
   const avatarHtml = logoUrl ? `<img src="${logoUrl}" alt="">` : `<span>🏟</span>`;
   const t = p.post_type || 'torneo';
-  const typeLabels = { torneo: '🏆 TORNEO', aviso: '⚠️ AVISO', info: 'ℹ️ INFORMACIÓN' };
+  const typeLabels = { torneo: '🏆 '+t_('jug_type_tournament','TORNEO'), aviso: '⚠️ '+t_('jug_type_notice','AVISO'), info: 'ℹ️ '+t_('jug_type_info','INFORMACIÓN') };
   const isTorneo = t === 'torneo';
   const prizes = (() => {
     if (!isTorneo) return [];
