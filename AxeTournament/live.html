@@ -592,7 +592,7 @@
 <!-- NAV -->
 <nav id="nav">
   <div class="t-logo">
-    <img src="public/novuraxe-logo.png" alt="NOVURAXE" class="logo-img">
+    <a href="index.html"><img src="public/novuraxe-logo.png" alt="NOVURAXE" class="logo-img"></a>
   </div>
   <ul class="nav-links">
     <li><a href="index.html#features">Funciones</a></li>
@@ -662,21 +662,20 @@ async function get(path) {
 //  INIT
 // ═══════════════════════════════════════════
 async function init() {
-  // 1. Primero solo buscamos activos — si no hay, no cargamos nada más
+  // 1. Buscar activos Y pending — si no hay ninguno, no cargamos más
   let active;
   try {
-    active = await get(`tournaments?status=eq.active&select=id,name,date,updated_at,state_json,user_id,status`);
+    active = await get(`tournaments?status=in.(active,pending)&select=id,name,date,updated_at,state_json,user_id,status`);
   } catch(e) {
     console.error('[live] error:', e);
     renderEmpty(); return;
   }
 
-  const hayActivos = (active || []).filter(r => r.state_json).length > 0;
+  const hayActivos = (active || []).filter(r => r.state_json || r.status === 'pending').length > 0;
 
-  // Sin activos → mostrar estado vacío y NO hacer más queries ni timers
+  // Sin activos ni pending → pantalla de espera
   if (!hayActivos) {
     if (!ALL_ORGS.length) {
-      // Primera carga: mostrar pantalla de espera
       document.getElementById('main-wrap').innerHTML = `
         <div class="state-center fade-in">
           <div class="state-icon">⏳</div>
@@ -684,13 +683,13 @@ async function init() {
           <div class="state-sub">No hay ningún torneo activo ahora mismo.<br>Vuelve cuando haya uno en curso.</div>
         </div>`;
     }
-    // Reintentar en 30s por si arranca uno
-    if (_pollTimer) clearInterval(_pollTimer);
+    // Usar setTimeout y guardarlo correctamente
+    if (_pollTimer) clearTimeout(_pollTimer);
     _pollTimer = setTimeout(init, 30000);
     return;
   }
 
-  // 2. Hay activos → cargar también archivados y cerrados para el historial
+  // 2. Hay activos/pending → cargar también archivados para historial
   let archived, closed;
   try {
     [archived, closed] = await Promise.all([
@@ -715,17 +714,18 @@ async function init() {
   stampTime();
 
   const activos     = enriched.filter(t => t.status === 'active');
+  const pendientes  = enriched.filter(t => t.status === 'pending');
   const finalizados = enriched.filter(t => t.status === 'archived');
   const cerrados    = enriched.filter(t => t.status === 'closed');
 
-  // Si solo hay 1 activo y ningún finalizado/cerrado → entrar directo
-  if (activos.length === 1 && finalizados.length === 0 && cerrados.length === 0) {
+  // Si solo hay 1 activo y nada más → entrar directo
+  if (activos.length === 1 && pendientes.length === 0 && finalizados.length === 0 && cerrados.length === 0) {
     selectOrg(activos[0]);
   } else {
-    renderOrgList(activos, finalizados, cerrados);
+    renderOrgList(activos, finalizados, cerrados, pendientes);
   }
 
-  // Polling cada 30s solo mientras hay activos
+  // Polling cada 30s como fallback — solo con setInterval (no mezclar con setTimeout)
   if (_pollTimer) clearInterval(_pollTimer);
   _pollTimer = setInterval(() => { if (!CUR_ORG) init(); }, 30000);
 }
@@ -735,10 +735,11 @@ async function init() {
 // ═══════════════════════════════════════════
 let OPEN_ID = null; // ID del torneo expandido actualmente
 
-function renderOrgList(activos, finalizados, cerrados) {
+function renderOrgList(activos, finalizados, cerrados, pendientes) {
   if (!activos)     activos     = ALL_ORGS.filter(t => t.status === 'active');
   if (!finalizados) finalizados = ALL_ORGS.filter(t => t.status === 'archived');
   if (!cerrados)    cerrados    = ALL_ORGS.filter(t => t.status === 'closed');
+  if (!pendientes)  pendientes  = ALL_ORGS.filter(t => t.status === 'pending');
 
   const wrap = document.getElementById('main-wrap');
 
@@ -747,9 +748,11 @@ function renderOrgList(activos, finalizados, cerrados) {
     const logoHtml = org?.logo_url ? `<img src="${org.logo_url}" alt="">` : '🏟';
     const badge = mode === 'live'
       ? `<div class="org-live-badge"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 1.4s infinite"></span> Live</div>`
-      : mode === 'closed'
-        ? `<div class="org-closed-badge">✕ Cerrado</div>`
-        : `<div class="org-done-badge">✓ Finalizado</div>`;
+      : mode === 'pending'
+        ? `<div class="org-live-badge" style="background:rgba(196,135,58,0.15);color:var(--amber);border-color:rgba(196,135,58,0.3)">📋 Inscripciones</div>`
+        : mode === 'closed'
+          ? `<div class="org-closed-badge">✕ Cerrado</div>`
+          : `<div class="org-done-badge">✓ Finalizado</div>`;
     const isLive = mode === 'live';
     let champ = '';
     try {
@@ -777,18 +780,22 @@ function renderOrgList(activos, finalizados, cerrados) {
 
   let html = `<div class="fade-in"><div class="tournament-list">`;
 
-  const hasAnything = activos.length || finalizados.length || cerrados.length;
+  const hasAnything = activos.length || pendientes.length || finalizados.length || cerrados.length;
 
   if (activos.length) {
     html += `<div class="list-section-label">En directo</div>`;
     html += activos.map(t => buildBanner(t, 'live')).join('');
   }
+  if (pendientes.length) {
+    html += `<div class="list-section-label" style="margin-top:${activos.length ? '1.5rem' : '0'}">Próximamente</div>`;
+    html += pendientes.map(t => buildBanner(t, 'pending')).join('');
+  }
   if (finalizados.length) {
-    html += `<div class="list-section-label" style="margin-top:${activos.length ? '1.5rem' : '0'}">Finalizados</div>`;
+    html += `<div class="list-section-label" style="margin-top:${(activos.length || pendientes.length) ? '1.5rem' : '0'}">Finalizados</div>`;
     html += finalizados.map(t => buildBanner(t, 'done')).join('');
   }
   if (cerrados.length) {
-    html += `<div class="list-section-label" style="margin-top:${(activos.length || finalizados.length) ? '1.5rem' : '0'};color:#e05555">Cerrados</div>`;
+    html += `<div class="list-section-label" style="margin-top:${(activos.length || pendientes.length || finalizados.length) ? '1.5rem' : '0'};color:#e05555">Cerrados</div>`;
     html += cerrados.map(t => buildBanner(t, 'closed')).join('');
   }
   if (!hasAnything) {
@@ -843,7 +850,7 @@ function toggleAccordion(tid) {
 function renderPanelContent(tournament) {
   CUR_ORG   = tournament;
   const state = tournament.state_json;
-  CUR_STATE = typeof state === 'string' ? JSON.parse(state) : state;
+  CUR_STATE = typeof state === 'string' ? JSON.parse(state) : (state || {});
   CUR_TAB   = 'qualify';
   CUR_GROUP = hasPro() ? 'pro' : 'semi';
 
@@ -851,8 +858,24 @@ function renderPanelContent(tournament) {
   if (!inner) return;
 
   const s = CUR_STATE;
+  const isPending  = tournament.status === 'pending';
   const isFinished = tournament.status === 'archived';
   const isClosed   = tournament.status === 'closed';
+
+  // Torneo pending — mostrar pantalla de inscripciones abiertas
+  if (isPending) {
+    inner.innerHTML = `
+      <div style="padding:1.5rem 0;text-align:center">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem">📋</div>
+        <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px">${s?.tName || tournament.name || 'Torneo'}</div>
+        ${s?.tDate ? `<div style="font-size:12px;color:var(--ink4);margin-bottom:1rem">${fmtDate(s.tDate)}${s?.tTime ? ' · ' + s.tTime : ''}${s?.tLocation ? ' · ' + s.tLocation : ''}</div>` : ''}
+        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(76,217,138,0.1);border:1px solid rgba(76,217,138,0.25);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;color:#4cd98a">
+          🟢 Inscripciones abiertas
+        </div>
+        ${s?.tDesc ? `<div style="margin-top:1rem;font-size:13px;color:var(--ink3);max-width:400px;margin-left:auto;margin-right:auto">${s.tDesc}</div>` : ''}
+      </div>`;
+    return;
+  }
 
   // Phase pill
   const phase = (hasPro() ? s?.pro?.phase : s?.semi?.phase) || 'qualify';
@@ -1202,22 +1225,25 @@ function backToList() {
 function startLiveSync(userId, tid) {
   stopSync();
 
+  let _rendering = false; // guard contra renders simultáneos
+
   const applyUpdate = (state, newStatus) => {
-    if (!state) return;
+    if (!state || _rendering) return;
+    _rendering = true;
     CUR_STATE = state;
     if (CUR_ORG) CUR_ORG = { ...CUR_ORG, state_json: state, status: newStatus || CUR_ORG.status };
-    // update ALL_ORGS too
     const idx = ALL_ORGS.findIndex(x => x.id === tid);
     if (idx >= 0) ALL_ORGS[idx] = { ...ALL_ORGS[idx], state_json: state, status: newStatus || ALL_ORGS[idx].status };
     if (newStatus === 'archived') stopSync();
     stampTime();
-    // Re-render panel if still open
+    // Re-render solo si el torneo está visible
     if (OPEN_ID === tid) {
       const t = ALL_ORGS.find(x => x.id === tid);
       if (t) renderPanelContent(t);
     } else if (document.getElementById('tab-content')) {
-      renderTournament();
+      renderTabContent(); // solo re-render el contenido, no todo el torneo
     }
+    setTimeout(() => { _rendering = false; }, 500); // liberar tras 500ms
   };
 
   // Realtime
@@ -1247,7 +1273,7 @@ function startLiveSync(userId, tid) {
 
 function stopSync() {
   if (_rtChannel) { sb.removeChannel(_rtChannel); _rtChannel = null; }
-  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+  if (_pollTimer) { clearInterval(_pollTimer); clearTimeout(_pollTimer); _pollTimer = null; }
 }
 
 // ═══════════════════════════════════════════
