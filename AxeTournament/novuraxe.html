@@ -5686,6 +5686,16 @@ function saveTournament() {
         await safe(dbUpdate('tournaments', `id=eq.${resolvedTid}`, { status: 'archived' }));
         ADMIN.__tid = null;
         localStorage.setItem(gk(), JSON.stringify(ADMIN));
+        // Actualizar el post asociado a "finished"
+        try {
+          const postRows = await dbGet('posts', `tournament_id=eq.${resolvedTid}&select=id&limit=1`);
+          if (postRows?.[0]?.id) {
+            await dbUpdate('posts', `id=eq.${postRows[0].id}`, {
+              inscription_status: 'finished',
+              registration_open:  false
+            });
+          }
+        } catch(e) { console.warn('[saveTournament] post update:', e.message); }
       }
       // Guardar global + history en tabla dedicada (persiste entre torneos)
       await saveOrganizerData();
