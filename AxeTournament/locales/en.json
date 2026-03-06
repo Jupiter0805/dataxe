@@ -247,7 +247,7 @@
   "jug_save_password": "Save password",
   "jug_my_profile": "My profile",
   "jug_wrong_credentials": "Incorrect email or password",
-  "jug_pw_min_chars": "Password must be at least 6 characters",
+  "jug_pw_min_chars": "Password must be at least 8 characters",
   "jug_pw_updated": "✓ Password updated",
   "jug_new_post": "📢 New post available",
   "jug_reg_open": "🟢 Registration open",
@@ -300,5 +300,7 @@
   "jug_tournaments_word": "Tournaments",
   "jug_no_history": "No registered tournaments",
   "jug_no_history_sub": "Register for tournaments from your feed to see them here",
-  "hist_th_tournament": "Tournament"
+  "hist_th_tournament": "Tournament",
+  "jug_ph_min_chars": "Minimum 8 characters",
+  "jug_ph_repeat_pw": "Repeat password"
 }
