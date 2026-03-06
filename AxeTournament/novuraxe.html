@@ -2750,13 +2750,13 @@ async function loadOrganizerData() {
     const rows = await dbGet('organizer_data', `user_id=eq.${DB_USER_ID}&select=global_stats,history`);
     if (rows?.[0]) {
       const remote = rows[0];
-      // Sobrescribir solo si hay datos en BD
       if (remote.global_stats && Object.keys(remote.global_stats).length) {
         ADMIN.global = remote.global_stats;
       }
       if (remote.history && remote.history.length) {
         ADMIN.history = remote.history;
       }
+      ADMIN.__orgDataLoadedAt = Date.now(); // marca de cuándo cargamos
       console.log('[organizer_data] loaded — history:', ADMIN.history.length, '| global keys:', Object.keys(ADMIN.global).length);
     }
   } catch(e) {
@@ -2769,7 +2769,38 @@ async function saveOrganizerData() {
   try {
     const session = (await sb.auth.getSession()).data.session;
     const token   = session?.access_token || SUPA_KEY;
-    // Upsert por user_id
+
+    // Comprobar updated_at remoto antes de guardar
+    // Si BD es más reciente que nuestra carga inicial, fusionar en lugar de sobreescribir
+    const remoteRows = await dbGet('organizer_data',
+      `user_id=eq.${DB_USER_ID}&select=updated_at,global_stats,history`);
+    const remote = remoteRows?.[0];
+
+    if (remote) {
+      const remoteTs = new Date(remote.updated_at).getTime();
+      const localTs  = ADMIN.__orgDataLoadedAt || 0;
+
+      if (remoteTs > localTs) {
+        // BD más reciente — fusionar: combinar historiales y stats
+        console.warn('[organizer_data] remote is newer — merging before save');
+        const remoteHistory = remote.history || [];
+        const localHistory  = ADMIN.history  || [];
+        // Unir por id, eliminar duplicados, ordenar por fecha
+        const mergedIds = new Set(localHistory.map(h => h.id));
+        const merged = [...localHistory, ...remoteHistory.filter(h => !mergedIds.has(h.id))]
+          .sort((a, b) => (b.id || 0) - (a.id || 0));
+        ADMIN.history = merged;
+
+        // Fusionar global_stats: sumar torneos del remoto que no están en local
+        const remoteGlobal = remote.global_stats || {};
+        Object.entries(remoteGlobal).forEach(([key, val]) => {
+          if (!ADMIN.global[key]) ADMIN.global[key] = val;
+        });
+      }
+    }
+
+    // Guardar estado fusionado
+    const now = new Date().toISOString();
     await fetch(`${SUPA_URL}/rest/v1/organizer_data`, {
       method: 'POST',
       headers: {
@@ -2782,10 +2813,11 @@ async function saveOrganizerData() {
         user_id:      DB_USER_ID,
         global_stats: ADMIN.global  || {},
         history:      ADMIN.history || [],
-        updated_at:   new Date().toISOString(),
+        updated_at:   now,
       })
     });
-    console.log('[organizer_data] saved');
+    ADMIN.__orgDataLoadedAt = new Date(now).getTime();
+    console.log('[organizer_data] saved — history:', (ADMIN.history||[]).length);
   } catch(e) {
     console.warn('[saveOrganizerData]', e.message);
   }
