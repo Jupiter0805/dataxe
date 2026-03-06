@@ -1895,7 +1895,7 @@ document.querySelector('.gear-submit').addEventListener('click', () => {
 
   try {
     const [pRes, tRes, oRes, mRes] = await Promise.all([
-      fetch(`${SUPA_URL}/rest/v1/players?select=id&limit=1`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
+      fetch(`${SUPA_URL}/rest/v1/users?role=eq.player&select=id&limit=1`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
       fetch(`${SUPA_URL}/rest/v1/tournaments?select=id&limit=1`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
       fetch(`${SUPA_URL}/rest/v1/organizers?select=id&limit=1`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
       fetch(`${SUPA_URL}/rest/v1/matches?select=id&limit=1`, { headers: { ...h, 'Prefer': 'count=exact', 'Range': '0-0' } }),
