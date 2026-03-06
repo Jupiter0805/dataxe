@@ -1967,7 +1967,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       <div class="pg-sub">Gestión de torneos</div>
 
       <!-- ── TORNEO ACTIVO ── -->
-      <div style="
+      <div id="active-tournament-card" style="
         background: linear-gradient(135deg, rgba(196,135,58,0.1) 0%, rgba(196,135,58,0.03) 100%);
         border: 1px solid rgba(196,135,58,0.3); border-radius: var(--r2);
         padding: 1.25rem 1.5rem; margin-bottom: 1.75rem;
@@ -5195,14 +5195,21 @@ async function setTournamentStatus(tid, newStatus) {
 }
 
 function renderActiveTournamentCard() {
+  const card   = document.getElementById('active-tournament-card');
   const nameEl = document.getElementById('active-t-name');
   const infoEl = document.getElementById('active-t-info');
-  if (!nameEl || !infoEl) return;
+  if (!card) return;
+
+  // Sin torneo activo — ocultar la card
+  const hasActiveTournament = !!(ADMIN.__tid || ADMIN.tName) && (ADMIN.pro !== null || ADMIN.semi !== null);
+  card.style.display = hasActiveTournament ? 'flex' : 'none';
+  if (!hasActiveTournament) return;
+
   nameEl.textContent = ADMIN.tName || 'Torneo sin nombre';
   const date = ADMIN.tDate ? new Date(ADMIN.tDate).toLocaleDateString('es-ES', { day:'numeric', month:'long', year:'numeric' }) : 'Sin fecha';
   const proC  = ADMIN.pro?.players?.length  || 0;
   const semiC = ADMIN.semi?.players?.length || 0;
-  const pStr  = [proC ? `⚡ ${proC} PRO` : '', semiC ? `🎯 ${semiC} SEMI` : ''].filter(Boolean).join(' · ') || 'Sin jugadores';
+  const pStr  = [proC ? `⚡ ${proC} PRO` : '', semiC ? `🎯 ${semiC} SEMI` : ''].filter(Boolean).join(' · ') || 'Sin jugadores aún';
   infoEl.textContent = date + ' · ' + pStr;
 }
 
