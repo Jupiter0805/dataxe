@@ -845,7 +845,7 @@ function renderOrgList(activos, finalizados, cerrados, pendientes) {
 
 function toggleAccordion(tid) {
   console.log('[toggle] tid:', tid, 'ALL_ORGS ids:', ALL_ORGS.map(x => x.id));
-  const t = ALL_ORGS.find(x => x.id === tid);
+  const t = ALL_ORGS.find(x => String(x.id) === String(tid));
   console.log('[toggle] found:', t?.id, t?.status);
   if (!t) { console.warn('[toggle] tournament not found in ALL_ORGS'); return; }
 
@@ -1272,13 +1272,13 @@ function startLiveSync(userId, tid) {
     _rendering = true;
     CUR_STATE = state;
     if (CUR_ORG) CUR_ORG = { ...CUR_ORG, state_json: state, status: newStatus || CUR_ORG.status };
-    const idx = ALL_ORGS.findIndex(x => x.id === tid);
+    const idx = ALL_ORGS.findIndex(x => String(x.id) === String(tid));
     if (idx >= 0) ALL_ORGS[idx] = { ...ALL_ORGS[idx], state_json: state, status: newStatus || ALL_ORGS[idx].status };
     if (newStatus === 'archived') stopSync();
     stampTime();
     // Re-render solo si el torneo está visible
     if (OPEN_ID === tid) {
-      const t = ALL_ORGS.find(x => x.id === tid);
+      const t = ALL_ORGS.find(x => String(x.id) === String(tid));
       if (t) renderPanelContent(t);
     } else if (document.getElementById('tab-content')) {
       renderTabContent(); // solo re-render el contenido, no todo el torneo
