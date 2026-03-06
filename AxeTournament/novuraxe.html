@@ -944,6 +944,47 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   letter-spacing: 1px;
 }
 
+/* ── SETTINGS CARDS ── */
+.settings-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--r2);
+  padding: 1.375rem;
+}
+.settings-card-danger {
+  border-color: rgba(184,64,64,0.2);
+  background: rgba(184,64,64,0.04);
+}
+.settings-card-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 1rem;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.settings-row-label { font-size: 13px; font-weight: 600; color: var(--ink); }
+.settings-row-sub   { font-size: 12px; color: var(--ink4); margin-top: 2px; }
+.settings-field     { margin-bottom: 0.875rem; }
+.settings-logo-wrap {
+  width: 88px; height: 88px;
+  border-radius: var(--r);
+  border: 1.5px dashed rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.04);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; cursor: pointer; flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+.settings-logo-wrap:hover { border-color: var(--accent); }
+.settings-logo-wrap img { width:100%; height:100%; object-fit:contain; }
+
 /* ─── MODAL ─── */
 .modal-bg {
   display: none;
@@ -2014,21 +2055,83 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     <!-- ──── SETTINGS ──── -->
     <div class="page" id="pg-settings">
       <div class="pg-title">Confi<em>g</em></div>
-      <div class="pg-sub">Perfil del local</div>
-      <div style="max-width:480px">
-        <div class="card">
-          <div class="card-title">Perfil del local</div>
-          <div class="f-group"><label class="f-label">Nombre del local / club</label><input class="f-input" type="text" id="cfg-club" placeholder="Axe House Madrid"></div>
-          <div class="f-group">
-            <label class="f-label">Logo PNG — aparece en PDFs</label>
-            <div class="logo-drop" id="logo-area">
-              <input type="file" accept="image/png,image/jpeg,image/webp" onchange="handleLogo(event)">
-              <img id="logo-img" style="max-height:70px;max-width:180px;display:none;object-fit:contain">
-              <div id="logo-hint"><div style="font-size:1.5rem">🖼️</div><div class="logo-drop-hint">Arrastra o haz clic</div></div>
+      <div class="pg-sub">Perfil y cuenta</div>
+
+      <div style="max-width:520px;display:flex;flex-direction:column;gap:1.25rem">
+
+        <!-- PERFIL DEL LOCAL -->
+        <div class="settings-card">
+          <div class="settings-card-title">Perfil del local</div>
+          <div style="display:flex;align-items:center;gap:1.25rem;margin-bottom:1rem">
+            <div class="settings-logo-wrap" onclick="document.getElementById('logo-file-input').click()" title="Cambiar logo">
+              <img id="logo-img" style="display:none;width:100%;height:100%;object-fit:contain">
+              <div id="logo-hint" style="display:flex;flex-direction:column;align-items:center;gap:4px">
+                <div style="font-size:1.6rem">🖼️</div>
+                <div style="font-size:9px;color:var(--ink4);letter-spacing:0.5px;text-transform:uppercase">Logo</div>
+              </div>
+              <input type="file" id="logo-file-input" accept="image/png,image/jpeg,image/webp" onchange="handleLogo(event)" style="display:none">
+            </div>
+            <div style="flex:1">
+              <div class="settings-field" style="margin-bottom:0.5rem">
+                <label class="f-label">Nombre del local / club</label>
+                <input class="f-input" type="text" id="cfg-club" placeholder="Axe House Madrid">
+              </div>
+              <div style="font-size:11px;color:var(--ink4);line-height:1.5">El logo aparece en los PDFs exportados.<br>Formatos: PNG, JPG o WEBP.</div>
             </div>
           </div>
-          <button class="btn btn-red" onclick="saveSettings()">Guardar</button>
+          <button class="btn btn-red btn-sm" onclick="saveSettings()">Guardar</button>
         </div>
+
+        <!-- CONTRASEÑA -->
+        <div class="settings-card">
+          <div class="settings-card-title">Contraseña</div>
+          <div class="settings-field">
+            <label class="f-label">Nueva contraseña</label>
+            <div class="pass-wrap">
+              <input class="f-input" type="password" id="cfg-pass" placeholder="Mínimo 6 caracteres">
+              <button class="pass-eye" type="button" onclick="togglePass('cfg-pass',this)" tabindex="-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="settings-field">
+            <label class="f-label">Confirmar contraseña</label>
+            <div class="pass-wrap">
+              <input class="f-input" type="password" id="cfg-pass2" placeholder="Repite la contraseña">
+              <button class="pass-eye" type="button" onclick="togglePass('cfg-pass2',this)" tabindex="-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <div id="cfg-pass-err" style="font-size:12px;color:var(--red);display:none;margin-bottom:8px"></div>
+          <div id="cfg-pass-ok" style="font-size:12px;color:var(--green);display:none;margin-bottom:8px">✓ Contraseña actualizada</div>
+          <button class="btn btn-red btn-sm" onclick="saveSettingsPassword()">Cambiar contraseña</button>
+        </div>
+
+        <!-- SESIÓN -->
+        <div class="settings-card">
+          <div class="settings-card-title">Sesión</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Cerrar sesión</div>
+              <div class="settings-row-sub">Salir de tu cuenta en este dispositivo</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="logoutAndRedirect()">Cerrar sesión</button>
+          </div>
+        </div>
+
+        <!-- LEGAL -->
+        <div class="settings-card">
+          <div class="settings-card-title">Legal</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-row-label">Términos y condiciones</div>
+              <div class="settings-row-sub">Consulta los términos de uso de la plataforma</div>
+            </div>
+            <a href="terms.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">Leer →</a>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -5395,8 +5498,14 @@ function expHistPDFById(id) {
 // ─────────────────────────────────
 function renderSettings() {
   document.getElementById('cfg-club').value = ADMIN.club || '';
+  // Reset password fields
+  const p1 = document.getElementById('cfg-pass'), p2 = document.getElementById('cfg-pass2');
+  if (p1) p1.value = '';
+  if (p2) p2.value = '';
+  document.getElementById('cfg-pass-err').style.display = 'none';
+  document.getElementById('cfg-pass-ok').style.display  = 'none';
   if (ADMIN.logo) {
-    document.getElementById('logo-img').src          = ADMIN.logo;
+    document.getElementById('logo-img').src            = ADMIN.logo;
     document.getElementById('logo-img').style.display  = 'block';
     document.getElementById('logo-hint').style.display = 'none';
   }
@@ -5408,7 +5517,30 @@ function saveSettings() {
   document.getElementById('t-club-name').textContent = ADMIN.club || CUR_USER;
   localStorage.setItem(gk(), JSON.stringify(ADMIN));
   syncToSupabase().catch(e => console.warn('sync error', e));
-  toast('Configuración guardada ✓', 'green');
+  toast('Perfil guardado ✓', 'green');
+}
+
+async function saveSettingsPassword() {
+  const p1  = document.getElementById('cfg-pass').value;
+  const p2  = document.getElementById('cfg-pass2').value;
+  const err = document.getElementById('cfg-pass-err');
+  const ok  = document.getElementById('cfg-pass-ok');
+  err.style.display = 'none';
+  ok.style.display  = 'none';
+  if (!p1) { err.textContent = 'Introduce una contraseña'; err.style.display = 'block'; return; }
+  if (p1.length < 6) { err.textContent = 'Mínimo 6 caracteres'; err.style.display = 'block'; return; }
+  if (p1 !== p2) { err.textContent = 'Las contraseñas no coinciden'; err.style.display = 'block'; return; }
+  try {
+    const { error } = await sb.auth.updateUser({ password: p1 });
+    if (error) throw error;
+    document.getElementById('cfg-pass').value  = '';
+    document.getElementById('cfg-pass2').value = '';
+    ok.style.display = 'block';
+    toast('Contraseña actualizada ✓', 'green');
+  } catch(e) {
+    err.textContent = e.message || 'Error al actualizar';
+    err.style.display = 'block';
+  }
 }
 
 async function handleLogo(evt) {
