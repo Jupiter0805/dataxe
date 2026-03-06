@@ -2676,22 +2676,33 @@ function loadAdmin() {
 async function loadAdminFromSupabase() {
   if (!DB_USER_ID) return false;
   try {
-    const rows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id,state_json,updated_at&order=updated_at.desc&limit=1`);
+    // Buscar activo O en iniciación — el más reciente
+    const rows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=in.(active,initiation)&select=id,status,state_json,updated_at&order=updated_at.desc&limit=1`);
     if (!rows || !rows.length || !rows[0].state_json) return false;
     const remote = rows[0];
     const localRaw = localStorage.getItem(gk());
     const localTs  = localRaw ? (JSON.parse(localRaw).__savedAt || 0) : 0;
     const remoteTs = new Date(remote.updated_at).getTime();
     if (remoteTs > localTs) {
-      // Remote is newer — use it
       const state = typeof remote.state_json === 'string'
         ? JSON.parse(remote.state_json)
         : remote.state_json;
-      state.__savedAt = remoteTs;
+      state.__savedAt  = remoteTs;
+      state.__tid      = remote.id;
+      state.__status   = remote.status; // restaurar estado real desde BD
       ADMIN = state;
       localStorage.setItem(gk(), JSON.stringify(ADMIN));
-      console.log('[sync] Loaded state from Supabase (remote newer)');
+      console.log('[sync] Loaded state from Supabase — status:', remote.status);
       return true;
+    }
+    // Local es más reciente pero aseguramos que __status refleja BD
+    if (localRaw) {
+      const local = JSON.parse(localRaw);
+      if (!local.__status && remote.status) {
+        local.__status = remote.status;
+        ADMIN = local;
+        localStorage.setItem(gk(), JSON.stringify(ADMIN));
+      }
     }
     console.log('[sync] Local state is up to date');
     return false;
@@ -2727,20 +2738,27 @@ async function syncToSupabase() {
 async function _doSync() {
   const safe = fn => fn.catch(e => { console.warn('[sync]', e.message); return null; });
 
-  // ── 1. Tournament — usar __tid cacheado para evitar inserts duplicados ──
+  // ── 1. Tournament ──
   let tid = ADMIN.__tid || null;
+  const currentStatus = ADMIN.__status || 'active'; // preservar estado real
+
   try {
     if (tid) {
+      // Ya tenemos tid — solo actualizar state_json, no cambiar status
       await safe(dbUpdate('tournaments', `id=eq.${tid}`, {
         name:       ADMIN.tName || 'Torneo',
         date:       ADMIN.tDate || new Date().toISOString().split('T')[0],
         updated_at: new Date().toISOString(),
         state_json: JSON.stringify(ADMIN),
+        // No sobreescribir status — solo si es active real
+        ...(currentStatus === 'active' ? { status: 'active' } : {})
       }));
     } else {
-      const tRows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id&order=updated_at.desc&limit=1`);
+      // Sin tid — buscar activo o en iniciación
+      const tRows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=in.(active,initiation)&select=id&order=updated_at.desc&limit=1`);
       tid = tRows?.[0]?.id;
       if (!tid) {
+        // Solo crear si hay datos reales (torneo activo con jugadores)
         const hasData = (ADMIN.pro?.players?.length || 0) + (ADMIN.semi?.players?.length || 0) > 0 || ADMIN.tName;
         if (!hasData) { console.warn('[sync] sin tid y sin datos — abortando'); return; }
         const t = await dbInsert('tournaments', {
@@ -2749,7 +2767,7 @@ async function _doSync() {
           date:       ADMIN.tDate || new Date().toISOString().split('T')[0],
           updated_at: new Date().toISOString(),
           state_json: JSON.stringify(ADMIN),
-          status:     'active'
+          status:     currentStatus
         });
         tid = t?.[0]?.id;
       } else {
@@ -2764,6 +2782,9 @@ async function _doSync() {
     }
   } catch(e) { console.warn('[sync] tournament:', e.message); }
   if (!tid) { console.warn('[sync] no tid, aborting'); return; }
+
+  // En estado initiation no sincronizar grupos (aún no existen)
+  if (currentStatus === 'initiation') return;
 
   // ── 2. Groups ──
   for (const gtype of ['pro', 'semi']) {
@@ -5853,9 +5874,29 @@ async function loadRegistrations() {
   document.getElementById('reg-list').innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--ink4)">Cargando...</div>';
 
   try {
+    // Cargar inscripciones
     ACTIVE_REGS = await dbGet('event_registrations',
-      `event_id=eq.${ACTIVE_REG_POST.id}&select=*,users(username,club_name)&order=created_at.asc`) || [];
-  } catch(e) { ACTIVE_REGS = []; }
+      `event_id=eq.${ACTIVE_REG_POST.id}&order=created_at.asc&select=*`) || [];
+
+    // Enriquecer con perfiles de usuarios (tabla pública `users`)
+    if (ACTIVE_REGS.length) {
+      const uids = [...new Set(ACTIVE_REGS.filter(r => r.user_id).map(r => r.user_id))];
+      if (uids.length) {
+        try {
+          const profiles = await dbGet('users', `id=in.(${uids.join(',')})&select=id,username,club_name`) || [];
+          const profileMap = {};
+          profiles.forEach(p => { profileMap[p.id] = p; });
+          ACTIVE_REGS = ACTIVE_REGS.map(r => ({
+            ...r,
+            _profile: profileMap[r.user_id] || null
+          }));
+        } catch(e) { console.warn('[loadRegistrations] profiles:', e.message); }
+      }
+    }
+  } catch(e) {
+    console.warn('[loadRegistrations]', e);
+    ACTIVE_REGS = [];
+  }
 
   const count = ACTIVE_REGS.length;
   const pct   = Math.min(100, Math.round(count / cap * 100));
@@ -5871,9 +5912,10 @@ async function loadRegistrations() {
   }
 
   document.getElementById('reg-list').innerHTML = ACTIVE_REGS.map((r, i) => {
-    const uname = r.users?.username || r.name || '—';
-    const club  = r.users?.club_name || '';
-    const lvl   = r.player_level;
+    const profile = r._profile;
+    const uname   = profile?.username || r.name || '—';
+    const club    = profile?.club_name || '';
+    const lvl     = r.player_level;
     const lvlHtml = lvl === 'pro'
       ? `<span class="reg-lvl-pro">PRO</span>`
       : lvl === 'semi'
@@ -5931,7 +5973,7 @@ async function startTournamentFromRegistrations() {
 
   const noLevel = ACTIVE_REGS.filter(r => !r.player_level);
   if (noLevel.length) {
-    const names = noLevel.slice(0,3).map(r => '@' + (r.users?.username || r.name)).join(', ');
+    const names = noLevel.slice(0,3).map(r => '@' + (r._profile?.username || r.name)).join(', ');
     const more  = noLevel.length > 3 ? ` y ${noLevel.length - 3} más` : '';
     if (!confirm(`⚠️ ${noLevel.length} jugador(es) sin nivel PRO/SEMI:\n${names}${more}\n\nSe añadirán como PRO por defecto. ¿Iniciar torneo?`)) return;
   }
@@ -5959,9 +6001,9 @@ async function startTournamentFromRegistrations() {
     const lvl    = r.player_level || 'pro';
     const player = {
       id:       uid(),
-      name:     r.users?.username || r.name || 'Jugador',
+      name:     r._profile?.username || r.name || 'Jugador',
       user_id:  r.user_id || null,
-      username: r.users?.username || null,
+      username: r._profile?.username || null,
       level:    lvl,
     };
     if (lvl === 'semi') ADMIN.semi.players.push(player);
