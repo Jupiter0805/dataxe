@@ -940,11 +940,12 @@ section {
   border-radius: 2px;
   margin-bottom: 1.5rem;
 }
-.gear-badge span {
+.gear-badge span:first-child {
   width: 6px; height: 6px;
   background: var(--accent);
   border-radius: 50%;
   animation: pulse 2s infinite;
+  flex-shrink: 0;
 }
 
 .gear-title {
