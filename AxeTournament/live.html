@@ -732,7 +732,7 @@ async function init() {
     archived = []; closed = [];
   }
 
-  const rows = [...(active || []), ...(archived || []), ...(closed || [])].filter(r => r.state_json);
+  const rows = [...(active || []), ...(archived || []), ...(closed || [])].filter(r => r.state_json || r.status === 'pending');
 
   // 3. Enriquecer con info del organizador
   const enriched = await Promise.all(rows.map(async t => {
@@ -781,10 +781,10 @@ function renderOrgList(activos, finalizados, cerrados, pendientes) {
     const badge = mode === 'live'
       ? `<div class="org-live-badge"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 1.4s infinite"></span> Live</div>`
       : mode === 'pending'
-        ? `<div class="org-live-badge" style="background:rgba(196,135,58,0.15);color:var(--amber);border-color:rgba(196,135,58,0.3)">📋 Inscripciones</div>`
+        ? `<div class="org-live-badge" style="background:rgba(196,135,58,0.15);color:var(--amber);border-color:rgba(196,135,58,0.3)">${t_('live_badge_reg','📋 Inscripciones')}</div>`
         : mode === 'closed'
-          ? `<div class="org-closed-badge">✕ Cerrado</div>`
-          : `<div class="org-done-badge">✓ Finalizado</div>`;
+          ? `<div class="org-closed-badge">${t_('live_badge_closed','✕ Cerrado')}</div>`
+          : `<div class="org-done-badge">${t_('live_badge_done','✓ Finalizado')}</div>`;
     const isLive = mode === 'live';
     let champ = '';
     try {
@@ -815,19 +815,19 @@ function renderOrgList(activos, finalizados, cerrados, pendientes) {
   const hasAnything = activos.length || pendientes.length || finalizados.length || cerrados.length;
 
   if (activos.length) {
-    html += `<div class="list-section-label">En directo</div>`;
+    html += `<div class="list-section-label">${t_('live_label_live','En directo')}</div>`;
     html += activos.map(t => buildBanner(t, 'live')).join('');
   }
   if (pendientes.length) {
-    html += `<div class="list-section-label" style="margin-top:${activos.length ? '1.5rem' : '0'}">Próximamente</div>`;
+    html += `<div class="list-section-label" style="margin-top:${activos.length ? '1.5rem' : '0'}">${t_('live_label_upcoming','Próximamente')}</div>`;
     html += pendientes.map(t => buildBanner(t, 'pending')).join('');
   }
   if (finalizados.length) {
-    html += `<div class="list-section-label" style="margin-top:${(activos.length || pendientes.length) ? '1.5rem' : '0'}">Finalizados</div>`;
+    html += `<div class="list-section-label" style="margin-top:${(activos.length || pendientes.length) ? '1.5rem' : '0'}">${t_('live_label_finished','Finalizados')}</div>`;
     html += finalizados.map(t => buildBanner(t, 'done')).join('');
   }
   if (cerrados.length) {
-    html += `<div class="list-section-label" style="margin-top:${(activos.length || pendientes.length || finalizados.length) ? '1.5rem' : '0'};color:#e05555">Cerrados</div>`;
+    html += `<div class="list-section-label" style="margin-top:${(activos.length || pendientes.length || finalizados.length) ? '1.5rem' : '0'};color:#e05555">${t_('live_label_closed','Cerrados')}</div>`;
     html += cerrados.map(t => buildBanner(t, 'closed')).join('');
   }
   if (!hasAnything) {
@@ -882,7 +882,7 @@ function toggleAccordion(tid) {
 function renderPanelContent(tournament) {
   CUR_ORG   = tournament;
   const state = tournament.state_json;
-  CUR_STATE = typeof state === 'string' ? JSON.parse(state) : (state || {});
+  CUR_STATE = state ? (typeof state === 'string' ? JSON.parse(state) : state) : {};
   CUR_TAB   = 'qualify';
   CUR_GROUP = hasPro() ? 'pro' : 'semi';
 
@@ -918,9 +918,9 @@ function renderPanelContent(tournament) {
   const phase = (hasPro() ? s?.pro?.phase : s?.semi?.phase) || 'qualify';
   const phaseLabel = { qualify: t_('live_tab_class','Clasificación'), elim: t_('live_tab_bracket','Eliminatorias'), done: t_('live_tab_done','Finalizado') };
   const phasePill = isClosed
-    ? `<div class="pill" style="background:rgba(212,99,90,0.12);color:#e05555;border:1px solid rgba(212,99,90,0.35)">✕ Cerrado</div>`
+    ? `<div class="pill" style="background:rgba(212,99,90,0.12);color:#e05555;border:1px solid rgba(212,99,90,0.35)">${t_('live_badge_closed','✕ Cerrado')}</div>`
     : isFinished
-      ? `<div class="pill pill-phase-done">✓ Finalizado</div>`
+      ? `<div class="pill pill-phase-done">${t_('live_badge_done','✓ Finalizado')}</div>`
       : `<div class="pill pill-phase-${phase}">${phaseLabel[phase] || phase}</div>`;
 
   const groupPills = [
@@ -939,7 +939,7 @@ function renderPanelContent(tournament) {
   const showGroupTabs = hasPro() && hasSemi();
   const groupTabsHtml = showGroupTabs ? `
     <div class="group-selector">
-      <div class="group-selector-label">Categoría</div>
+      <div class="group-selector-label">${t_('live_category','Categoría')}</div>
       <div class="group-tabs">
         <button class="group-tab ${CUR_GROUP==='pro' ? 'on':''}" data-group="pro" onclick="switchGroup('pro')">
           <span class="group-tab-dot pro-dot"></span> PRO
@@ -1013,7 +1013,7 @@ function renderTournament() {
 
   // Si el torneo está archivado, mostrar siempre t_("live_tab_done","Finalizado")
   const phasePill = isFinished
-    ? `<div class="pill pill-phase-done">✓ Finalizado</div>`
+    ? `<div class="pill pill-phase-done">${t_('live_badge_done','✓ Finalizado')}</div>`
     : `<div class="pill pill-phase-${phase}">${phaseLabel[phase] || phase}</div>`;
 
   // Build group pills
@@ -1033,7 +1033,7 @@ function renderTournament() {
   const showGroupTabs = hasPro() && hasSemi();
   const groupTabsHtml = showGroupTabs ? `
     <div class="group-selector">
-      <div class="group-selector-label">Categoría</div>
+      <div class="group-selector-label">${t_('live_category','Categoría')}</div>
       <div class="group-tabs">
         <button class="group-tab ${CUR_GROUP==='pro'  ? 'on':''}" data-group="pro"  onclick="switchGroup('pro')">
           <span class="group-tab-dot pro-dot"></span> PRO
