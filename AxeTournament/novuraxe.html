@@ -2741,11 +2741,71 @@ async function loadAdminFromSupabase() {
   }
 }
 
+// ─────────────────────────────────
+// ORGANIZER DATA (global stats + history — persiste entre torneos)
+// ─────────────────────────────────
+async function loadOrganizerData() {
+  if (!DB_USER_ID) return;
+  try {
+    const rows = await dbGet('organizer_data', `user_id=eq.${DB_USER_ID}&select=global_stats,history`);
+    if (rows?.[0]) {
+      const remote = rows[0];
+      // Sobrescribir solo si hay datos en BD
+      if (remote.global_stats && Object.keys(remote.global_stats).length) {
+        ADMIN.global = remote.global_stats;
+      }
+      if (remote.history && remote.history.length) {
+        ADMIN.history = remote.history;
+      }
+      console.log('[organizer_data] loaded — history:', ADMIN.history.length, '| global keys:', Object.keys(ADMIN.global).length);
+    }
+  } catch(e) {
+    console.warn('[loadOrganizerData]', e.message);
+  }
+}
+
+async function saveOrganizerData() {
+  if (!DB_USER_ID) return;
+  try {
+    const session = (await sb.auth.getSession()).data.session;
+    const token   = session?.access_token || SUPA_KEY;
+    // Upsert por user_id
+    await fetch(`${SUPA_URL}/rest/v1/organizer_data`, {
+      method: 'POST',
+      headers: {
+        'apikey':        SUPA_KEY,
+        'Authorization': 'Bearer ' + token,
+        'Content-Type':  'application/json',
+        'Prefer':        'resolution=merge-duplicates,return=minimal',
+      },
+      body: JSON.stringify({
+        user_id:      DB_USER_ID,
+        global_stats: ADMIN.global  || {},
+        history:      ADMIN.history || [],
+        updated_at:   new Date().toISOString(),
+      })
+    });
+    console.log('[organizer_data] saved');
+  } catch(e) {
+    console.warn('[saveOrganizerData]', e.message);
+  }
+}
+
 // save() keeps localStorage as fast local cache AND pushes to Supabase async
 function save() {
   ADMIN.__savedAt = Date.now();
   localStorage.setItem(gk(), JSON.stringify(ADMIN));
   syncToSupabase().catch(e => console.warn('Supabase sync error:', e));
+  // Guardar global/history en organizer_data con debounce (máx 1 vez cada 10s)
+  debouncedSaveOrgData();
+}
+
+let _orgDataTimer = null;
+function debouncedSaveOrgData() {
+  clearTimeout(_orgDataTimer);
+  _orgDataTimer = setTimeout(() => {
+    saveOrganizerData().catch(e => console.warn('[orgData]', e.message));
+  }, 10000); // 10 segundos tras el último save()
 }
 
 // Full sync of current ADMIN state to Supabase
@@ -3144,15 +3204,19 @@ function launchApp() {
   document.getElementById('scr-app').classList.add('on');
   document.getElementById('t-club-name').textContent = ADMIN.club || CUR_USER;
 
-  // ── Multi-device sync ──
-  startRealtimeSync();
-  renderAll();
-  showPage('dashboard');
-  toast('Bienvenido, ' + (ADMIN.club || CUR_USER), 'green');
+  // ── Cargar global/history desde organizer_data (fuente de verdad) ──
+  loadOrganizerData().then(() => {
+    startRealtimeSync();
+    renderAll();
+    showPage('dashboard');
+    toast('Bienvenido, ' + (ADMIN.club || CUR_USER), 'green');
+  });
 }
 
 async function doLogout() {
   save();
+  clearTimeout(_orgDataTimer);
+  await saveOrganizerData(); // guardar inmediatamente antes de salir
   await sb.auth.signOut();
   CUR_USER = null; ADMIN = null;
   document.getElementById('scr-app').classList.remove('on');
@@ -5082,8 +5146,8 @@ function confirmDeleteActiveTournament() {
       }));
     }
 
-    // Resetear estado local
-    const preserved = { club: ADMIN.club, logo: ADMIN.logo, history: ADMIN.history, global: ADMIN.global };
+    // Resetear estado local — global/history se preservan (vienen de organizer_data)
+    const preserved = { club: ADMIN.club, logo: ADMIN.logo, history: ADMIN.history || [], global: ADMIN.global || {} };
     ADMIN = { ...defAdmin(), ...preserved };
     localStorage.setItem(gk(), JSON.stringify(ADMIN));
 
@@ -5591,6 +5655,8 @@ function saveTournament() {
         ADMIN.__tid = null;
         localStorage.setItem(gk(), JSON.stringify(ADMIN));
       }
+      // Guardar global + history en tabla dedicada (persiste entre torneos)
+      await saveOrganizerData();
     } catch(e) { /* silent */ }
     toast('✓ Torneo y stats guardados', 'green');
   }).catch(e => {
@@ -7248,6 +7314,31 @@ function addPrizeRow(pos, value) {
     <button class="prize-remove" onclick="document.getElementById('${id}').remove()" title="Eliminar">✕</button>`;
   document.getElementById('prizes-list').appendChild(row);
 }
+
+// ── Guardar organizer_data al salir o cambiar de pestaña ──
+window.addEventListener('beforeunload', () => {
+  if (DB_USER_ID && ADMIN) {
+    clearTimeout(_orgDataTimer);
+    // Usar sendBeacon para garantizar el envío aunque la página se cierre
+    const payload = JSON.stringify({
+      user_id:      DB_USER_ID,
+      global_stats: ADMIN.global  || {},
+      history:      ADMIN.history || [],
+      updated_at:   new Date().toISOString(),
+    });
+    navigator.sendBeacon(
+      `${SUPA_URL}/rest/v1/organizer_data`,
+      new Blob([payload], { type: 'application/json' })
+    );
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && DB_USER_ID && ADMIN) {
+    clearTimeout(_orgDataTimer);
+    saveOrganizerData().catch(() => {});
+  }
+});
 </script>
 </body>
 </html>
