@@ -1869,10 +1869,10 @@ function renderFeedList() {
     posts  = posts.filter(p => FOLLOWS.has(p.user_id));
   }
 
-  const taggedEvents = events.map(e => ({ ...e, _type: 'event', _sort: e.date || e.created_at || '9999' }));
-  const taggedPosts  = posts.map(p  => ({ ...p,  _type: 'post',  _sort: p.date  || p.created_at || '9999' }));
+  const taggedEvents = events.map(e => ({ ...e, _type: 'event', _sort: e.created_at || e.date || '0' }));
+  const taggedPosts  = posts.map(p  => ({ ...p,  _type: 'post',  _sort: p.created_at || p.date  || '0' }));
   const merged = [...taggedEvents, ...taggedPosts]
-    .sort((a, b) => a._sort < b._sort ? -1 : a._sort > b._sort ? 1 : 0);
+    .sort((a, b) => a._sort > b._sort ? -1 : a._sort < b._sort ? 1 : 0); // desc: más reciente primero
 
   if (!merged.length) {
     container.innerHTML = '<div class="empty" style="min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center">'
