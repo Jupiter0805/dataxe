@@ -279,5 +279,12 @@
   "jug_following": "Following",
   "jug_type_tournament": "TOURNAMENT",
   "jug_type_notice": "NOTICE",
-  "jug_type_info": "INFO"
+  "jug_type_info": "INFO",
+  "jug_clubs_title": "Clubs &",
+  "jug_organizers_title": "Organizers.",
+  "jug_search_placeholder": "Search by club name, city...",
+  "jug_followers": "Followers",
+  "jug_following_label": "Following",
+  "jug_following_btn": "Following",
+  "jug_follow_btn": "Follow"
 }
