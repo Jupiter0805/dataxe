@@ -5010,15 +5010,32 @@ function adjDashN(d) {
 }
 
 function confirmDeleteActiveTournament() {
-  const name = ADMIN.tName || 'este torneo';
-  if (!confirm(`¿Borrar "${name}" permanentemente?\n\nSe eliminarán todos los jugadores, puntuaciones y bracket. Esta acción no se puede deshacer.`)) return;
+  const name      = ADMIN.tName || 'este torneo';
+  const isPending = ADMIN.__status === 'pending';
+  const extraMsg  = isPending
+    ? '\n\nComo el torneo está en fase de inscripciones, también se eliminarán:\n• La publicación del torneo\n• Todas las inscripciones de jugadores'
+    : '\n\nSe eliminarán todos los jugadores, puntuaciones y bracket.';
+
+  if (!confirm(`¿Borrar "${name}" permanentemente?${extraMsg}\n\nEsta acción no se puede deshacer.`)) return;
 
   (async () => {
-    // Eliminar de Supabase
+    const safe   = fn => fn.catch(e => { console.warn('[delete]', e.message); return null; });
+    const tid    = ADMIN.__tid;
+    const postId = ADMIN.__post_id;
+
     try {
-      const tid = ADMIN.__tid;
+      if (isPending && postId) {
+        // Borrar inscripciones del post
+        await safe(dbDelete('event_registrations', `event_id=eq.${postId}`));
+        // Borrar la publicación
+        await safe(dbDelete('posts', `id=eq.${postId}`));
+      }
+      // Marcar torneo como cerrado
       if (tid) {
-        await safe(dbUpdate('tournaments', `id=eq.${tid}`, { status: 'closed', updated_at: new Date().toISOString() }));
+        await safe(dbUpdate('tournaments', `id=eq.${tid}`, {
+          status: 'closed',
+          updated_at: new Date().toISOString()
+        }));
       }
     } catch(e) { console.warn('[delete]', e.message); }
 
@@ -5030,6 +5047,7 @@ function confirmDeleteActiveTournament() {
     document.getElementById('champ-bar').classList.remove('on');
     renderAll();
     showPage('dashboard');
+    renderPosts(); // refrescar publicaciones
     toast('Torneo eliminado', 'red');
   })();
 }
