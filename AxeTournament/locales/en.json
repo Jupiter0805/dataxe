@@ -272,5 +272,12 @@
   "jug_tomorrow": "Tomorrow",
   "jug_in_days": "In",
   "jug_days": "days",
-  "jug_past": "Past"
+  "jug_past": "Past",
+  "jug_sidebar_tournaments": "Tournaments",
+  "jug_sidebar_wins": "Wins",
+  "jug_sidebar_points": "Points",
+  "jug_following": "Following",
+  "jug_type_tournament": "TOURNAMENT",
+  "jug_type_notice": "NOTICE",
+  "jug_type_info": "INFO"
 }
