@@ -1064,15 +1064,59 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 }
 .ds-next.idle {
   text-align: center;
-  padding: 3rem 2rem;
-  border: 1.5px dashed rgba(196,135,58,0.3);
+  padding: 4rem 2rem;
+  border: 1.5px dashed rgba(196,135,58,0.25);
   background: rgba(196,135,58,0.03);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
-.ds-next.idle .ds-next-title { font-size: 2rem; margin-bottom: 0.5rem; }
-.ds-next.idle .ds-next-desc  { max-width: 360px; margin: 0 auto 1.75rem; }
+.ds-next.idle .ds-next-label { display: none; }
+.ds-next.idle .ds-next-title { font-size: 1.75rem; margin-bottom: 0.5rem; }
+.ds-next.idle .ds-next-desc  { max-width: 380px; margin: 0 auto 2rem; }
+.ds-next.idle .ds-next-actions { justify-content: center; }
 .ds-next.qualify { border-color: rgba(196,135,58,0.25); background: rgba(196,135,58,0.04); }
 .ds-next.bracket { border-color: rgba(239,68,68,0.2);   background: rgba(239,68,68,0.03); }
 .ds-next.done    { border-color: rgba(76,217,138,0.25);  background: rgba(76,217,138,0.03); }
+
+/* ── START TOURNAMENT BUTTON ── */
+.btn-start-tournament {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #C4873A 0%, #D4975A 100%);
+  color: #1a1410;
+  font-family: var(--f-display);
+  font-size: 1.05rem;
+  letter-spacing: 3px;
+  font-weight: 700;
+  padding: 1rem 3rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(196,135,58,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
+}
+.btn-start-tournament::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+.btn-start-tournament:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(196,135,58,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+  background: linear-gradient(135deg, #D4975A 0%, #C4873A 100%);
+}
+.btn-start-tournament:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(196,135,58,0.3);
+}
 
 /* Step pills */
 .ds-steps {
@@ -4988,10 +5032,10 @@ function renderDash() {
 
   const cards = {
     idle: {
-      cls: 'idle', icon: '🪓',
+      cls: 'idle', icon: '',
       title: 'Sin torneo activo',
       desc: 'Crea un nuevo torneo para empezar a registrar jugadores, puntuaciones y bracket.',
-      actions: `<button class="btn-start-tournament" onclick="newTournament()">🏆 INICIAR TORNEO</button>`
+      actions: `<button class="btn-start-tournament" onclick="newTournament()">🏆 &nbsp;INICIAR TORNEO</button>`
     },
     add_players: {
       cls: 'qualify', icon: '👥',
@@ -5047,9 +5091,10 @@ function renderDash() {
   na.innerHTML = `
     <div class="ds-steps">${stepsHtml}</div>
     <div class="ds-next ${card.cls}">
-      ${phase === 'idle' ? `<div style="font-size:3rem;margin-bottom:1rem">${card.icon}</div>` : `
-      <div class="ds-next-label">Siguiente paso</div>`}
-      <div class="ds-next-title">${card.icon} ${card.title}</div>
+      ${phase === 'idle'
+        ? `<div style="font-size:2.5rem;margin-bottom:1.25rem;opacity:0.6">🪓</div>`
+        : `<div class="ds-next-label">Siguiente paso</div>`}
+      <div class="ds-next-title">${phase === 'idle' ? card.title : card.icon + ' ' + card.title}</div>
       <div class="ds-next-desc">${card.desc}</div>
       <div class="ds-next-actions">${card.actions}${deleteBtn}</div>
     </div>`;
