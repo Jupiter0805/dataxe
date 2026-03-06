@@ -1261,10 +1261,17 @@ async function initI18n() {
     const T = await fetch('locales/en.json').then(r => r.json());
     window._T = T;
     const apply = (root) => {
+      // Simple text replacement
       root.querySelectorAll('[data-i18n]:not([data-i18n-done])').forEach(el => {
         const v = T[el.dataset.i18n];
         if (v !== undefined) { el.textContent = v; el.dataset.i18nDone = '1'; }
       });
+      // HTML replacement (for elements with inner markup)
+      root.querySelectorAll('[data-i18n-html]:not([data-i18n-done])').forEach(el => {
+        const v = T[el.dataset.i18nHtml];
+        if (v !== undefined) { el.innerHTML = v; el.dataset.i18nDone = '1'; }
+      });
+      // Placeholder replacement
       root.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
         const v = T[el.dataset.i18nPlaceholder];
         if (v !== undefined) el.placeholder = v;
@@ -1366,7 +1373,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
   <!-- Decorative logo background -->
   <img src="public/dataxe-simple.png" class="hero-axe-bg" alt="">
 
-  <div class="hero-eyebrow">Gestión profesional de torneos</div>
+  <div class="hero-eyebrow"><span data-i18n="hero_sup">Gestión profesional de torneos</span></div>
 
   <h1 class="hero-title">
     <span data-i18n="hero_domina">Domina</span><br>
@@ -1374,7 +1381,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
     <span class="stroke"><span data-i18n="hero_title_3">Cada lanzamiento.</span></span>
   </h1>
 
-  <p class="hero-sub">
+  <p class="hero-sub" data-i18n-html="hero_sub">
     La plataforma definitiva para organizar torneos de <strong>axe throwing</strong>.
     Clasificaciones en tiempo real, brackets automáticos y <strong>estadísticas detalladas</strong> — desde cualquier dispositivo.
   </p>
@@ -1443,7 +1450,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
   <div class="section-inner">
     <div class="features-header">
       <div>
-        <div class="section-eyebrow reveal">Todo lo que necesitas</div>
+        <div class="section-eyebrow reveal"><span data-i18n="features_title_1">Todo lo que necesitas</span></div>
         <h2 class="section-title reveal reveal-delay-1"><span data-i18n="features_title_1">Funciones</span><br><em><span data-i18n="features_title_2">completas.</span></em></h2>
       </div>
       <p class="section-desc reveal reveal-delay-2">
@@ -1492,7 +1499,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
         <span class="feature-num" style="color:rgba(76,217,138,0.12)">07</span>
         <span class="feature-icon">📡</span>
         <div class="feature-name" style="color:#4cd98a"><span data-i18n="feat_07_title">Vista Espectador en Vivo</span></div>
-        <p class="feature-desc">Página pública sin login donde cualquiera puede seguir el torneo en tiempo real — clasificación, bracket y resultados actualizados al instante desde <a href="live.html" style="color:#4cd98a;text-decoration:none;font-weight:600">novuraxe.com/live →</a></p>
+        <p class="feature-desc" data-i18n-html="feat_07_desc_pre">Página pública sin login donde cualquiera puede seguir el torneo en tiempo real — clasificación, bracket y resultados actualizados al instante desde <a href="live.html" style="color:#4cd98a;text-decoration:none;font-weight:600">novuraxe.com/live →</a></p>
       </div>
     </div>
   </div>
@@ -1507,10 +1514,10 @@ document.addEventListener('DOMContentLoaded', initI18n);
       <div>
         <div class="section-eyebrow reveal" style="color:#4cd98a">
           <span style="width:6px;height:6px;border-radius:50%;background:#4cd98a;box-shadow:0 0 8px #4cd98a;display:inline-block;animation:pulse 1.4s infinite;margin-right:4px"></span>
-          En directo
+          <span data-i18n="live_title_1">En directo</span>
         </div>
         <h2 class="section-title reveal reveal-delay-1"><span data-i18n="live_title_2">Vista</span><br><span style="color:#4cd98a"><span data-i18n="live_title_3">espectador.</span></span></h2>
-        <p class="section-desc reveal reveal-delay-2" style="margin-top:1.25rem; max-width:100%">
+        <p class="section-desc reveal reveal-delay-2" style="margin-top:1.25rem; max-width:100%" data-i18n-html="live_desc_full">
           Cualquier persona puede seguir el torneo desde su móvil <strong style="color:var(--cream)">sin necesidad de cuenta</strong>. 
           La página pública <code style="font-family:var(--f-mono);font-size:0.85em;color:#4cd98a;background:rgba(76,217,138,0.08);padding:2px 8px;border-radius:3px">novuraxe.com/live</code> muestra en tiempo real:
         </p>
@@ -1597,7 +1604,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
 </section>
 <section id="how">
   <div class="section-inner">
-    <div class="section-eyebrow reveal">Proceso</div>
+    <div class="section-eyebrow reveal"><span data-i18n="steps_title_1">Proceso</span></div>
     <h2 class="section-title reveal reveal-delay-1"><span data-i18n="steps_title_2">Así de</span> <em><span data-i18n="steps_title_3">simple.</span></em></h2>
 
     <div class="steps-container">
@@ -1701,11 +1708,11 @@ document.addEventListener('DOMContentLoaded', initI18n);
 <!-- ══ QUIENES SOMOS ══ -->
 <section id="about">
   <div class="section-inner">
-    <div class="section-eyebrow reveal">Quiénes somos</div>
+    <div class="section-eyebrow reveal"><span data-i18n="about_title_1">Quiénes somos</span></div>
     <h2 class="section-title reveal reveal-delay-1"><span data-i18n="about_title_2">Hechos por</span><br><em><span data-i18n="about_title_3">la comunidad.</span></em></h2>
 
     <div class="about-grid">
-      <div class="about-text reveal">
+      <div class="about-text reveal" data-i18n-html="about_text">
         <p>
           NOVURAXE nació de la <strong>necesidad real</strong> de los organizadores de torneos de axe throwing. 
           Cansados de hojas de cálculo, papeles y errores de cálculo en medio de un evento, 
@@ -1750,7 +1757,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
         <div class="about-big-text">AXE</div>
         <div class="about-card">
           <div class="about-card-title"><span data-i18n="mission_title">Nuestra misión</span></div>
-          <div class="about-quote">
+          <div class="about-quote" data-i18n-html="mission_quote_full">
             "El lanzamiento de hacha merece las mismas herramientas de organización que cualquier deporte profesional. NOVURAXE es nuestra respuesta a eso."
           </div>
           <div class="about-author"><span data-i18n="mission_author">— Equipo NOVURAXE</span></div>
@@ -1762,7 +1769,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
                 <span style="color:var(--green)">✓</span> <span data-i18n="status_web">App web multiplataforma</span>
               </div>
               <div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:var(--ink5)">
-                <span style="color:var(--green)">✓</span> Seguridad con RLS + JWT
+                <span style="color:var(--green)">✓</span> <span data-i18n="status_security">Seguridad con RLS + JWT</span>
               </div>
               <div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:var(--ink4)">
                 <span style="color:var(--accent)">→</span> <span data-i18n="status_mobile">App móvil nativa (próximamente)</span>
@@ -1785,10 +1792,10 @@ document.addEventListener('DOMContentLoaded', initI18n);
       <div class="reveal">
         <div class="gear-badge">
           <span></span>
-          Próximamente
+          <span data-i18n="gear_coming">Próximamente</span>
         </div>
         <h2 class="gear-title"><span data-i18n="gear_title_1">El mejor</span><br><em><span data-i18n="gear_title_2">equipamiento.</span></em><br><span data-i18n="gear_title_3">Seleccionado.</span></h2>
-        <p class="gear-desc">
+        <p class="gear-desc" data-i18n-html="gear_desc">
           Estamos preparando una selección curada de hachas, dianas, equipamiento de protección 
           y accesorios recomendados por la comunidad. Cada producto probado y validado por lanzadores reales.
         </p>
@@ -1837,7 +1844,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
   <div class="contact-inner">
     <div class="contact-eyebrow reveal"><span data-i18n="contact_title_1">¿Tienes alguna duda?</span></div>
     <h2 class="contact-title reveal reveal-delay-1"><span data-i18n="contact_title_2">Escríbenos,</span><br><em><span data-i18n="contact_title_3">respondemos.</span></em></h2>
-    <p class="contact-sub reveal reveal-delay-2">
+    <p class="contact-sub reveal reveal-delay-2" data-i18n-html="contact_desc">
       Estamos aquí para ayudarte con cualquier consulta sobre torneos, cuentas o funcionamiento de la plataforma.
     </p>
     <div class="contact-form reveal reveal-delay-3">
@@ -1873,7 +1880,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
       <span data-i18n="cta_title_2">Tu próximo torneo,</span><br>
       <em><span data-i18n="cta_title_3">sin papel.</span></em>
     </h2>
-    <p class="cta-sub reveal reveal-delay-2">Gratis. Sin instalación. Desde cualquier dispositivo.</p>
+    <p class="cta-sub reveal reveal-delay-2"><span data-i18n="cta_desc">Gratis. Sin instalación. Desde cualquier dispositivo.</span></p>
     <div class="cta-actions reveal reveal-delay-3">
       <a href="#" class="btn-primary" onclick="openRoleModal(event)"><span data-i18n="cta_signup">Crear cuenta gratis →</span></a>
       <a href="#" class="btn-secondary" onclick="openRoleModal(event)"><span data-i18n="cta_login">Ya tengo cuenta</span></a>
