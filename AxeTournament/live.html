@@ -576,17 +576,49 @@
       .back-btn { margin-left: 0; width: 100%; text-align: center; }
     }
   </style>
+<script>
+// i18n helper — t_(key, fallback) usable immediately in JS templates
+window._T_LIVE = {};
+window.t_ = (key, fallback) => window._T_LIVE[key] || window._T?.[key] || fallback;
+
+async function initI18n() {
+  const urlLang = new URLSearchParams(window.location.search).get('lang');
+  const lang = urlLang || ((navigator.language || 'es').startsWith('es') ? 'es' : 'en');
+  document.documentElement.lang = lang;
+  window._lang = lang;
+  if (lang === 'es') return;
+  try {
+    const T = await fetch('locales/en.json').then(r => r.json());
+    window._T = T;
+    const apply = (root) => {
+      root.querySelectorAll('[data-i18n]:not([data-i18n-done])').forEach(el => {
+        const v = T[el.dataset.i18n];
+        if (v !== undefined) { el.textContent = v; el.dataset.i18nDone = '1'; }
+      });
+      root.querySelectorAll('[data-i18n-html]:not([data-i18n-done])').forEach(el => {
+        const v = T[el.dataset.i18nHtml];
+        if (v !== undefined) { el.innerHTML = v; el.dataset.i18nDone = '1'; }
+      });
+    };
+    apply(document);
+    if (T.page_title_live) document.title = T.page_title_live;
+    new MutationObserver(() => apply(document.body))
+      .observe(document.body, { childList: true, subtree: true });
+  } catch(e) { console.warn('[i18n]', e.message); }
+}
+document.addEventListener('DOMContentLoaded', initI18n);
+</script>
 </head>
 <body>
 
 <!-- Mobile Menu -->
 <div class="mobile-menu" id="mobile-menu">
-  <button class="mobile-menu-close" onclick="toggleMenu()">✕ CERRAR</button>
-  <a href="index.html" onclick="toggleMenu()">Inicio</a>
-  <a href="index.html#features" onclick="toggleMenu()">Funciones</a>
-  <a href="index.html#how" onclick="toggleMenu()">Cómo funciona</a>
-  <a href="index.html#about" onclick="toggleMenu()">Quiénes somos</a>
-  <a href="index.html#gear" onclick="toggleMenu()">Equipamiento</a>
+  <button class="mobile-menu-close" onclick="toggleMenu()"><span data-i18n="nav_close">✕ CERRAR</span></button>
+  <a href="index.html" onclick="toggleMenu()"><span data-i18n="nav_home">Inicio</span></a>
+  <a href="index.html#features" onclick="toggleMenu()"><span data-i18n="nav_features">Funciones</span></a>
+  <a href="index.html#how" onclick="toggleMenu()"><span data-i18n="nav_how">Cómo funciona</span></a>
+  <a href="index.html#about" onclick="toggleMenu()"><span data-i18n="nav_about">Quiénes somos</span></a>
+  <a href="index.html#gear" onclick="toggleMenu()"><span data-i18n="nav_gear">Equipamiento</span></a>
 </div>
 
 <!-- NAV -->
@@ -595,10 +627,10 @@
     <a href="index.html"><img src="public/novuraxe-logo.png" alt="NOVURAXE" class="logo-img"></a>
   </div>
   <ul class="nav-links">
-    <li><a href="index.html#features">Funciones</a></li>
-    <li><a href="index.html#how">Cómo funciona</a></li>
-    <li><a href="index.html#about">Quiénes somos</a></li>
-    <li><a href="index.html#gear">Equipamiento</a></li>
+    <li><a href="index.html#features"><span data-i18n="nav_features">Funciones</span></a></li>
+    <li><a href="index.html#how"><span data-i18n="nav_how">Cómo funciona</span></a></li>
+    <li><a href="index.html#about"><span data-i18n="nav_about">Quiénes somos</span></a></li>
+    <li><a href="index.html#gear"><span data-i18n="nav_gear">Equipamiento</span></a></li>
     <li>
       <div class="live-badge">
         <div class="live-dot"></div>
@@ -613,12 +645,12 @@
 <div class="wrap" id="main-wrap">
   <div class="state-center" id="loading-state">
     <div class="spinner"></div>
-    <div class="state-sub">Cargando torneos activos...</div>
+    <div class="state-sub"><span data-i18n="live_loading">Cargando torneos activos...</span></div>
   </div>
 </div>
 
 <footer class="live-footer">
-  NOVURAXE · Plataforma de gestión de torneos de lanzamiento de hacha ·
+  NOVURAXE · <span data-i18n="live_footer_desc">Plataforma de gestión de torneos de lanzamiento de hacha</span> ·
   <a href="terms.html" target="_blank">Privacidad</a>
 </footer>
 
@@ -764,7 +796,7 @@ function renderOrgList(activos, finalizados, cerrados, pendientes) {
       <div class="t-banner" id="banner-${t.id}" onclick="toggleAccordion('${t.id}')">
         <div class="t-banner-logo">${logoHtml}</div>
         <div class="t-banner-info">
-          <div class="t-banner-name">${t.name || org?.club_name || 'Torneo'}</div>
+          <div class="t-banner-name">${t.name || org?.club_name || t_('live_tournament','Torneo')}</div>
           <div class="t-banner-meta">${org?.club_name || org?.username || ''}${t.date ? ' · ' + fmtDate(t.date) : ''}</div>
           ${champ}
         </div>
@@ -801,7 +833,7 @@ function renderOrgList(activos, finalizados, cerrados, pendientes) {
   if (!hasAnything) {
     html += `<div class="state-center"><div class="state-icon">🪓</div>
       <div class="state-title">Sin torneos</div>
-      <div class="state-sub">Vuelve más tarde.</div></div>`;
+      <div class="state-sub">${t_('live_later','Vuelve más tarde.')}</div></div>`;
   }
 
   html += `</div></div>`;
@@ -867,15 +899,15 @@ function renderPanelContent(tournament) {
     inner.innerHTML = `
       <div style="padding:1.5rem 0;text-align:center">
         <div style="font-size:2.5rem;margin-bottom:0.75rem">📋</div>
-        <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px">${s?.tName || tournament.name || 'Torneo'}</div>
+        <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px">${s?.tName || tournament.name || t_('live_tournament','Torneo')}</div>
         ${s?.tDate ? `<div style="font-size:12px;color:var(--ink4);margin-bottom:1rem">${fmtDate(s.tDate)}${s?.tTime ? ' · ' + s.tTime : ''}${s?.tLocation ? ' · ' + s.tLocation : ''}</div>` : ''}
         <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(76,217,138,0.1);border:1px solid rgba(76,217,138,0.25);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;color:#4cd98a;margin-bottom:1.25rem">
-          🟢 Inscripciones abiertas
+          ${t_('live_reg_open','🟢 Inscripciones abiertas')}
         </div>
         ${s?.tDesc ? `<div style="margin-bottom:1.25rem;font-size:13px;color:var(--ink3);max-width:400px;margin-left:auto;margin-right:auto">${s.tDesc}</div>` : ''}
         <div>
           <a href="jugador.html" style="display:inline-flex;align-items:center;gap:8px;background:#c4873a;color:#fff;font-size:13px;font-weight:700;letter-spacing:0.5px;padding:10px 22px;border-radius:8px;text-decoration:none;transition:opacity 0.15s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-            ✍️ Inscribirme
+            ${t_('live_register','✍️ Inscribirme')}
           </a>
         </div>
       </div>`;
@@ -884,7 +916,7 @@ function renderPanelContent(tournament) {
 
   // Phase pill
   const phase = (hasPro() ? s?.pro?.phase : s?.semi?.phase) || 'qualify';
-  const phaseLabel = { qualify: 'Clasificación', elim: 'Eliminatorias', done: 'Finalizado' };
+  const phaseLabel = { qualify: t_('live_tab_class','Clasificación'), elim: t_('live_tab_bracket','Eliminatorias'), done: t_('live_tab_done','Finalizado') };
   const phasePill = isClosed
     ? `<div class="pill" style="background:rgba(212,99,90,0.12);color:#e05555;border:1px solid rgba(212,99,90,0.35)">✕ Cerrado</div>`
     : isFinished
@@ -899,7 +931,7 @@ function renderPanelContent(tournament) {
   // Champion banner
   const champHtml = ((isFinished || isClosed) && (s?.pro?.champion || s?.semi?.champion)) ? `
     <div class="champion-card" style="margin-bottom:1.25rem">
-      <div class="champion-label">🏆 ${[s?.pro?.champion && 'Campeón PRO', s?.semi?.champion && 'Campeón SEMI PRO'].filter(Boolean).join(' · ')}</div>
+      <div class="champion-label">🏆 ${[s?.pro?.champion && t_('live_champ_pro','Campeón PRO'), s?.semi?.champion && t_('live_champ_semi','Campeón SEMI PRO')].filter(Boolean).join(' · ')}</div>
       <div class="champion-name">${[s?.pro?.champion, s?.semi?.champion].filter(Boolean).join(' & ')}</div>
     </div>` : '';
 
@@ -921,7 +953,7 @@ function renderPanelContent(tournament) {
   // Tabs
   const tabs = `
     <div class="tabs" style="margin-bottom:1.25rem">
-      <button class="tab-btn ${CUR_TAB==='qualify' ? 'on':''}" onclick="switchTab('qualify')">📊 Clasificación</button>
+      <button class="tab-btn ${CUR_TAB==='qualify' ? 'on':''}" onclick="switchTab('qualify')">${'📊 '+t_('live_tab_class','Clasificación')}</button>
       <button class="tab-btn ${CUR_TAB==='bracket' ? 'on':''}" onclick="switchTab('bracket')">🏆 Bracket</button>
     </div>`;
 
@@ -937,7 +969,7 @@ function renderEmpty() {
     <div class="state-center fade-in">
       <div class="state-icon">🪓</div>
       <div class="state-title">Sin torneos</div>
-      <div class="state-sub">Aún no hay torneos disponibles.<br>Vuelve más tarde.</div>
+      <div class="state-sub">${t_('live_no_tournaments','Aún no hay torneos disponibles.')}<br>${t_('live_later','Vuelve más tarde.')}</div>
     </div>`;
 }
 
@@ -977,9 +1009,9 @@ function renderTournament() {
 
   const phase = G().phase || 'qualify';
   const isFinished = CUR_ORG.status === 'archived';
-  const phaseLabel = { qualify: 'Clasificación', elim: 'Eliminatorias', done: 'Finalizado' };
+  const phaseLabel = { qualify: t_('live_tab_class','Clasificación'), elim: t_('live_tab_bracket','Eliminatorias'), done: t_('live_tab_done','Finalizado') };
 
-  // Si el torneo está archivado, mostrar siempre "Finalizado"
+  // Si el torneo está archivado, mostrar siempre t_("live_tab_done","Finalizado")
   const phasePill = isFinished
     ? `<div class="pill pill-phase-done">✓ Finalizado</div>`
     : `<div class="pill pill-phase-${phase}">${phaseLabel[phase] || phase}</div>`;
@@ -993,7 +1025,7 @@ function renderTournament() {
   // Tabs
   const tabs = `
     <div class="tabs">
-      <button class="tab-btn ${CUR_TAB==='qualify' ? 'on':''}"  onclick="switchTab('qualify')">📊 Clasificación</button>
+      <button class="tab-btn ${CUR_TAB==='qualify' ? 'on':''}"  onclick="switchTab('qualify')">${'📊 '+t_('live_tab_class','Clasificación')}</button>
       <button class="tab-btn ${CUR_TAB==='bracket' ? 'on':''}"  onclick="switchTab('bracket')">🏆 Bracket</button>
     </div>`;
 
@@ -1021,7 +1053,7 @@ function renderTournament() {
       <div class="t-info-card">
         <div class="t-info-logo">${logoHtml}</div>
         <div>
-          <div class="t-info-name">${s?.tName || 'Torneo'}</div>
+          <div class="t-info-name">${s?.tName || t_('live_tournament','Torneo')}</div>
           <div class="t-info-meta">${org?.club_name || org?.username || ''}${s?.tDate ? ' · ' + fmtDate(s.tDate) : ''}</div>
         </div>
         <div class="t-info-pills">${phasePill}${groupPills}</div>
@@ -1029,7 +1061,7 @@ function renderTournament() {
 
       ${isFinished && (s?.pro?.champion || s?.semi?.champion) ? `
       <div class="champion-card" style="margin-bottom:1.75rem">
-        <div class="champion-label">🏆 ${[s?.pro?.champion && 'Campeón PRO', s?.semi?.champion && 'Campeón SEMI PRO'].filter(Boolean).join(' · ')}</div>
+        <div class="champion-label">🏆 ${[s?.pro?.champion && t_('live_champ_pro','Campeón PRO'), s?.semi?.champion && t_('live_champ_semi','Campeón SEMI PRO')].filter(Boolean).join(' · ')}</div>
         <div class="champion-name">${[s?.pro?.champion, s?.semi?.champion].filter(Boolean).join(' &amp; ')}</div>
       </div>` : ''}
 
@@ -1061,7 +1093,7 @@ function renderQualifyView() {
 
   if (!activePlayers.length) {
     return `<div class="state-center" style="padding:4rem"><div class="state-icon">📊</div>
-      <div class="state-sub">Sin jugadores en clasificación todavía</div></div>`;
+      <div class="state-sub">${t_('live_no_players','Sin jugadores en clasificación todavía')}</div></div>`;
   }
 
   // Compute totals and sort
@@ -1170,12 +1202,12 @@ function renderBracketView() {
 
       bracketHtml += `<div class="b-match${isFin ? ' final' : ''}">
         <div class="b-row ${c1}">
-          <span class="b-row-name">${m.p1 || 'Por definir'}</span>
+          <span class="b-row-name">${m.p1 || t_('live_tbd','Por definir')}</span>
           ${m.score1 !== null && m.score1 !== undefined ? `<span class="b-row-score">${m.score1}</span>` : ''}
         </div>
         <div class="b-divider"></div>
         <div class="b-row ${c2}">
-          <span class="b-row-name">${m.p2 || 'Por definir'}</span>
+          <span class="b-row-name">${m.p2 || t_('live_tbd','Por definir')}</span>
           ${m.score2 !== null && m.score2 !== undefined ? `<span class="b-row-score">${m.score2}</span>` : ''}
         </div>
         ${m.winner
@@ -1286,9 +1318,9 @@ function stopSync() {
 // ═══════════════════════════════════════════
 function rndName(ri, total) {
   const r = total - ri;
-  if (r === 1) return 'FINAL';
-  if (r === 2) return 'SEMIFINAL';
-  if (r === 3) return 'CUARTOS';
+  if (r === 1) return t_('live_round_final','FINAL');
+  if (r === 2) return t_('live_round_semi','SEMIFINAL');
+  if (r === 3) return t_('live_round_quarters','CUARTOS');
   return 'RONDA ' + (ri + 1);
 }
 
@@ -1299,7 +1331,7 @@ function fmtDate(d) {
 
 function stampTime() {
   const el = document.getElementById('last-updated');
-  if (el) el.textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  if (el) el.textContent = t_('live_updated','Actualizado') + ' ' + new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
 // ═══════════════════════════════════════════
