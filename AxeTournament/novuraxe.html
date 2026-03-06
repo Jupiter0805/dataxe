@@ -2676,35 +2676,64 @@ function loadAdmin() {
 async function loadAdminFromSupabase() {
   if (!DB_USER_ID) return false;
   try {
-    // Buscar activo O en iniciación — el más reciente
-    const rows = await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=in.(active,pending)&select=id,status,state_json,updated_at&order=updated_at.desc&limit=1`);
-    if (!rows || !rows.length || !rows[0].state_json) return false;
+    // Buscar torneo activo o pending — el más reciente
+    const rows = await dbGet('tournaments',
+      `user_id=eq.${DB_USER_ID}&status=in.(active,pending)&select=id,name,status,state_json,updated_at&order=updated_at.desc&limit=1`);
+
+    if (!rows || !rows.length) return false;
     const remote = rows[0];
-    const localRaw = localStorage.getItem(gk());
-    const localTs  = localRaw ? (JSON.parse(localRaw).__savedAt || 0) : 0;
-    const remoteTs = new Date(remote.updated_at).getTime();
-    if (remoteTs > localTs) {
-      const state = typeof remote.state_json === 'string'
-        ? JSON.parse(remote.state_json)
-        : remote.state_json;
-      state.__savedAt  = remoteTs;
-      state.__tid      = remote.id;
-      state.__status   = remote.status; // restaurar estado real desde BD
-      ADMIN = state;
+
+    // Siempre recuperar __post_id desde posts (fuente de verdad)
+    let postId = null;
+    try {
+      const postRows = await dbGet('posts',
+        `tournament_id=eq.${remote.id}&select=id&limit=1`);
+      postId = postRows?.[0]?.id || null;
+    } catch(e) { console.warn('[loadAdmin] post lookup:', e.message); }
+
+    const applyRemoteFields = (state) => {
+      state.__tid     = remote.id;
+      state.__status  = remote.status; // SIEMPRE desde BD
+      state.__post_id = postId;        // SIEMPRE desde BD
+      return state;
+    };
+
+    if (!remote.state_json) {
+      // Sin JSON guardado — restaurar campos críticos desde BD
+      ADMIN = applyRemoteFields({ ...defAdmin() });
+      ADMIN.tName = remote.name || null;
       localStorage.setItem(gk(), JSON.stringify(ADMIN));
-      console.log('[sync] Loaded state from Supabase — status:', remote.status);
       return true;
     }
-    // Local es más reciente pero aseguramos que __status refleja BD
-    if (localRaw) {
-      const local = JSON.parse(localRaw);
-      if (!local.__status && remote.status) {
-        local.__status = remote.status;
-        ADMIN = local;
-        localStorage.setItem(gk(), JSON.stringify(ADMIN));
-      }
+
+    const localRaw  = localStorage.getItem(gk());
+    const localTs   = localRaw ? (JSON.parse(localRaw).__savedAt || 0) : 0;
+    const remoteTs  = new Date(remote.updated_at).getTime();
+
+    if (remoteTs > localTs) {
+      // Remoto más reciente — usar remoto
+      const state = typeof remote.state_json === 'string'
+        ? JSON.parse(remote.state_json) : remote.state_json;
+      state.__savedAt = remoteTs;
+      ADMIN = applyRemoteFields(state);
+      localStorage.setItem(gk(), JSON.stringify(ADMIN));
+      console.log('[sync] remote state loaded — status:', remote.status, '| postId:', postId);
+      return true;
     }
-    console.log('[sync] Local state is up to date');
+
+    // Local más reciente — pero SIEMPRE corregir __status/__tid/__post_id desde BD
+    const local = localRaw ? JSON.parse(localRaw) : defAdmin();
+    const changed = local.__status !== remote.status
+      || local.__tid !== remote.id
+      || local.__post_id !== postId;
+
+    if (changed) {
+      ADMIN = applyRemoteFields(local);
+      localStorage.setItem(gk(), JSON.stringify(ADMIN));
+      console.log('[sync] local state corrected — status:', remote.status, '| postId:', postId);
+    } else {
+      console.log('[sync] local state up to date');
+    }
     return false;
   } catch(e) {
     console.warn('[loadAdminFromSupabase]', e);
