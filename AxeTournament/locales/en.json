@@ -167,5 +167,10 @@
   "live_no_tournaments": "No tournaments available yet.",
   "live_no_players": "No players in classification yet",
   "live_reg_open": "🟢 Registration open",
-  "live_register": "✍️ Register"
+  "live_register": "✍️ Register",
+  "live_no_active_title": "No tournaments in progress",
+  "live_no_active_sub": "There are no active tournaments right now.",
+  "live_no_active_sub2": "Come back when one is live.",
+  "live_no_tournaments_title": "No tournaments",
+  "live_bracket_pending": "The bracket has not been generated yet"
 }
