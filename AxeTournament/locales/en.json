@@ -140,5 +140,11 @@
   "login_player_title": "Player",
   "login_player_desc_1": "Follow tournaments,",
   "login_player_desc_2": "view your stats",
-  "login_hint": "Select your role to continue"
+  "login_hint": "Select your role to continue",
+  "hero_sub": "The ultimate platform to organize <em>axe throwing</em> tournaments.<br>Real-time leaderboards, automatic brackets and <strong>detailed statistics</strong> — from any device.",
+  "live_desc_full": "Anyone can follow the tournament from their phone <strong style=\"color:var(--cream)\">no account needed</strong>. The public page <code style=\"font-family:var(--f-mono);font-size:0.85em;color:#4cd98a;background:rgba(76,217,138,0.08);padding:2px 8px;border-radius:3px\">novuraxe.com/live</code> shows in real time:",
+  "about_text": "<p>NOVURAXE was born from the <strong>real need</strong> of axe throwing tournament organizers. Tired of spreadsheets, paper and calculation errors in the middle of an event, we built the tool we wished we had from the start.</p><p>We are <em>practitioners of the sport</em>, not just developers. Every feature was designed thinking about what happens on the range: speed to record throws, clarity to see the bracket and professionalism to present results.</p><p>Our goal is to take <strong>axe throwing</strong> to the next level as an organized sport, with the digital tools it deserves.</p>",
+  "mission_quote_full": "\"Axe throwing deserves the same organizational tools as any professional sport. NOVURAXE is our answer to that.\"",
+  "gear_coming": "Coming soon",
+  "feat_07_desc_pre": "Public page without login where anyone can follow the tournament in real time — leaderboard, bracket and results updated instantly from <a href=\"live.html\" style=\"color:#4cd98a;text-decoration:none;font-weight:600\">novuraxe.com/live →</a>"
 }
