@@ -711,8 +711,8 @@ async function init() {
       document.getElementById('main-wrap').innerHTML = `
         <div class="state-center fade-in">
           <div class="state-icon">⏳</div>
-          <div class="state-title">Sin torneos en curso</div>
-          <div class="state-sub">No hay ningún torneo activo ahora mismo.<br>Vuelve cuando haya uno en curso.</div>
+          <div class="state-title"><span data-i18n="live_no_active_title">Sin torneos en curso</span></div>
+          <div class="state-sub"><span data-i18n="live_no_active_sub">No hay ningún torneo activo ahora mismo.</span><br><span data-i18n="live_no_active_sub2">Vuelve cuando haya uno en curso.</span></div>
         </div>`;
     }
     // Usar setTimeout y guardarlo correctamente
@@ -832,7 +832,7 @@ function renderOrgList(activos, finalizados, cerrados, pendientes) {
   }
   if (!hasAnything) {
     html += `<div class="state-center"><div class="state-icon">🪓</div>
-      <div class="state-title">Sin torneos</div>
+      <div class="state-title">${t_('live_no_tournaments_title','Sin torneos')}</div>
       <div class="state-sub">${t_('live_later','Vuelve más tarde.')}</div></div>`;
   }
 
@@ -968,7 +968,7 @@ function renderEmpty() {
   document.getElementById('main-wrap').innerHTML = `
     <div class="state-center fade-in">
       <div class="state-icon">🪓</div>
-      <div class="state-title">Sin torneos</div>
+      <div class="state-title">${t_('live_no_tournaments_title','Sin torneos')}</div>
       <div class="state-sub">${t_('live_no_tournaments','Aún no hay torneos disponibles.')}<br>${t_('live_later','Vuelve más tarde.')}</div>
     </div>`;
 }
@@ -1169,7 +1169,7 @@ function renderBracketView() {
   if (!g.rounds?.length) {
     return `<div class="state-center" style="padding:4rem">
       <div class="state-icon">🏆</div>
-      <div class="state-sub">El bracket aún no ha sido generado</div>
+      <div class="state-sub"><span data-i18n="live_bracket_pending">El bracket aún no ha sido generado</span></div>
     </div>`;
   }
 
