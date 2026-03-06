@@ -286,5 +286,15 @@
   "jug_followers": "Followers",
   "jug_following_label": "Following",
   "jug_following_btn": "Following",
-  "jug_follow_btn": "Follow"
+  "jug_follow_btn": "Follow",
+  "jug_member_since": "Member since",
+  "jug_click_photo": "Click the photo to change it",
+  "jug_losses": "Losses",
+  "jug_win_rate": "Win rate",
+  "jug_killshots": "Killshots",
+  "jug_bulls_eye": "Bull's eye",
+  "jug_precision": "Center accuracy",
+  "jug_bull_duel": "% Bull duel",
+  "jug_no_stats": "No statistics yet",
+  "jug_no_stats_sub": "Your stats will appear here when organizers link your player name to your account"
 }
