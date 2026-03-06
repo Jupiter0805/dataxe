@@ -1983,26 +1983,41 @@ async function openPostDetail(id, p) {
 }
 
 async function registerFromPost() {
-  if (!ACTIVE_POST || !CUR_USER) return;
+  if (!ACTIVE_POST || !CUR_USER) { toast('Debes iniciar sesión', 'red'); return; }
   const btn = document.getElementById('post-reg-btn');
   if (btn) { btn.textContent = 'Enviando...'; btn.disabled = true; }
   try {
-    const res = await dbPost('event_registrations', {
-      event_id:     ACTIVE_POST.id,
-      user_id:      CUR_USER.id,
-      name:         PROFILE?.username || PROFILE?.full_name || '',
-      email:        CUR_USER.email,
-      player_level: PROFILE?.level || null,
-      status:       'confirmed',
-    });
-    if (!res.ok) throw new Error('Error de servidor');
+    const payload = {
+      event_id: ACTIVE_POST.id,
+      user_id:  CUR_USER.id,
+      name:     PROFILE?.username || PROFILE?.full_name || CUR_USER.email || '',
+      email:    CUR_USER.email,
+      status:   'confirmed',
+    };
+    // player_level is optional — only include if column exists
+    if (PROFILE?.level) payload.player_level = PROFILE.level;
+
+    const res = await dbPost('event_registrations', payload);
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      // Duplicate registration — treat as already registered
+      if (res.status === 409 || errBody?.code === '23505') {
+        MY_REGISTRATIONS.set(ACTIVE_POST.id, true);
+        toast('Ya estabas inscrito en este torneo ✅', 'green');
+        closeModal('m-post-detail');
+        renderFeedList();
+        return;
+      }
+      throw new Error(errBody?.message || `Error ${res.status}`);
+    }
     MY_REGISTRATIONS.set(ACTIVE_POST.id, true);
     ACTIVE_POST.registration_count = (ACTIVE_POST.registration_count || 0) + 1;
     toast('✅ Inscripción confirmada', 'green');
     closeModal('m-post-detail');
     renderFeedList();
   } catch(e) {
-    toast('Error al inscribirse — inténtalo de nuevo', 'red');
+    console.error('[registerFromPost]', e);
+    toast('Error: ' + (e.message || 'inténtalo de nuevo'), 'red');
     if (btn) { btn.textContent = 'Inscribirme'; btn.disabled = false; }
   }
 }
