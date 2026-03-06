@@ -296,5 +296,9 @@
   "jug_precision": "Center accuracy",
   "jug_bull_duel": "% Bull duel",
   "jug_no_stats": "No statistics yet",
-  "jug_no_stats_sub": "Your stats will appear here when organizers link your player name to your account"
+  "jug_no_stats_sub": "Your stats will appear here when organizers link your player name to your account",
+  "jug_tournaments_word": "Tournaments",
+  "jug_no_history": "No registered tournaments",
+  "jug_no_history_sub": "Register for tournaments from your feed to see them here",
+  "hist_th_tournament": "Tournament"
 }
