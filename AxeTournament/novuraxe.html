@@ -4759,6 +4759,31 @@ function adjDashN(d) {
   renderDash();
 }
 
+function confirmDeleteActiveTournament() {
+  const name = ADMIN.tName || 'este torneo';
+  if (!confirm(`¿Borrar "${name}" permanentemente?\n\nSe eliminarán todos los jugadores, puntuaciones y bracket. Esta acción no se puede deshacer.`)) return;
+
+  (async () => {
+    // Eliminar de Supabase
+    try {
+      const tid = ADMIN.__tid;
+      if (tid) {
+        await safe(dbUpdate('tournaments', `id=eq.${tid}`, { status: 'closed', updated_at: new Date().toISOString() }));
+      }
+    } catch(e) { console.warn('[delete]', e.message); }
+
+    // Resetear estado local completamente
+    const preserved = { club: ADMIN.club, logo: ADMIN.logo, history: ADMIN.history, global: ADMIN.global };
+    ADMIN = { ...defAdmin(), ...preserved };
+    localStorage.setItem(gk(), JSON.stringify(ADMIN));
+
+    document.getElementById('champ-bar').classList.remove('on');
+    renderAll();
+    showPage('dashboard');
+    toast('Torneo eliminado', 'red');
+  })();
+}
+
 function renderDashGroup(players, containerId, groupKey) {
   const el = document.getElementById(containerId);
   if (!el) return;
@@ -4907,6 +4932,20 @@ function renderDash() {
     }
   };
 
+  // Botón borrar — se muestra en todas las fases activas (no idle)
+  const deleteBtn = phase !== 'idle'
+    ? `<button onclick="confirmDeleteActiveTournament()" style="
+        margin-left:auto;
+        background:none;border:none;cursor:pointer;
+        font-size:11px;font-weight:600;letter-spacing:0.5px;
+        color:rgba(255,255,255,0.2);padding:4px 8px;border-radius:6px;
+        transition:color 0.15s,background 0.15s;
+      " onmouseover="this.style.color='#e05555';this.style.background='rgba(184,64,64,0.1)'"
+         onmouseout="this.style.color='rgba(255,255,255,0.2)';this.style.background='none'">
+        🗑 Borrar torneo
+      </button>`
+    : '';
+
   const card = cards[phase];
   na.innerHTML = `
     <div class="ds-steps">${stepsHtml}</div>
@@ -4915,7 +4954,7 @@ function renderDash() {
       <div class="ds-next-label">Siguiente paso</div>`}
       <div class="ds-next-title">${card.icon} ${card.title}</div>
       <div class="ds-next-desc">${card.desc}</div>
-      <div class="ds-next-actions">${card.actions}</div>
+      <div class="ds-next-actions">${card.actions}${deleteBtn}</div>
     </div>`;
 
   // ── Stats ──
