@@ -5082,6 +5082,7 @@ function renderDashGroup(players, containerId, groupKey) {
 }
 
 function renderDash() {
+  try {
   const proG  = ADMIN.pro  || {};
   const semiG = ADMIN.semi || {};
   const proPlayers  = proG.players  || [];
@@ -5090,24 +5091,26 @@ function renderDash() {
   const proPhase  = proG.phase  || 'qualify';
   const semiPhase = semiG.phase || 'qualify';
 
-  // 3 tournament states: null → idle, initiation → waiting for manual start, active/etc → running
+  // tStatus viene de BD: 'pending' = inscripciones abiertas, 'active' = en curso
   const tStatus       = ADMIN.__status || (ADMIN.__tid ? 'active' : null);
   const hasTournament = !!(ADMIN.__tid || ADMIN.tName);
-  const isInitiation  = hasTournament && tStatus === 'pending' && !ADMIN.pro;
+  const isInitiation  = hasTournament && (tStatus === 'pending') && !ADMIN.pro;
   const hasPlayers    = totalPlayers > 0;
   const hasScores     = hasPlayers && [...proPlayers, ...semiPlayers].some(p => qTotal(p.id) > 0);
   const hasBracket    = (proG.rounds?.length || 0) + (semiG.rounds?.length || 0) > 0;
   const isDone        = (proPhase === 'done' || !proPlayers.length) && (semiPhase === 'done' || !semiPlayers.length);
 
-  // ── Determine phase ──
+  // ── Determine phase (clave usada en el objeto cards) ──
   let phase = 'idle';
-  if (!hasTournament)  phase = 'idle';
-  else if (isInitiation) phase = 'pending'; // nuevo: inscripciones abiertas, no iniciado
+  if (!hasTournament)    phase = 'idle';
+  else if (isInitiation) phase = 'initiation'; // clave del objeto cards
   else if (!hasPlayers)  phase = 'add_players';
   else if (!hasScores)   phase = 'score';
   else if (!hasBracket)  phase = 'bracket';
   else if (!isDone)      phase = 'duels';
   else                   phase = 'done';
+
+  console.log('[renderDash] phase:', phase, 'tStatus:', tStatus, 'isInitiation:', isInitiation);
 
   document.getElementById('ds-sub').textContent = hasTournament
     ? ADMIN.tName || 'Torneo activo'
@@ -5116,14 +5119,14 @@ function renderDash() {
   // ── Step pills ──
   const steps = [
     { id: 'idle',        label: 'Crear' },
-    { id: 'pending',  label: 'Inscripciones' },
+    { id: 'initiation',  label: 'Inscripciones' },
     { id: 'add_players', label: 'Jugadores' },
     { id: 'score',       label: 'Clasificación' },
     { id: 'bracket',     label: 'Bracket' },
     { id: 'duels',       label: 'Duelos' },
     { id: 'done',        label: 'Finalizado' },
   ];
-  const phaseOrder = ['idle','pending','add_players','score','bracket','duels','done'];
+  const phaseOrder = ['idle','initiation','add_players','score','bracket','duels','done'];
   const curIdx = phaseOrder.indexOf(phase);
 
   const stepsHtml = steps.map((s, i) => {
@@ -5139,7 +5142,7 @@ function renderDash() {
   const groupsRow  = document.getElementById('ds-groups-row');
   const recentWrap = document.getElementById('ds-recent-wrap');
 
-  const showDetails = phase !== 'idle' && phase !== 'pending';
+  const showDetails = phase !== 'idle' && phase !== 'initiation';
   statsRow.style.display   = showDetails ? '' : 'none';
   groupsRow.style.display  = showDetails ? '' : 'none';
   recentWrap.style.display = showDetails ? '' : 'none';
@@ -5265,10 +5268,10 @@ function renderDash() {
         ).join('')
       + '</div>';
   }
+  } catch(e) {
+    console.error('[renderDash] error:', e);
+  }
 }
-
-// ─────────────────────────────────
-// HISTORY
 // ─────────────────────────────────
 function saveTournament() {
   const proPlayers  = ADMIN.pro?.players  || [];
