@@ -843,7 +843,12 @@ function renderOrgList(activos, finalizados, cerrados, pendientes) {
   if (activos.length === 1) toggleAccordion(activos[0].id);
 }
 
+let _toggleLock = false;
 function toggleAccordion(tid) {
+  if (_toggleLock) return;
+  _toggleLock = true;
+  setTimeout(() => _toggleLock = false, 300);
+
   console.log('[toggle] tid:', tid, 'ALL_ORGS ids:', ALL_ORGS.map(x => x.id));
   const t = ALL_ORGS.find(x => String(x.id) === String(tid));
   console.log('[toggle] found:', t?.id, t?.status);
