@@ -1670,9 +1670,12 @@ async function handlePostRealtime(payload) {
       };
       renderFeedList();
 
-      // Si es el post que el usuario tiene abierto, actualizar ACTIVE_POST
+      // Actualizar ACTIVE_POST si el modal está abierto con este post
       if (ACTIVE_POST?.id === newRow.id) {
         ACTIVE_POST = { ...ACTIVE_POST, ...newRow };
+        // Refrescar solo la caja de inscripción sin cerrar el modal
+        const regBoxEl = document.getElementById('modal-reg-box');
+        if (regBoxEl) regBoxEl.innerHTML = buildRegBox(ACTIVE_POST);
       }
 
       // Notificar si el estado de inscripción cambió
@@ -2014,53 +2017,7 @@ async function openPostDetail(id, p) {
   })();
   const medals = ['🥇','🥈','🥉'];
 
-  // Registration action box
-  const regBox = (() => {
-    if (!isTorneo) return '';
-    const cap      = p.capacity || 40;
-    const count    = p.registration_count || 0;
-    const status   = p.inscription_status || (p.registration_open ? 'open' : 'closed');
-    const isReg    = MY_REGISTRATIONS.has(p.id);
-    const isFull   = count >= cap;
-    const spotsLeft = Math.max(0, cap - count);
-
-    if (status === 'started') {
-      return `<div class="reg-action-box" style="background:rgba(59,130,246,0.07);border-color:rgba(59,130,246,0.2)">
-        <span style="font-size:1.2rem">🏆</span>
-        <div><div style="font-size:13px;font-weight:600;color:var(--ink2)">El torneo ya ha comenzado</div>
-        <div style="font-size:11px;color:var(--ink4);margin-top:2px">${count} participantes</div></div>
-      </div>`;
-    }
-    if (status === 'closed' && !isReg) {
-      return `<div class="reg-action-box">
-        <span style="font-size:1.2rem">🔒</span>
-        <div><div style="font-size:13px;font-weight:600;color:var(--ink2)">Inscripción cerrada</div>
-        <div style="font-size:11px;color:var(--ink4);margin-top:2px">${count} / ${cap} inscritos</div></div>
-      </div>`;
-    }
-    if (isFull && !isReg) {
-      return `<div class="reg-action-box" style="background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.2)">
-        <span style="font-size:1.2rem">🔴</span>
-        <div><div style="font-size:13px;font-weight:600;color:var(--ink2)">Aforo completo</div>
-        <div style="font-size:11px;color:var(--ink4);margin-top:2px">${cap} / ${cap} plazas ocupadas</div></div>
-      </div>`;
-    }
-    if (isReg) {
-      return `<div class="reg-action-box" style="background:rgba(76,217,138,0.06);border-color:rgba(76,217,138,0.2)">
-        <span style="font-size:1.2rem">✅</span>
-        <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ink2)">Estás inscrito</div>
-        <div style="font-size:11px;color:var(--ink4);margin-top:2px">${count} inscritos · ${spotsLeft} plazas libres</div></div>
-        ${status !== 'started' ? `<button class="btn btn-sm" style="background:rgba(184,64,64,0.1);color:#e05555;border:1px solid rgba(184,64,64,0.2)"
-          onclick="event.stopPropagation();unregisterFromPost()">Darme de baja</button>` : ''}
-      </div>`;
-    }
-    return `<div class="reg-action-box" style="background:rgba(196,135,58,0.06);border-color:rgba(196,135,58,0.2)">
-      <span style="font-size:1.2rem">🎯</span>
-      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ink2)">¿Quieres participar?</div>
-      <div style="font-size:11px;color:var(--ink4);margin-top:2px">${spotsLeft} plazas disponibles de ${cap}</div></div>
-      <button class="btn btn-accent btn-sm" id="post-reg-btn" onclick="event.stopPropagation();registerFromPost()">Inscribirme</button>
-    </div>`;
-  })();
+  const regBox = buildRegBox(p);
 
   document.getElementById('m-post-detail-body').innerHTML = `
     <div class="post-header">
@@ -2074,7 +2031,7 @@ async function openPostDetail(id, p) {
       ${prizes.length ? `<div class="post-prizes"><div class="post-prizes-title">Premios</div>
         ${prizes.slice(0,3).map((pr,i) => `<div class="post-prize-row"><span class="post-prize-medal">${medals[i]||'🏅'}</span>${pr}</div>`).join('')}
       </div>` : ''}
-      ${regBox}
+      <div id="modal-reg-box">${regBox}</div>
     </div>
     ${p.image_url ? `<div class="post-img-wrap" style="margin:10px 16px">
       <img src="${p.image_url}" alt="${p.title}" loading="lazy" style="width:100%;height:auto;max-height:600px;object-fit:contain;display:block">
@@ -2085,6 +2042,62 @@ async function openPostDetail(id, p) {
     </div>` : ''}`;
 
   openModal('m-post-detail');
+}
+
+// Construye la caja de inscripción — función reutilizable para modal y realtime
+function buildRegBox(p) {
+  const isTorneo = (p.post_type || 'torneo') === 'torneo';
+  if (!isTorneo) return '';
+  const cap       = p.capacity || 40;
+  const count     = p.registration_count || 0;
+  const status    = p.inscription_status || (p.registration_open ? 'open' : 'closed');
+  const isReg     = MY_REGISTRATIONS.has(p.id);
+  const isFull    = count >= cap;
+  const spotsLeft = Math.max(0, cap - count);
+
+  if (status === 'finished') {
+    return `<div class="reg-action-box" style="background:rgba(148,163,184,0.06);border-color:rgba(148,163,184,0.15)">
+      <span style="font-size:1.2rem">🏁</span>
+      <div><div style="font-size:13px;font-weight:600;color:var(--ink2)">Torneo finalizado</div>
+      <div style="font-size:11px;color:var(--ink4);margin-top:2px">${count} participantes</div></div>
+    </div>`;
+  }
+  if (status === 'started') {
+    return `<div class="reg-action-box" style="background:rgba(59,130,246,0.07);border-color:rgba(59,130,246,0.2)">
+      <span style="font-size:1.2rem">🏆</span>
+      <div><div style="font-size:13px;font-weight:600;color:var(--ink2)">El torneo ya ha comenzado</div>
+      <div style="font-size:11px;color:var(--ink4);margin-top:2px">${count} participantes</div></div>
+    </div>`;
+  }
+  if (status === 'closed' && !isReg) {
+    return `<div class="reg-action-box">
+      <span style="font-size:1.2rem">🔒</span>
+      <div><div style="font-size:13px;font-weight:600;color:var(--ink2)">Inscripción cerrada</div>
+      <div style="font-size:11px;color:var(--ink4);margin-top:2px">${count} / ${cap} inscritos</div></div>
+    </div>`;
+  }
+  if (isFull && !isReg) {
+    return `<div class="reg-action-box" style="background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.2)">
+      <span style="font-size:1.2rem">🔴</span>
+      <div><div style="font-size:13px;font-weight:600;color:var(--ink2)">Aforo completo</div>
+      <div style="font-size:11px;color:var(--ink4);margin-top:2px">${cap} / ${cap} plazas ocupadas</div></div>
+    </div>`;
+  }
+  if (isReg) {
+    return `<div class="reg-action-box" style="background:rgba(76,217,138,0.06);border-color:rgba(76,217,138,0.2)">
+      <span style="font-size:1.2rem">✅</span>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ink2)">Estás inscrito</div>
+      <div style="font-size:11px;color:var(--ink4);margin-top:2px">${count} inscritos · ${spotsLeft} plazas libres</div></div>
+      ${status !== 'started' ? `<button class="btn btn-sm" style="background:rgba(184,64,64,0.1);color:#e05555;border:1px solid rgba(184,64,64,0.2)"
+        onclick="event.stopPropagation();unregisterFromPost()">Darme de baja</button>` : ''}
+    </div>`;
+  }
+  return `<div class="reg-action-box" style="background:rgba(196,135,58,0.06);border-color:rgba(196,135,58,0.2)">
+    <span style="font-size:1.2rem">🎯</span>
+    <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ink2)">¿Quieres participar?</div>
+    <div style="font-size:11px;color:var(--ink4);margin-top:2px">${spotsLeft} plazas disponibles de ${cap}</div></div>
+    <button class="btn btn-accent btn-sm" id="post-reg-btn" onclick="event.stopPropagation();registerFromPost()">Inscribirme</button>
+  </div>`;
 }
 
 async function registerFromPost() {
