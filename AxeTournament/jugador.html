@@ -1578,7 +1578,6 @@ async function launchApp(user) {
   if (rows.length) {
     PROFILE = rows[0];
   } else {
-    // Create profile for new user (fallback if not created in doRegister)
     await dbPost('users', {
       id:        user.id,
       username:  user.user_metadata?.username || user.email.split('@')[0],
@@ -1597,14 +1596,120 @@ async function launchApp(user) {
   const followRows = await dbGet(`follows?follower_id=eq.${user.id}&select=following_id`);
   FOLLOWS = new Set(followRows.map(f => f.following_id));
 
-  // Also load organizers table to verify follow targets exist
-  // (follows.following_id references organizers.user_id)
-
   document.getElementById('t-username').textContent = PROFILE.username || user.email;
   document.getElementById('scr-login').classList.remove('on');
   document.getElementById('scr-app').classList.add('on');
 
   showPage('feed');
+
+  // ── Realtime: escuchar cambios en posts ──
+  initRealtime();
+}
+
+let _realtimeChannel = null;
+
+function initRealtime() {
+  // Limpiar canal anterior si existe
+  if (_realtimeChannel) {
+    sb.removeChannel(_realtimeChannel);
+    _realtimeChannel = null;
+  }
+
+  _realtimeChannel = sb.channel('feed-posts')
+    .on('postgres_changes', {
+      event: '*', // INSERT, UPDATE, DELETE
+      schema: 'public',
+      table: 'posts'
+    }, async (payload) => {
+      console.log('[realtime] posts change:', payload.eventType, payload.new?.id || payload.old?.id);
+      await handlePostRealtime(payload);
+    })
+    .subscribe((status) => {
+      console.log('[realtime] status:', status);
+    });
+}
+
+async function handlePostRealtime(payload) {
+  const { eventType, new: newRow, old: oldRow } = payload;
+
+  if (eventType === 'DELETE') {
+    // Eliminar del array local
+    FEED_POSTS = FEED_POSTS.filter(p => p.id !== oldRow.id);
+    renderFeedList();
+    return;
+  }
+
+  if (eventType === 'INSERT') {
+    // Cargar post completo con join a organizers
+    try {
+      const rows = await dbGet(`posts?id=eq.${newRow.id}&select=*,organizers(username,club_name,logo_url)&limit=1`);
+      if (rows?.[0]) {
+        // Enriquecer con count de inscripciones
+        const regs = await dbGet(`event_registrations?event_id=eq.${newRow.id}&select=id`) || [];
+        rows[0].registration_count = regs.length;
+        // Comprobar si el usuario está inscrito
+        if (MY_REGISTRATIONS.has(newRow.id)) rows[0]._myReg = true;
+        FEED_POSTS.unshift(rows[0]); // al principio (más reciente)
+        renderFeedList();
+        showFeedToast('📢 Nueva publicación disponible');
+      }
+    } catch(e) { console.warn('[realtime] insert enrich:', e.message); }
+    return;
+  }
+
+  if (eventType === 'UPDATE') {
+    // Actualizar el post en el array local
+    const idx = FEED_POSTS.findIndex(p => p.id === newRow.id);
+    if (idx !== -1) {
+      // Preservar datos enriquecidos (organizers, registration_count)
+      FEED_POSTS[idx] = {
+        ...FEED_POSTS[idx],
+        ...newRow,
+        organizers:         FEED_POSTS[idx].organizers,
+        registration_count: FEED_POSTS[idx].registration_count,
+      };
+      renderFeedList();
+
+      // Si es el post que el usuario tiene abierto, actualizar ACTIVE_POST
+      if (ACTIVE_POST?.id === newRow.id) {
+        ACTIVE_POST = { ...ACTIVE_POST, ...newRow };
+      }
+
+      // Notificar si el estado de inscripción cambió
+      const statusChanged = FEED_POSTS[idx].inscription_status !== newRow.inscription_status;
+      if (statusChanged) {
+        const msgs = {
+          open:    '🟢 Inscripción abierta',
+          closed:  '🔒 Inscripción cerrada',
+          started: '🏆 El torneo ha comenzado',
+        };
+        const msg = msgs[newRow.inscription_status];
+        if (msg) showFeedToast(msg);
+      }
+    }
+    return;
+  }
+}
+
+function showFeedToast(msg) {
+  // Toast suave en el feed — no intrusivo
+  let el = document.getElementById('feed-realtime-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'feed-realtime-toast';
+    el.style.cssText = `
+      position:fixed;top:70px;left:50%;transform:translateX(-50%);
+      background:rgba(30,25,18,0.95);border:1px solid rgba(196,135,58,0.3);
+      color:#fff;font-size:12px;font-weight:600;padding:8px 16px;
+      border-radius:20px;z-index:9999;opacity:0;
+      transition:opacity 0.3s;pointer-events:none;
+    `;
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.opacity = '0'; }, 3000);
 }
 
 // Restore session — with role check
