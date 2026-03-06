@@ -1000,6 +1000,41 @@ input, textarea, select { font-family: inherit; }
 }
 .pass-eye:hover { opacity: 1; }
 </style>
+<script>
+window._T = {};
+window.t_ = (key, fallback) => window._T[key] || fallback;
+
+async function initI18n() {
+  const urlLang = new URLSearchParams(window.location.search).get('lang');
+  const lang = urlLang || ((navigator.language || 'es').startsWith('es') ? 'es' : 'en');
+  document.documentElement.lang = lang;
+  window._lang = lang;
+  if (lang === 'es') return;
+  try {
+    const T = await fetch('locales/en.json').then(r => r.json());
+    window._T = T;
+    const apply = (root) => {
+      root.querySelectorAll('[data-i18n]:not([data-i18n-done])').forEach(el => {
+        const v = T[el.dataset.i18n];
+        if (v !== undefined) { el.textContent = v; el.dataset.i18nDone = '1'; }
+      });
+      root.querySelectorAll('[data-i18n-html]:not([data-i18n-done])').forEach(el => {
+        const v = T[el.dataset.i18nHtml];
+        if (v !== undefined) { el.innerHTML = v; el.dataset.i18nDone = '1'; }
+      });
+      root.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const v = T[el.dataset.i18nPlaceholder];
+        if (v !== undefined) el.placeholder = v;
+      });
+    };
+    apply(document);
+    if (T.page_title_jug) document.title = T.page_title_jug;
+    new MutationObserver(() => apply(document.body))
+      .observe(document.body, { childList: true, subtree: true });
+  } catch(e) { console.warn('[i18n]', e.message); }
+}
+document.addEventListener('DOMContentLoaded', initI18n);
+</script>
 </head>
 <body>
 
@@ -1010,33 +1045,33 @@ input, textarea, select { font-family: inherit; }
 <div class="screen on" id="scr-login">
   <div class="login-logo">
     <img src="public/novuraxe-logo.png" alt="NOVURAXE">
-    <div class="login-logo-sub">Gestión de Torneos</div>
-    <div class="login-role-tag">Portal del Jugador</div>
+    <div class="login-logo-sub"><span data-i18n="nav_tournament_mgmt">Gestión de Torneos</span></div>
+    <div class="login-role-tag"><span data-i18n="jug_portal_title">Portal del Jugador</span></div>
   </div>
 
   <div class="login-box">
     <div class="l-tabs">
-      <button class="l-tab on" id="lt-login" onclick="switchTab('login')">Iniciar sesión</button>
-      <button class="l-tab" id="lt-reg" onclick="switchTab('reg')">Registrarse</button>
+      <button class="l-tab on" id="lt-login" onclick="switchTab('login')"><span data-i18n="jug_login">Iniciar sesión</span></button>
+      <button class="l-tab" id="lt-reg" onclick="switchTab('reg')"><span data-i18n="jug_register">Registrarse</span></button>
     </div>
 
     <!-- LOGIN -->
     <div id="pn-login">
       <div class="err-msg" id="err-login"></div>
       <div class="field">
-        <label class="f-label">Email</label>
+        <label class="f-label"><span data-i18n="contact_email">Email</span></label>
         <input class="f-input" type="email" id="l-email" placeholder="tu@email.com" autocomplete="email">
       </div>
       <div class="field">
-        <label class="f-label">Contraseña</label>
+        <label class="f-label"><span data-i18n="jug_password">Contraseña</span></label>
         <div class="pass-wrap">
           <input class="f-input" type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password">
           <button class="pass-eye" onclick="togglePass('l-pass',this)">👁</button>
         </div>
       </div>
-      <button class="btn-full" onclick="doLogin()" style="margin-bottom:0.75rem">Entrar</button>
+      <button class="btn-full" onclick="doLogin()" style="margin-bottom:0.75rem"><span data-i18n="jug_enter">Entrar</span></button>
       <div style="text-align:center">
-        <button class="link-small" onclick="switchTab('forgot')">¿Olvidaste tu contraseña?</button>
+        <button class="link-small" onclick="switchTab('forgot')"><span data-i18n="jug_forgot_pw">¿Olvidaste tu contraseña?</span></button>
       </div>
     </div>
 
@@ -1044,12 +1079,12 @@ input, textarea, select { font-family: inherit; }
     <div id="pn-forgot" style="display:none">
       <div class="err-msg" id="err-forgot"></div>
       <div class="field">
-        <label class="f-label">Email</label>
+        <label class="f-label"><span data-i18n="contact_email">Email</span></label>
         <input class="f-input" type="email" id="f-email" placeholder="tu@email.com">
       </div>
-      <button class="btn-full" onclick="doForgot()" style="margin-bottom:0.75rem">Enviar enlace</button>
+      <button class="btn-full" onclick="doForgot()" style="margin-bottom:0.75rem"><span data-i18n="jug_send_link">Enviar enlace</span></button>
       <div style="text-align:center">
-        <button class="link-small" onclick="switchTab('login')">← Volver al login</button>
+        <button class="link-small" onclick="switchTab('login')"><span data-i18n="jug_back_login">← Volver al login</span></button>
       </div>
     </div>
 
@@ -1057,19 +1092,19 @@ input, textarea, select { font-family: inherit; }
     <div id="pn-reg" style="display:none">
       <div class="err-msg" id="err-reg"></div>
       <div class="field">
-        <label class="f-label">Nombre</label>
+        <label class="f-label"><span data-i18n="contact_name">Nombre</span></label>
         <input class="f-input" type="text" id="r-name" placeholder="Tu nombre completo">
       </div>
       <div class="field">
-        <label class="f-label">Usuario</label>
+        <label class="f-label"><span data-i18n="jug_username">Usuario</span></label>
         <input class="f-input" type="text" id="r-user" placeholder="@usuario">
       </div>
       <div class="field">
-        <label class="f-label">Email</label>
+        <label class="f-label"><span data-i18n="contact_email">Email</span></label>
         <input class="f-input" type="email" id="r-email" placeholder="tu@email.com">
       </div>
       <div class="field">
-        <label class="f-label">Contraseña</label>
+        <label class="f-label"><span data-i18n="jug_password">Contraseña</span></label>
         <div class="pass-wrap">
           <input class="f-input" type="password" id="r-pass" placeholder="Mínimo 6 caracteres">
           <button class="pass-eye" onclick="togglePass('r-pass',this)">👁</button>
@@ -1081,7 +1116,7 @@ input, textarea, select { font-family: inherit; }
         Novuraxe no se hace responsable de daños derivados de la práctica del lanzamiento de hacha.
       </div>
       </div>
-      <button class="btn-full" onclick="doRegister()">Crear cuenta de jugador</button>
+      <button class="btn-full" onclick="doRegister()"><span data-i18n="jug_create_account">Crear cuenta de jugador</span></button>
     </div>
   </div>
 </div>
@@ -1098,15 +1133,15 @@ input, textarea, select { font-family: inherit; }
     <div class="t-role-badge">Jugador</div>
     <div class="t-sep"></div>
     <nav class="t-nav">
-      <button class="t-nav-btn on" data-page="feed" onclick="showPage('feed')">Feed</button>
-      <button class="t-nav-btn" data-page="orgs" onclick="showPage('orgs')">Organizadores</button>
-      <button class="t-nav-btn" data-page="stats" onclick="showPage('stats')">Mis stats</button>
-      <button class="t-nav-btn" data-page="history" onclick="showPage('history')">Historial</button>
+      <button class="t-nav-btn on" data-page="feed" onclick="showPage('feed')"><span data-i18n="jug_feed">Feed</span></button>
+      <button class="t-nav-btn" data-page="orgs" onclick="showPage('orgs')"><span data-i18n="jug_organizers">Organizadores</span></button>
+      <button class="t-nav-btn" data-page="stats" onclick="showPage('stats')"><span data-i18n="jug_my_stats">Mis stats</span></button>
+      <button class="t-nav-btn" data-page="history" onclick="showPage('history')"><span data-i18n="jug_history">Historial</span></button>
     </nav>
     <div class="t-right">
       <span class="t-username" id="t-username"></span>
       <button class="btn btn-ghost btn-sm" onclick="showPage('settings')" style="border-color:rgba(255,255,255,0.1)">⚙️</button>
-      <button class="btn btn-ghost btn-sm" onclick="doLogout()">Salir</button>
+      <button class="btn btn-ghost btn-sm" onclick="doLogout()"><span data-i18n="jug_logout">Salir</span></button>
     </div>
   </div>
 
@@ -1119,13 +1154,13 @@ input, textarea, select { font-family: inherit; }
       <span class="icon">🏟</span>Clubs
     </button>
     <button class="mob-btn" data-page="stats" onclick="showPage('stats')">
-      <span class="icon">📊</span>Stats
+      <span class="icon">📊</span><span data-i18n="jug_stats">Stats</span>
     </button>
     <button class="mob-btn" data-page="history" onclick="showPage('history')">
       <span class="icon">📁</span>Historial
     </button>
     <button class="mob-btn" data-page="settings" onclick="showPage('settings')">
-      <span class="icon">⚙️</span>Ajustes
+      <span class="icon">⚙️</span><span data-i18n="jug_settings">Ajustes</span>
     </button>
   </nav>
 
@@ -1144,19 +1179,19 @@ input, textarea, select { font-family: inherit; }
 
         <!-- Main feed -->
         <div class="feed-main">
-          <div class="pg-eyebrow">Próximos torneos</div>
-          <h1 class="pg-title">Tu <em>feed.</em></h1>
-          <p class="pg-sub">Torneos de los organizadores que sigues</p>
+          <div class="pg-eyebrow"><span data-i18n="jug_upcoming">Próximos torneos</span></div>
+          <h1 class="pg-title">Tu <em><span data-i18n="jug_feed_title">feed.</span></em></h1>
+          <p class="pg-sub"><span data-i18n="jug_feed_sub">Torneos de los organizadores que sigues</span></p>
 
           <div class="feed-filters">
-            <button class="filter-btn on" onclick="setFilter('all',this)">Todos</button>
-            <button class="filter-btn" onclick="setFilter('torneos',this)">🏆 Torneos</button>
-            <button class="filter-btn" onclick="setFilter('soon',this)">Esta semana</button>
-            <button class="filter-btn" onclick="setFilter('following',this)">Solo mis clubs</button>
+            <button class="filter-btn on" onclick="setFilter('all',this)"><span data-i18n="jug_filter_all">Todos</span></button>
+            <button class="filter-btn" onclick="setFilter('torneos',this)"><span data-i18n="jug_filter_tournaments">🏆 Torneos</span></button>
+            <button class="filter-btn" onclick="setFilter('soon',this)"><span data-i18n="jug_filter_week">Esta semana</span></button>
+            <button class="filter-btn" onclick="setFilter('following',this)"><span data-i18n="jug_filter_clubs">Solo mis clubs</span></button>
           </div>
 
           <div id="feed-list">
-            <div class="loading"><div class="spinner"></div> Cargando torneos...</div>
+            <div class="loading"><div class="spinner"></div> <span data-i18n="jug_loading_tournaments">Cargando torneos...</span></div>
           </div>
         </div>
 
@@ -1165,9 +1200,9 @@ input, textarea, select { font-family: inherit; }
 
     <!-- ── ORGANIZADORES ── -->
     <div class="page" id="pg-orgs">
-      <div class="pg-eyebrow">Descubrir</div>
+      <div class="pg-eyebrow"><span data-i18n="jug_discover">Descubrir</span></div>
       <h1 class="pg-title">Clubs &amp; <em>Organizadores.</em></h1>
-      <p class="pg-sub">Sigue a los organizadores para ver sus torneos en tu feed</p>
+      <p class="pg-sub"><span data-i18n="jug_discover_sub">Sigue a los organizadores para ver sus torneos en tu feed</span></p>
 
       <div class="orgs-search-bar">
         <span class="orgs-search-icon">🔍</span>
@@ -1177,43 +1212,43 @@ input, textarea, select { font-family: inherit; }
       </div>
 
       <div id="orgs-list">
-        <div class="loading"><div class="spinner"></div> Cargando organizadores...</div>
+        <div class="loading"><div class="spinner"></div> <span data-i18n="jug_loading_orgs">Cargando organizadores...</span></div>
       </div>
     </div>
 
     <!-- ── MIS STATS ── -->
     <div class="page" id="pg-stats">
-      <div class="pg-eyebrow">Mi perfil</div>
-      <h1 class="pg-title">Mis <em>estadísticas.</em></h1>
-      <p class="pg-sub">Tu historial en torneos registrados en NOVURAXE</p>
+      <div class="pg-eyebrow"><span data-i18n="jug_my_profile">Mi perfil</span></div>
+      <h1 class="pg-title"><span data-i18n="jug_my">Mis</span> <em><span data-i18n="jug_stats_title">estadísticas.</span></em></h1>
+      <p class="pg-sub"><span data-i18n="jug_stats_sub">Tu historial en torneos registrados en NOVURAXE</span></p>
 
       <div class="stats-layout" id="stats-layout">
-        <div class="loading"><div class="spinner"></div> Cargando...</div>
+        <div class="loading"><div class="spinner"></div> <span data-i18n="jug_loading">Cargando...</span></div>
       </div>
     </div>
 
     <!-- ── HISTORIAL ── -->
     <div class="page" id="pg-history">
-      <div class="pg-eyebrow">Historial</div>
-      <h1 class="pg-title">Torneos <em>jugados.</em></h1>
-      <p class="pg-sub">Torneos en los que apareces registrado</p>
+      <div class="pg-eyebrow"><span data-i18n="jug_history">Historial</span></div>
+      <h1 class="pg-title">Torneos <em><span data-i18n="jug_played">jugados.</span></em></h1>
+      <p class="pg-sub"><span data-i18n="jug_history_sub">Torneos en los que apareces registrado</span></p>
 
       <div id="history-list">
-        <div class="loading"><div class="spinner"></div> Cargando historial...</div>
+        <div class="loading"><div class="spinner"></div> <span data-i18n="jug_loading_history">Cargando historial...</span></div>
       </div>
     </div>
 
     <!-- ── AJUSTES ── -->
     <div class="page" id="pg-settings">
       <div class="pg-eyebrow">Cuenta</div>
-      <h1 class="pg-title">Ajus<em>tes.</em></h1>
-      <p class="pg-sub">Gestiona tu perfil y preferencias</p>
+      <h1 class="pg-title"><span data-i18n="jug_settings_title1">Ajus</span><em><span data-i18n="jug_settings_title2">tes.</span></em></h1>
+      <p class="pg-sub"><span data-i18n="jug_settings_sub">Gestiona tu perfil y preferencias</span></p>
 
       <div style="max-width:560px;display:flex;flex-direction:column;gap:1.25rem">
 
         <!-- FOTO DE PERFIL -->
         <div class="settings-card">
-          <div class="settings-card-title">Foto de perfil</div>
+          <div class="settings-card-title"><span data-i18n="jug_profile_photo">Foto de perfil</span></div>
           <div style="display:flex;align-items:center;gap:1.25rem">
             <div class="settings-avatar-wrap" onclick="document.getElementById('settings-avatar-input').click()">
               <div class="settings-avatar" id="settings-avatar-preview">
@@ -1226,7 +1261,7 @@ input, textarea, select { font-family: inherit; }
             <div>
               <div style="font-size:13px;font-weight:600;color:var(--ink2)" id="settings-display-name">—</div>
               <div style="font-size:12px;color:var(--ink4);margin-top:2px" id="settings-display-username">—</div>
-              <button class="btn-link" onclick="document.getElementById('settings-avatar-input').click()" style="margin-top:6px">Cambiar foto</button>
+              <button class="btn-link" onclick="document.getElementById('settings-avatar-input').click()" style="margin-top:6px"><span data-i18n="jug_change_photo">Cambiar foto</span></button>
             </div>
           </div>
           <div id="settings-avatar-status" style="font-size:12px;margin-top:10px;display:none"></div>
@@ -1234,34 +1269,34 @@ input, textarea, select { font-family: inherit; }
 
         <!-- NOMBRE Y USUARIO -->
         <div class="settings-card">
-          <div class="settings-card-title">Información personal</div>
+          <div class="settings-card-title"><span data-i18n="jug_personal_info">Información personal</span></div>
           <div class="settings-field">
-            <label class="f-label">Nombre completo</label>
+            <label class="f-label"><span data-i18n="jug_full_name">Nombre completo</span></label>
             <input class="f-input" type="text" id="settings-fullname" placeholder="Tu nombre">
           </div>
           <div class="settings-field">
-            <label class="f-label">Nombre de usuario</label>
+            <label class="f-label"><span data-i18n="jug_username_label">Nombre de usuario</span></label>
             <div style="position:relative">
               <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink4);font-size:14px">@</span>
               <input class="f-input" type="text" id="settings-username" placeholder="usuario" style="padding-left:26px">
             </div>
           </div>
           <div id="settings-profile-err" style="font-size:12px;color:var(--red);display:none;margin-bottom:8px"></div>
-          <button class="btn btn-accent btn-sm" onclick="saveSettingsProfile()">Guardar cambios</button>
+          <button class="btn btn-accent btn-sm" onclick="saveSettingsProfile()"><span data-i18n="jug_save_changes">Guardar cambios</span></button>
         </div>
 
         <!-- CONTRASEÑA -->
         <div class="settings-card">
           <div class="settings-card-title">Contraseña</div>
           <div class="settings-field">
-            <label class="f-label">Nueva contraseña</label>
+            <label class="f-label"><span data-i18n="jug_new_password">Nueva contraseña</span></label>
             <div class="pass-wrap">
               <input class="f-input" type="password" id="settings-pass" placeholder="Mínimo 6 caracteres">
               <button class="pass-eye" type="button" onclick="togglePassVis('settings-pass', this)">👁</button>
             </div>
           </div>
           <div class="settings-field">
-            <label class="f-label">Confirmar contraseña</label>
+            <label class="f-label"><span data-i18n="jug_confirm_password">Confirmar contraseña</span></label>
             <div class="pass-wrap">
               <input class="f-input" type="password" id="settings-pass2" placeholder="Repite la contraseña">
               <button class="pass-eye" type="button" onclick="togglePassVis('settings-pass2', this)">👁</button>
@@ -1269,42 +1304,42 @@ input, textarea, select { font-family: inherit; }
           </div>
           <div id="settings-pass-err" style="font-size:12px;color:var(--red);display:none;margin-bottom:8px"></div>
           <div id="settings-pass-ok" style="font-size:12px;color:var(--green);display:none;margin-bottom:8px">✓ Contraseña actualizada</div>
-          <button class="btn btn-accent btn-sm" onclick="saveSettingsPassword()">Cambiar contraseña</button>
+          <button class="btn btn-accent btn-sm" onclick="saveSettingsPassword()"><span data-i18n="jug_change_password">Cambiar contraseña</span></button>
         </div>
 
         <!-- SESIÓN -->
         <div class="settings-card">
-          <div class="settings-card-title">Sesión</div>
+          <div class="settings-card-title"><span data-i18n="jug_session">Sesión</span></div>
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <div>
-              <div style="font-size:13px;font-weight:600;color:var(--ink2)">Cerrar sesión</div>
-              <div style="font-size:12px;color:var(--ink4);margin-top:2px">Salir de tu cuenta en este dispositivo</div>
+              <div style="font-size:13px;font-weight:600;color:var(--ink2)"><span data-i18n="jug_close_session">Cerrar sesión</span></div>
+              <div style="font-size:12px;color:var(--ink4);margin-top:2px"><span data-i18n="jug_logout_desc">Salir de tu cuenta en este dispositivo</span></div>
             </div>
-            <button class="btn btn-ghost btn-sm" onclick="doLogout()">Cerrar sesión</button>
+            <button class="btn btn-ghost btn-sm" onclick="doLogout()"><span data-i18n="jug_close_session">Cerrar sesión</span></button>
           </div>
         </div>
 
         <!-- TÉRMINOS Y CONDICIONES -->
         <div class="settings-card">
-          <div class="settings-card-title">Legal</div>
+          <div class="settings-card-title"><span data-i18n="jug_legal">Legal</span></div>
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <div>
-              <div style="font-size:13px;font-weight:600;color:var(--ink2)">Términos y condiciones</div>
-              <div style="font-size:12px;color:var(--ink4);margin-top:2px">Consulta los términos de uso de la plataforma</div>
+              <div style="font-size:13px;font-weight:600;color:var(--ink2)"><span data-i18n="jug_terms">Términos y condiciones</span></div>
+              <div style="font-size:12px;color:var(--ink4);margin-top:2px"><span data-i18n="jug_terms_desc">Consulta los términos de uso de la plataforma</span></div>
             </div>
-            <a href="https://novuraxe.com/terms.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">Leer →</a>
+            <a href="https://novuraxe.com/terms.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none"><span data-i18n="jug_read">Leer →</span></a>
           </div>
         </div>
 
         <!-- ZONA PELIGROSA -->
         <div class="settings-card settings-card-danger">
-          <div class="settings-card-title" style="color:var(--red)">Zona peligrosa</div>
+          <div class="settings-card-title" style="color:var(--red)"><span data-i18n="jug_danger_zone">Zona peligrosa</span></div>
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <div>
-              <div style="font-size:13px;font-weight:600;color:var(--ink2)">Eliminar cuenta</div>
-              <div style="font-size:12px;color:var(--ink4);margin-top:2px">Esta acción es permanente e irreversible</div>
+              <div style="font-size:13px;font-weight:600;color:var(--ink2)"><span data-i18n="jug_delete_account">Eliminar cuenta</span></div>
+              <div style="font-size:12px;color:var(--ink4);margin-top:2px"><span data-i18n="jug_delete_desc">Esta acción es permanente e irreversible</span></div>
             </div>
-            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-ln)" onclick="confirmDeleteAccount()">Eliminar cuenta</button>
+            <button class="btn btn-sm" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-ln)" onclick="confirmDeleteAccount()"><span data-i18n="jug_delete_account">Eliminar cuenta</span></button>
           </div>
         </div>
 
@@ -1317,11 +1352,11 @@ input, textarea, select { font-family: inherit; }
 <!-- ══ MODAL EVENTO ══ -->
 <div class="modal-overlay" id="m-event">
   <div class="modal">
-    <div class="modal-title" id="m-event-title">Detalle del torneo</div>
+    <div class="modal-title" id="m-event-title"><span data-i18n="jug_tournament_detail">Detalle del torneo</span></div>
     <div id="m-event-body"></div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('m-event')">Cerrar</button>
-      <button class="btn btn-accent" id="m-event-reg-btn" onclick="registerToEvent()">Inscribirme</button>
+      <button class="btn btn-ghost" onclick="closeModal('m-event')"><span data-i18n="nav_close">Cerrar</span></button>
+      <button class="btn btn-accent" id="m-event-reg-btn" onclick="registerToEvent()"><span data-i18n="jug_register_me">Inscribirme</span></button>
     </div>
   </div>
 </div>
@@ -1331,7 +1366,7 @@ input, textarea, select { font-family: inherit; }
   <div class="modal" style="padding:0;overflow:hidden;max-width:520px;background:#1e1812;border:1px solid rgba(255,255,255,0.1)">
     <div id="m-post-detail-body"></div>
     <div style="padding:0.75rem 1.25rem;border-top:1px solid rgba(255,255,255,0.06);display:flex;justify-content:flex-end">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('m-post-detail')">Cerrar</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('m-post-detail')"><span data-i18n="nav_close">Cerrar</span></button>
     </div>
   </div>
 </div>
@@ -1339,12 +1374,12 @@ input, textarea, select { font-family: inherit; }
 <!-- ══ MODAL RESET PASS ══ -->
 <div class="modal-overlay on" id="m-reset" style="display:none">
   <div class="modal" style="max-width:360px">
-    <div class="modal-title">Nueva contraseña</div>
+    <div class="modal-title"><span data-i18n="jug_new_password">Nueva contraseña</span></div>
     <div class="field">
-      <label class="f-label">Contraseña nueva</label>
+      <label class="f-label"><span data-i18n="jug_new_pw_label">Contraseña nueva</span></label>
       <input class="f-input" type="password" id="new-pass" placeholder="Mínimo 6 caracteres">
     </div>
-    <button class="btn-full" onclick="confirmReset()">Guardar contraseña</button>
+    <button class="btn-full" onclick="confirmReset()"><span data-i18n="jug_save_password">Guardar contraseña</span></button>
   </div>
 </div>
 
@@ -1401,8 +1436,8 @@ function statusBadge(status, date) {
   if (status === 'cancelled') return '<span class="badge badge-cancel">Cancelado</span>';
   if (status === 'done')      return '<span class="badge badge-done">Finalizado</span>';
   if (status === 'full')      return '<span class="badge badge-full">Completo</span>';
-  if (days !== null && days >= 0 && days <= 7) return '<span class="badge badge-soon">Esta semana</span>';
-  return '<span class="badge badge-open">Inscripción abierta</span>';
+  if (days !== null && days >= 0 && days <= 7) return '<span class="badge badge-soon"><span data-i18n="jug_filter_week">Esta semana</span></span>';
+  return '<span class="badge badge-open">'+t_('jug_reg_open_label','Inscripción abierta')+'</span>';
 }
 
 async function dbGet(path) {
@@ -1488,7 +1523,7 @@ async function doLogin() {
   const pass  = document.getElementById('l-pass').value;
   if (!email || !pass) return showErr('err-login', 'Rellena todos los campos');
   const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-  if (error) return showErr('err-login', 'Email o contraseña incorrectos');
+  if (error) return showErr('err-login', t_('jug_wrong_credentials','Email o contraseña incorrectos'));
 
   // Verificar que es jugador, no organizador
   const profiles = await dbGet(`users?id=eq.${data.user.id}&select=role`);
@@ -1508,7 +1543,7 @@ async function doRegister() {
   const email = document.getElementById('r-email').value.trim();
   const pass  = document.getElementById('r-pass').value;
   if (!name || !user || !email || !pass) return showErr('err-reg', 'Rellena todos los campos');
-  if (pass.length < 6) return showErr('err-reg', 'La contraseña debe tener al menos 6 caracteres');
+  if (pass.length < 6) return showErr('err-reg', t_('jug_pw_min_chars','La contraseña debe tener al menos 6 caracteres'));
   if (!/^[a-z0-9_]+$/i.test(user)) return showErr('err-reg', 'Usuario solo puede contener letras, números y _');
 
   const { data, error } = await sb.auth.signUp({
@@ -1555,7 +1590,7 @@ async function confirmReset() {
   if (error) return toast('Error: ' + error.message);
   document.getElementById('m-reset').classList.remove('on');
   history.replaceState(null, '', location.pathname);
-  toast('✓ Contraseña actualizada');
+  toast(t_('jug_pw_updated','✓ Contraseña actualizada'));
 }
 
 async function doLogout() {
@@ -1651,7 +1686,7 @@ async function handlePostRealtime(payload) {
         if (MY_REGISTRATIONS.has(newRow.id)) rows[0]._myReg = true;
         FEED_POSTS.unshift(rows[0]); // al principio (más reciente)
         renderFeedList();
-        showFeedToast('📢 Nueva publicación disponible');
+        showFeedToast(t_('jug_new_post','📢 Nueva publicación disponible'));
       }
     } catch(e) { console.warn('[realtime] insert enrich:', e.message); }
     return;
@@ -1682,8 +1717,8 @@ async function handlePostRealtime(payload) {
       const statusChanged = FEED_POSTS[idx].inscription_status !== newRow.inscription_status;
       if (statusChanged) {
         const msgs = {
-          open:    '🟢 Inscripción abierta',
-          closed:  '🔒 Inscripción cerrada',
+          open:    t_('jug_reg_open','🟢 Inscripción abierta'),
+          closed:  t_('jug_reg_closed','🔒 Inscripción cerrada'),
           started: '🏆 El torneo ha comenzado',
         };
         const msg = msgs[newRow.inscription_status];
@@ -1829,7 +1864,7 @@ async function renderSidebar() {
       </div>
       <div class="sidebar-stat" onclick="showPage('orgs')">
         <div class="sidebar-stat-n w">${FOLLOWS.size}</div>
-        <div class="sidebar-stat-l">Clubs</div>
+        <div class="sidebar-stat-l"><span data-i18n="jug_clubs">Clubs</span></div>
       </div>
     </div>
     ${followingHtml}
@@ -1949,9 +1984,9 @@ function feedPostCard(p) {
     let statusHtml = '';
     if (status === 'started')    statusHtml = `<span class="feed-reg-pill pill-started">🏆 Torneo iniciado</span>`;
     else if (isFull)             statusHtml = `<span class="feed-reg-pill pill-full">🔴 Aforo completo</span>`;
-    else if (status === 'closed') statusHtml = `<span class="feed-reg-pill pill-closed">🔒 Inscripción cerrada</span>`;
-    else if (isReg)              statusHtml = `<span class="feed-reg-pill pill-registered">✅ Estás inscrito</span>`;
-    else                         statusHtml = `<span class="feed-reg-pill pill-open">🟢 Inscripción abierta</span>`;
+    else if (status === 'closed') statusHtml = `<span class="feed-reg-pill pill-closed">${t_('jug_reg_closed','🔒 Inscripción cerrada')}</span>`;
+    else if (isReg)              statusHtml = `<span class="feed-reg-pill pill-registered">${t_('jug_registered','✅ Estás inscrito')}</span>`;
+    else                         statusHtml = `<span class="feed-reg-pill pill-open">${t_('jug_reg_open_badge','🟢 Inscripción abierta')}</span>`;
 
     const spotsHtml = !isClosed && !isFull
       ? `<span style="font-size:11px;color:var(--ink4)">${spotsLeft} plaza${spotsLeft !== 1 ? 's' : ''} disponible${spotsLeft !== 1 ? 's' : ''}</span>`
@@ -2072,7 +2107,7 @@ function buildRegBox(p) {
   if (status === 'closed' && !isReg) {
     return `<div class="reg-action-box">
       <span style="font-size:1.2rem">🔒</span>
-      <div><div style="font-size:13px;font-weight:600;color:var(--ink2)">Inscripción cerrada</div>
+      <div><div style="font-size:13px;font-weight:600;color:var(--ink2)">${t_('jug_reg_closed_label','Inscripción cerrada')}</div>
       <div style="font-size:11px;color:var(--ink4);margin-top:2px">${count} / ${cap} inscritos</div></div>
     </div>`;
   }
@@ -2086,7 +2121,7 @@ function buildRegBox(p) {
   if (isReg) {
     return `<div class="reg-action-box" style="background:rgba(76,217,138,0.06);border-color:rgba(76,217,138,0.2)">
       <span style="font-size:1.2rem">✅</span>
-      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ink2)">Estás inscrito</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ink2)">${t_('jug_registered_label','Estás inscrito')}</div>
       <div style="font-size:11px;color:var(--ink4);margin-top:2px">${count} inscritos · ${spotsLeft} plazas libres</div></div>
       ${status !== 'started' ? `<button class="btn btn-sm" style="background:rgba(184,64,64,0.1);color:#e05555;border:1px solid rgba(184,64,64,0.2)"
         onclick="event.stopPropagation();unregisterFromPost()">Darme de baja</button>` : ''}
@@ -2096,12 +2131,12 @@ function buildRegBox(p) {
     <span style="font-size:1.2rem">🎯</span>
     <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ink2)">¿Quieres participar?</div>
     <div style="font-size:11px;color:var(--ink4);margin-top:2px">${spotsLeft} plazas disponibles de ${cap}</div></div>
-    <button class="btn btn-accent btn-sm" id="post-reg-btn" onclick="event.stopPropagation();registerFromPost()">Inscribirme</button>
+    <button class="btn btn-accent btn-sm" id="post-reg-btn" onclick="event.stopPropagation();registerFromPost()"><span data-i18n="jug_register_me">Inscribirme</span></button>
   </div>`;
 }
 
 async function registerFromPost() {
-  if (!ACTIVE_POST || !CUR_USER) { toast('Debes iniciar sesión', 'red'); return; }
+  if (!ACTIVE_POST || !CUR_USER) { toast(t_('jug_must_login','Debes iniciar sesión'), 'red'); return; }
   const btn = document.getElementById('post-reg-btn');
   if (btn) { btn.textContent = 'Enviando...'; btn.disabled = true; }
   try {
@@ -2148,7 +2183,7 @@ async function registerFromPost() {
     MY_REGISTRATIONS.set(ACTIVE_POST.id, true);
     ACTIVE_POST.registration_count = (ACTIVE_POST.registration_count || 0) + 1;
     const tagLabel = playerTag ? ` · ${playerTag.toUpperCase()}` : '';
-    toast('✅ Inscripción confirmada' + tagLabel, 'green');
+    toast(t_('jug_reg_confirmed','✅ Inscripción confirmada') + tagLabel, 'green');
     closeModal('m-post-detail');
     renderFeedList();
   } catch(e) {
@@ -2176,7 +2211,7 @@ async function unregisterFromPost() {
 function eventCard(e) {
   const club = e.organizers?.club_name || e.organizers?.username || 'Organizador';
   const days = daysUntil(e.date);
-  const daysLabel = days === null ? '' : days === 0 ? '¡Hoy!' : days === 1 ? 'Mañana' : days > 0 ? `En ${days} días` : 'Pasado';
+  const daysLabel = days === null ? '' : days === 0 ? t_('jug_today','¡Hoy!') : days === 1 ? t_('jug_tomorrow','Mañana') : days > 0 ? `${t_('jug_in_days','En')} ${days} ${t_('jug_days','días')}` : t_('jug_past','Pasado');
   const isFollowing = FOLLOWS.has(e.user_id);
 
   return `
@@ -2194,7 +2229,7 @@ function eventCard(e) {
         ${e.date ? `<div class="event-meta-item">📅 <span>${fmtDate(e.date)}${daysLabel ? ' · ' + daysLabel : ''}</span></div>` : ''}
         ${e.time ? `<div class="event-meta-item">🕐 <span>${e.time.slice(0,5)}</span></div>` : ''}
         ${e.location ? `<div class="event-meta-item">📍 <span>${e.location}</span></div>` : ''}
-        ${e.price != null ? `<div class="event-meta-item">💶 <span>${e.price === 0 ? 'Gratis' : e.price + '€'}</span></div>` : ''}
+        ${e.price != null ? `<div class="event-meta-item">💶 <span>${e.price === 0 ? t_('jug_free','Gratis') : e.price + '€'}</span></div>` : ''}
       </div>
     </div>
     <div class="event-card-footer">
@@ -2225,7 +2260,7 @@ async function openEvent(id) {
       ${e.date ? `<div class="stat-card"><div class="stat-n" style="font-size:1.2rem">${fmtDate(e.date)}</div><div class="stat-l">Fecha</div></div>` : ''}
       ${e.time ? `<div class="stat-card"><div class="stat-n" style="font-size:1.2rem">${e.time.slice(0,5)}</div><div class="stat-l">Hora</div></div>` : ''}
       ${e.location ? `<div class="stat-card" style="grid-column:1/-1"><div class="stat-n" style="font-size:1rem;letter-spacing:0">📍 ${e.location}</div><div class="stat-l">Lugar</div></div>` : ''}
-      ${e.price != null ? `<div class="stat-card"><div class="stat-n" style="font-size:1.2rem">${e.price === 0 ? 'Gratis' : e.price + '€'}</div><div class="stat-l">Inscripción</div></div>` : ''}
+      ${e.price != null ? `<div class="stat-card"><div class="stat-n" style="font-size:1.2rem">${e.price === 0 ? t_('jug_free','Gratis') : e.price + '€'}</div><div class="stat-l">${t_('jug_reg_label','Inscripción')}</div></div>` : ''}
       ${e.spots ? `<div class="stat-card"><div class="stat-n" style="font-size:1.2rem">${e.spots}</div><div class="stat-l">Plazas</div></div>` : ''}
     </div>
   `;
@@ -2251,9 +2286,9 @@ async function registerToEvent() {
   });
   closeModal('m-event');
   if (res.ok) {
-    toast('✓ Inscripción enviada al organizador');
+    toast(t_('jug_reg_sent','✓ Inscripción enviada al organizador'));
   } else {
-    toast('Error al inscribirse, inténtalo de nuevo');
+    toast(t_('jug_reg_error','Error al inscribirse, inténtalo de nuevo'));
   }
 }
 
@@ -2262,7 +2297,7 @@ async function registerToEvent() {
 // ══════════════════════════════
 async function renderOrgs() {
   const container = document.getElementById('orgs-list');
-  container.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando organizadores...</div>';
+  container.innerHTML = `<div class="loading"><div class="spinner"></div> ${t_('jug_loading_orgs','Cargando organizadores...')}</div>`;
 
   // Load all organizers from dedicated table
   ALL_ORGS = await dbGet('organizers?select=id,user_id,username,club_name,logo_url,description,location,created_at&order=club_name.asc');
@@ -2385,7 +2420,7 @@ async function toggleFollow(orgId, btn) {
 // ══════════════════════════════
 async function renderStats() {
   const container = document.getElementById('stats-layout');
-  container.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando...</div>';
+  container.innerHTML = '<div class="loading"><div class="spinner"></div> <span data-i18n="jug_loading">Cargando...</span></div>';
   if (!CUR_USER) return;
 
   const stats = await dbGet(`global_stats?user_id=eq.${CUR_USER.id}&select=*&order=total_qpts.desc`);
@@ -2594,7 +2629,7 @@ async function uploadAvatar(evt) {
 // ══════════════════════════════
 async function renderHistory() {
   const container = document.getElementById('history-list');
-  container.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando...</div>';
+  container.innerHTML = '<div class="loading"><div class="spinner"></div> <span data-i18n="jug_loading">Cargando...</span></div>';
 
   // Load event registrations for this user
   const regs = await dbGet(
@@ -2684,7 +2719,7 @@ async function saveSettingsProfile() {
 
   // Check username taken (exclude self)
   const existing = await dbGet(`users?username=eq.${encodeURIComponent(username)}&id=neq.${CUR_USER.id}&select=id`);
-  if (existing.length) { errEl.textContent = 'Ese nombre de usuario ya está en uso'; errEl.style.display = 'block'; return; }
+  if (existing.length) { errEl.textContent = t_('jug_username_taken','Ese nombre de usuario ya está en uso'); errEl.style.display = 'block'; return; }
 
   await dbPatch('users', `id=eq.${CUR_USER.id}`, { username, club_name: fullname });
   PROFILE.username  = username;
@@ -2706,9 +2741,9 @@ async function saveSettingsPassword() {
   errEl.style.display = 'none';
   okEl.style.display  = 'none';
 
-  if (!p1) { errEl.textContent = 'Escribe una contraseña nueva'; errEl.style.display = 'block'; return; }
-  if (p1.length < 6) { errEl.textContent = 'La contraseña debe tener al menos 6 caracteres'; errEl.style.display = 'block'; return; }
-  if (p1 !== p2) { errEl.textContent = 'Las contraseñas no coinciden'; errEl.style.display = 'block'; return; }
+  if (!p1) { errEl.textContent = t_('jug_write_pw','Escribe una contraseña nueva'); errEl.style.display = 'block'; return; }
+  if (p1.length < 6) { errEl.textContent = t_('jug_pw_min_chars','La contraseña debe tener al menos 6 caracteres'); errEl.style.display = 'block'; return; }
+  if (p1 !== p2) { errEl.textContent = t_('jug_pw_mismatch','Las contraseñas no coinciden'); errEl.style.display = 'block'; return; }
 
   const { error } = await sb.auth.updateUser({ password: p1 });
   if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; return; }
@@ -2716,7 +2751,7 @@ async function saveSettingsPassword() {
   document.getElementById('settings-pass').value  = '';
   document.getElementById('settings-pass2').value = '';
   okEl.style.display = 'block';
-  toast('✓ Contraseña actualizada');
+  toast(t_('jug_pw_updated','✓ Contraseña actualizada'));
 }
 
 async function handleSettingsAvatar(event) {
@@ -2765,10 +2800,10 @@ function togglePassVis(inputId, btn) {
 }
 
 async function confirmDeleteAccount() {
-  const confirmed = confirm('¿Seguro que quieres eliminar tu cuenta? Esta acción es PERMANENTE e irreversible. Se borrarán todos tus datos.');
+  const confirmed = confirm(t_('jug_confirm_delete','¿Seguro que quieres eliminar tu cuenta? Esta acción es PERMANENTE e irreversible. Se borrarán todos tus datos.'));
   if (!confirmed) return;
 
-  const confirmed2 = confirm('Última confirmación: ¿eliminar la cuenta definitivamente?');
+  const confirmed2 = confirm(t_('jug_confirm_delete2','Última confirmación: ¿eliminar la cuenta definitivamente?'));
   if (!confirmed2) return;
 
   try {
