@@ -844,11 +844,14 @@ function renderOrgList(activos, finalizados, cerrados, pendientes) {
 }
 
 function toggleAccordion(tid) {
+  console.log('[toggle] tid:', tid, 'ALL_ORGS ids:', ALL_ORGS.map(x => x.id));
   const t = ALL_ORGS.find(x => x.id === tid);
-  if (!t) return;
+  console.log('[toggle] found:', t?.id, t?.status);
+  if (!t) { console.warn('[toggle] tournament not found in ALL_ORGS'); return; }
 
   const banner = document.getElementById('banner-' + tid);
   const panel  = document.getElementById('panel-' + tid);
+  console.log('[toggle] banner:', !!banner, 'panel:', !!panel);
 
   // Cerrar el anterior si es diferente
   if (OPEN_ID && OPEN_ID !== tid) {
