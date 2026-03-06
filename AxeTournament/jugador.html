@@ -1987,6 +1987,17 @@ async function registerFromPost() {
   const btn = document.getElementById('post-reg-btn');
   if (btn) { btn.textContent = 'Enviando...'; btn.disabled = true; }
   try {
+    // Buscar player_tag asignado por el organizador en follows
+    let playerTag = null;
+    try {
+      const orgUserId = ACTIVE_POST.user_id;
+      if (orgUserId) {
+        const followRow = await dbGet('follows',
+          `follower_id=eq.${CUR_USER.id}&following_id=eq.${orgUserId}&select=player_tag`);
+        playerTag = followRow?.[0]?.player_tag || null;
+      }
+    } catch(e) { console.warn('[registerFromPost] follow lookup:', e.message); }
+
     const payload = {
       event_id: ACTIVE_POST.id,
       user_id:  CUR_USER.id,
@@ -1994,25 +2005,32 @@ async function registerFromPost() {
       email:    CUR_USER.email,
       status:   'confirmed',
     };
-    // player_level is optional — only include if column exists
-    if (PROFILE?.level) payload.player_level = PROFILE.level;
+    // Prioridad: tag del organizador > nivel del perfil
+    const level = playerTag || PROFILE?.level || null;
+    if (level) payload.player_level = level;
 
-    const res = await dbPost('event_registrations', payload);
-    if (!res.ok) {
+    const session = (await sb.auth.getSession()).data.session;
+    const token   = session?.access_token || SUPA_KEY;
+    const res = await fetch(`${SUPA_URL}/rest/v1/event_registrations`, {
+      method: 'POST',
+      headers: {
+        'apikey':        SUPA_KEY,
+        'Authorization': 'Bearer ' + token,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=minimal,resolution=ignore-duplicates',
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok && res.status !== 409) {
       const errBody = await res.json().catch(() => ({}));
-      // Duplicate registration — treat as already registered
-      if (res.status === 409 || errBody?.code === '23505') {
-        MY_REGISTRATIONS.set(ACTIVE_POST.id, true);
-        toast('Ya estabas inscrito en este torneo ✅', 'green');
-        closeModal('m-post-detail');
-        renderFeedList();
-        return;
-      }
       throw new Error(errBody?.message || `Error ${res.status}`);
     }
+
     MY_REGISTRATIONS.set(ACTIVE_POST.id, true);
     ACTIVE_POST.registration_count = (ACTIVE_POST.registration_count || 0) + 1;
-    toast('✅ Inscripción confirmada', 'green');
+    const tagLabel = playerTag ? ` · ${playerTag.toUpperCase()}` : '';
+    toast('✅ Inscripción confirmada' + tagLabel, 'green');
     closeModal('m-post-detail');
     renderFeedList();
   } catch(e) {
