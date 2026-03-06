@@ -1252,49 +1252,34 @@ footer {
 </style>
 </head>
 <script>
-// ── i18n — detección automática de idioma ──
 async function initI18n() {
   const urlLang = new URLSearchParams(window.location.search).get('lang');
   const lang = urlLang || ((navigator.language || 'es').startsWith('es') ? 'es' : 'en');
   document.documentElement.lang = lang;
   window._lang = lang;
   if (lang === 'es') return;
-
   try {
-    const T = await fetch(`locales/en.json`).then(r => r.json());
+    const T = await fetch('locales/en.json').then(r => r.json());
     window._T = T;
-
-    // Traducir elementos con data-i18n
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.dataset.i18n;
-      if (T[key] !== undefined) el.textContent = T[key];
-    });
-
-    // Traducir placeholders
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-      const key = el.dataset.i18nPlaceholder;
-      if (T[key] !== undefined) el.placeholder = T[key];
-    });
-
-    // Traducir title
-    if (T.page_title) document.title = T.page_title;
-
-    // Observer para elementos que se renderizan después (modales, etc.)
-    const obs = new MutationObserver(() => {
-      document.querySelectorAll('[data-i18n]:not([data-i18n-done])').forEach(el => {
-        const key = el.dataset.i18n;
-        if (T[key] !== undefined) { el.textContent = T[key]; el.dataset.i18nDone = '1'; }
+    const apply = (root) => {
+      root.querySelectorAll('[data-i18n]:not([data-i18n-done])').forEach(el => {
+        const v = T[el.dataset.i18n];
+        if (v !== undefined) { el.textContent = v; el.dataset.i18nDone = '1'; }
       });
-    });
-    obs.observe(document.body, { childList: true, subtree: true });
-
-  } catch(e) {
-    console.warn('[i18n] failed to load en.json:', e.message);
-  }
+      root.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const v = T[el.dataset.i18nPlaceholder];
+        if (v !== undefined) el.placeholder = v;
+      });
+    };
+    apply(document);
+    if (T.page_title) document.title = T.page_title;
+    new MutationObserver(() => apply(document.body))
+      .observe(document.body, { childList: true, subtree: true });
+  } catch(e) { console.warn('[i18n]', e.message); }
 }
-
 document.addEventListener('DOMContentLoaded', initI18n);
 </script>
+
 <body>
 
 <!-- Cursor -->
@@ -1415,11 +1400,11 @@ document.addEventListener('DOMContentLoaded', initI18n);
   <div class="section-inner">
     <div class="features-header">
       <div>
-        <div class="section-eyebrow reveal">Todo lo que necesitas</div>
-        <h2 class="section-title reveal reveal-delay-1">Funciones<br><em>completas.</em></h2>
+        <div class="section-eyebrow reveal"><span data-i18n="features_title_1">Todo lo que necesitas</span></div>
+        <h2 class="section-title reveal reveal-delay-1">Funciones<br><em><span data-i18n="features_title_2">completas.</span></em></h2>
       </div>
       <p class="section-desc reveal reveal-delay-2">
-        Desde la clasificación hasta el campeón, NOVURAXE gestiona cada fase del torneo con precisión profesional.
+        <span data-i18n="features_desc">Desde la clasificación hasta el campeón, NOVURAXE gestiona cada fase del torneo con precisión profesional.</span>
       </p>
     </div>
 
@@ -1427,43 +1412,43 @@ document.addEventListener('DOMContentLoaded', initI18n);
       <div class="feature-card reveal">
         <span class="feature-num">01</span>
         <span class="feature-icon">📊</span>
-        <div class="feature-name">Dashboard</div>
-        <p class="feature-desc">Vista general del torneo en tiempo real. Clasificación, últimos duelos y estadísticas de grupo de un vistazo.</p>
+        <div class="feature-name"><span data-i18n="feat_01_title">Dashboard</span></div>
+        <p class="feature-desc"><span data-i18n="feat_01_desc">Vista general del torneo en tiempo real. Clasificación, últimos duelos y estadísticas de grupo de un vistazo.</span></p>
       </div>
       <div class="feature-card reveal reveal-delay-1">
         <span class="feature-num">02</span>
         <span class="feature-icon">🪓</span>
-        <div class="feature-name">Clasificación</div>
-        <p class="feature-desc">Registro tiro a tiro. Killshots, configuración de rondas (1-2) y lanzamientos (10-12). Valores de diana configurables.</p>
+        <div class="feature-name"><span data-i18n="feat_02_title">Clasificación</span></div>
+        <p class="feature-desc"><span data-i18n="feat_02_desc">Registro tiro a tiro. Killshots, configuración de rondas (1-2) y lanzamientos (10-12). Valores de diana configurables.</span></p>
       </div>
       <div class="feature-card reveal reveal-delay-2">
         <span class="feature-num">03</span>
         <span class="feature-icon">⚡</span>
-        <div class="feature-name">Bracket</div>
-        <p class="feature-desc">Generación automática del bracket eliminatorio. Duelos 2×5 lanzamientos con límites de KS y Bulls Eye.</p>
+        <div class="feature-name"><span data-i18n="feat_03_title">Bracket</span></div>
+        <p class="feature-desc"><span data-i18n="feat_03_desc">Generación automática del bracket eliminatorio. Duelos 2×5 lanzamientos con límites de KS y Bulls Eye.</span></p>
       </div>
       <div class="feature-card reveal">
         <span class="feature-num">04</span>
         <span class="feature-icon">🏆</span>
-        <div class="feature-name">Ranking</div>
-        <p class="feature-desc">Estadísticas completas por jugador: puntos, killshots, bulls eye, victorias y derrotas. Perfil detallado al instante.</p>
+        <div class="feature-name"><span data-i18n="feat_04_title">Ranking</span></div>
+        <p class="feature-desc"><span data-i18n="feat_04_desc">Estadísticas completas por jugador: puntos, killshots, bulls eye, victorias y derrotas. Perfil detallado al instante.</span></p>
       </div>
       <div class="feature-card reveal reveal-delay-1">
         <span class="feature-num">05</span>
         <span class="feature-icon">📁</span>
-        <div class="feature-name">Historial</div>
-        <p class="feature-desc">Guarda torneos anteriores y acumula un ranking global del club entre eventos. Toda la historia en un lugar.</p>
+        <div class="feature-name"><span data-i18n="feat_05_title">Historial</span></div>
+        <p class="feature-desc"><span data-i18n="feat_05_desc">Guarda torneos anteriores y acumula un ranking global del club entre eventos. Toda la historia en un lugar.</span></p>
       </div>
       <div class="feature-card reveal reveal-delay-2">
         <span class="feature-num">06</span>
         <span class="feature-icon">📄</span>
-        <div class="feature-name">Exportación PDF</div>
-        <p class="feature-desc">Informes profesionales con el logo de tu club. Clasificación, bracket, ranking global e informe completo.</p>
+        <div class="feature-name"><span data-i18n="feat_06_title">Exportación PDF</span></div>
+        <p class="feature-desc"><span data-i18n="feat_06_desc">Informes profesionales con el logo de tu club. Clasificación, bracket, ranking global e informe completo.</span></p>
       </div>
       <div class="feature-card reveal" style="grid-column: 1 / -1; background: rgba(76,217,138,0.03); border-top: 2px solid rgba(76,217,138,0.15);">
         <span class="feature-num" style="color:rgba(76,217,138,0.12)">07</span>
         <span class="feature-icon">📡</span>
-        <div class="feature-name" style="color:#4cd98a">Vista Espectador en Vivo</div>
+        <div class="feature-name" style="color:#4cd98a"><span data-i18n="feat_07_title">Vista Espectador en Vivo</span></div>
         <p class="feature-desc">Página pública sin login donde cualquiera puede seguir el torneo en tiempo real — clasificación, bracket y resultados actualizados al instante desde <a href="live.html" style="color:#4cd98a;text-decoration:none;font-weight:600">novuraxe.com/live →</a></p>
       </div>
     </div>
@@ -1488,19 +1473,19 @@ document.addEventListener('DOMContentLoaded', initI18n);
         </p>
         <div style="margin-top:1.5rem; display:flex; flex-direction:column; gap:0.75rem;" class="reveal reveal-delay-3">
           <div style="display:flex;align-items:center;gap:10px;font-size:0.95rem;color:var(--ink5)">
-            <span style="color:#4cd98a;font-size:1rem">✓</span> Clasificación en vivo con puntos y lanzamientos
+            <span style="color:#4cd98a;font-size:1rem">✓</span> <span data-i18n="live_feat_1">Clasificación en vivo con puntos y lanzamientos</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;font-size:0.95rem;color:var(--ink5)">
-            <span style="color:#4cd98a;font-size:1rem">✓</span> Bracket eliminatorio con resultados de cada duelo
+            <span style="color:#4cd98a;font-size:1rem">✓</span> <span data-i18n="live_feat_2">Bracket eliminatorio con resultados de cada duelo</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;font-size:0.95rem;color:var(--ink5)">
-            <span style="color:#4cd98a;font-size:1rem">✓</span> Campeón destacado al finalizar
+            <span style="color:#4cd98a;font-size:1rem">✓</span> <span data-i18n="live_feat_3">Campeón destacado al finalizar</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;font-size:0.95rem;color:var(--ink5)">
-            <span style="color:#4cd98a;font-size:1rem">✓</span> Solo lectura — sin login, sin edición
+            <span style="color:#4cd98a;font-size:1rem">✓</span> <span data-i18n="live_feat_4">Solo lectura — sin login, sin edición</span>
           </div>
           <div style="display:flex;align-items:center;gap:10px;font-size:0.95rem;color:var(--ink5)">
-            <span style="color:#4cd98a;font-size:1rem">✓</span> Sincronización automática cada vez que el organizador guarda
+            <span style="color:#4cd98a;font-size:1rem">✓</span> <span data-i18n="live_feat_5">Sincronización automática cada vez que el organizador guarda</span>
           </div>
         </div>
         <div style="margin-top:2rem;" class="reveal reveal-delay-4">
@@ -1561,7 +1546,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
             </div>
           </div>
         </div>
-        <p style="font-family:var(--f-mono);font-size:10px;letter-spacing:1px;color:var(--ink4);text-align:center;margin-top:1rem;text-transform:uppercase">Solo lectura · Sin login · Actualización automática</p>
+        <p style="font-family:var(--f-mono);font-size:10px;letter-spacing:1px;color:var(--ink4);text-align:center;margin-top:1rem;text-transform:uppercase"><span data-i18n="live_badge">Solo lectura · Sin login · Actualización automática</span></p>
       </div>
 
     </div>
@@ -1577,36 +1562,36 @@ document.addEventListener('DOMContentLoaded', initI18n);
         <div class="step reveal">
           <div class="step-num">01</div>
           <div class="step-content">
-            <div class="step-title">Crea tu cuenta</div>
-            <p class="step-desc">Regístrate con el nombre de tu club, usuario y email. En segundos tienes acceso completo.</p>
+            <div class="step-title"><span data-i18n="step_1_title">Crea tu cuenta</span></div>
+            <p class="step-desc"><span data-i18n="step_1_desc">Regístrate con el nombre de tu club, usuario y email. En segundos tienes acceso completo.</span></p>
           </div>
         </div>
         <div class="step reveal reveal-delay-1">
           <div class="step-num">02</div>
           <div class="step-content">
-            <div class="step-title">Importa jugadores</div>
-            <p class="step-desc">Pega la lista de participantes en bloque o agrégalos uno a uno. Grupos PRO y Semi Pro separados.</p>
+            <div class="step-title"><span data-i18n="step_2_title">Importa jugadores</span></div>
+            <p class="step-desc"><span data-i18n="step_2_desc">Pega la lista de participantes en bloque o agrégalos uno a uno. Grupos PRO y Semi Pro separados.</span></p>
           </div>
         </div>
         <div class="step reveal reveal-delay-2">
           <div class="step-num">03</div>
           <div class="step-content">
-            <div class="step-title">Registra puntuaciones</div>
-            <p class="step-desc">Toca cada lanzamiento en la pantalla para asignar su valor. Killshots y Bulls Eye con un clic.</p>
+            <div class="step-title"><span data-i18n="step_3_title">Registra puntuaciones</span></div>
+            <p class="step-desc"><span data-i18n="step_3_desc">Toca cada lanzamiento en la pantalla para asignar su valor. Killshots y Bulls Eye con un clic.</span></p>
           </div>
         </div>
         <div class="step reveal reveal-delay-3">
           <div class="step-num">04</div>
           <div class="step-content">
-            <div class="step-title">Genera el bracket</div>
-            <p class="step-desc">Un botón genera el bracket completo desde la clasificación. Los duelos avanzan solos al confirmar.</p>
+            <div class="step-title"><span data-i18n="step_4_title">Genera el bracket</span></div>
+            <p class="step-desc"><span data-i18n="step_4_desc">Un botón genera el bracket completo desde la clasificación. Los duelos avanzan solos al confirmar.</span></p>
           </div>
         </div>
         <div class="step reveal reveal-delay-4">
           <div class="step-num">05</div>
           <div class="step-content">
-            <div class="step-title">Exporta y guarda</div>
-            <p class="step-desc">Descarga PDFs profesionales y guarda el torneo en el historial para acumular estadísticas del club.</p>
+            <div class="step-title"><span data-i18n="step_5_title">Exporta y guarda</span></div>
+            <p class="step-desc"><span data-i18n="step_5_desc">Descarga PDFs profesionales y guarda el torneo en el historial para acumular estadísticas del club.</span></p>
           </div>
         </div>
       </div>
@@ -1697,23 +1682,23 @@ document.addEventListener('DOMContentLoaded', initI18n);
         <div class="about-values">
           <div class="about-value">
             <div class="about-value-icon">⚡</div>
-            <div class="about-value-title">Velocidad</div>
-            <div class="about-value-desc">Registro de puntuaciones en segundos, sin interrumpir el flujo del torneo.</div>
+            <div class="about-value-title"><span data-i18n="val_speed_title">Velocidad</span></div>
+            <div class="about-value-desc"><span data-i18n="val_speed_desc">Registro de puntuaciones en segundos, sin interrumpir el flujo del torneo.</span></div>
           </div>
           <div class="about-value">
             <div class="about-value-icon">🎯</div>
-            <div class="about-value-title">Precisión</div>
-            <div class="about-value-desc">Cero errores de cálculo. El sistema lo computa todo automáticamente.</div>
+            <div class="about-value-title"><span data-i18n="val_precision_title">Precisión</span></div>
+            <div class="about-value-desc"><span data-i18n="val_precision_desc">Cero errores de cálculo. El sistema lo computa todo automáticamente.</span></div>
           </div>
           <div class="about-value">
             <div class="about-value-icon">🔒</div>
-            <div class="about-value-title">Seguridad</div>
-            <div class="about-value-desc">Cada club con sus datos aislados. Autenticación profesional con Supabase.</div>
+            <div class="about-value-title"><span data-i18n="val_security_title">Seguridad</span></div>
+            <div class="about-value-desc"><span data-i18n="val_security_desc">Cada club con sus datos aislados. Autenticación profesional con Supabase.</span></div>
           </div>
           <div class="about-value">
             <div class="about-value-icon">📱</div>
-            <div class="about-value-title">Movilidad</div>
-            <div class="about-value-desc">Funciona en cualquier dispositivo. Diseñado para usarse en pista.</div>
+            <div class="about-value-title"><span data-i18n="val_mobile_title">Movilidad</span></div>
+            <div class="about-value-desc"><span data-i18n="val_mobile_desc">Funciona en cualquier dispositivo. Diseñado para usarse en pista.</span></div>
           </div>
         </div>
       </div>
@@ -1721,26 +1706,26 @@ document.addEventListener('DOMContentLoaded', initI18n);
       <div class="about-visual reveal reveal-delay-2">
         <div class="about-big-text">AXE</div>
         <div class="about-card">
-          <div class="about-card-title">Nuestra misión</div>
+          <div class="about-card-title"><span data-i18n="mission_title">Nuestra misión</span></div>
           <div class="about-quote">
             "El lanzamiento de hacha merece las mismas herramientas de organización que cualquier deporte profesional. NOVURAXE es nuestra respuesta a eso."
           </div>
-          <div class="about-author">— Equipo NOVURAXE</div>
+          <div class="about-author"><span data-i18n="mission_author">— Equipo NOVURAXE</span></div>
 
           <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.06)">
-            <div style="font-family:var(--f-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink4);margin-bottom:0.75rem">En desarrollo activo</div>
+            <div style="font-family:var(--f-mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink4);margin-bottom:0.75rem"><span data-i18n="status_active">En desarrollo activo</span></div>
             <div style="display:flex;flex-direction:column;gap:0.5rem">
               <div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:var(--ink5)">
-                <span style="color:var(--green)">✓</span> App web multiplataforma
+                <span style="color:var(--green)">✓</span> <span data-i18n="status_web">App web multiplataforma</span>
               </div>
               <div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:var(--ink5)">
                 <span style="color:var(--green)">✓</span> Seguridad con RLS + JWT
               </div>
               <div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:var(--ink4)">
-                <span style="color:var(--accent)">→</span> App móvil nativa (próximamente)
+                <span style="color:var(--accent)">→</span> <span data-i18n="status_mobile">App móvil nativa (próximamente)</span>
               </div>
               <div style="display:flex;align-items:center;gap:8px;font-size:0.9rem;color:var(--ink4)">
-                <span style="color:var(--accent)">→</span> Torneos multijornada (próximamente)
+                <span style="color:var(--accent)">→</span> <span data-i18n="status_multi">Torneos multijornada (próximamente)</span>
               </div>
             </div>
           </div>
@@ -1777,26 +1762,26 @@ document.addEventListener('DOMContentLoaded', initI18n);
         <div class="gear-cat">
           <div class="gear-cat-coming">Próximo</div>
           <div class="gear-cat-icon">🪓</div>
-          <div class="gear-cat-name">Hachas</div>
-          <div class="gear-cat-desc">Selección de hachas de competición para todos los niveles.</div>
+          <div class="gear-cat-name"><span data-i18n="gear_axes_title">Hachas</span></div>
+          <div class="gear-cat-desc"><span data-i18n="gear_axes_desc">Selección de hachas de competición para todos los niveles.</span></div>
         </div>
         <div class="gear-cat">
           <div class="gear-cat-coming">Próximo</div>
           <div class="gear-cat-icon">🎯</div>
-          <div class="gear-cat-name">Dianas</div>
-          <div class="gear-cat-desc">Dianas de madera homologadas para entrenar en casa o en club.</div>
+          <div class="gear-cat-name"><span data-i18n="gear_targets_title">Dianas</span></div>
+          <div class="gear-cat-desc"><span data-i18n="gear_targets_desc">Dianas de madera homologadas para entrenar en casa o en club.</span></div>
         </div>
         <div class="gear-cat">
           <div class="gear-cat-coming">Próximo</div>
           <div class="gear-cat-icon">🛡️</div>
-          <div class="gear-cat-name">Protección</div>
-          <div class="gear-cat-desc">Guantes y equipamiento de seguridad para lanzar con confianza.</div>
+          <div class="gear-cat-name"><span data-i18n="gear_protection_title">Protección</span></div>
+          <div class="gear-cat-desc"><span data-i18n="gear_protection_desc">Guantes y equipamiento de seguridad para lanzar con confianza.</span></div>
         </div>
         <div class="gear-cat">
           <div class="gear-cat-coming">Próximo</div>
           <div class="gear-cat-icon">🎽</div>
-          <div class="gear-cat-name">Indumentaria</div>
-          <div class="gear-cat-desc">Ropa técnica y merch de la comunidad axe throwing.</div>
+          <div class="gear-cat-name"><span data-i18n="gear_clothing_title">Indumentaria</span></div>
+          <div class="gear-cat-desc"><span data-i18n="gear_clothing_desc">Ropa técnica y merch de la comunidad axe throwing.</span></div>
         </div>
       </div>
     </div>
@@ -1862,7 +1847,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
       <li><a href="#about">Quiénes somos</a></li>
       <li><a href="#gear"><span data-i18n="nav_gear">Equipamiento</span></a></li>
       <li><a href="live.html">Live</a></li>
-      <li><a href="#contact">Contacto</a></li>
+      <li><a href="#contact"><span data-i18n="nav_contact">Contacto</span></a></li>
       <li><a href="novuraxe.html">Acceder</a></li>
     </ul>
     <div class="footer-copy"><span data-i18n="footer">© 2026 NOVURAXE — novuraxe.com</span></div>
