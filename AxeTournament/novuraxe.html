@@ -5095,6 +5095,164 @@ function confirmDeleteActiveTournament() {
   })();
 }
 
+// ─────────────────────────────────
+// DASHBOARD INSCRIPTIONS PANEL
+// ─────────────────────────────────
+let DASH_REGS     = [];
+let DASH_POST     = null;
+
+async function loadDashRegistrations() {
+  const countEl  = document.getElementById('dash-reg-count');
+  const listEl   = document.getElementById('dash-reg-list');
+  const toggleEl = document.getElementById('dash-toggle-reg-btn');
+  if (!countEl || !listEl) return;
+
+  // Cargar post asociado al torneo
+  if (!DASH_POST || DASH_POST.tournament_id !== ADMIN.__tid) {
+    try {
+      const rows = await dbGet('posts', `tournament_id=eq.${ADMIN.__tid}&select=*&limit=1`);
+      DASH_POST = rows?.[0] || null;
+    } catch(e) { DASH_POST = null; }
+  }
+
+  if (!DASH_POST) {
+    countEl.textContent = 'Sin publicación asociada';
+    return;
+  }
+
+  // Actualizar botón toggle
+  const status = DASH_POST.inscription_status || 'open';
+  const cap    = DASH_POST.capacity || 40;
+  if (toggleEl) {
+    toggleEl.textContent  = status === 'open' ? '🔒 Cerrar inscripción' : '🔓 Abrir inscripción';
+    toggleEl.className    = status === 'open' ? 'btn btn-ghost btn-sm' : 'btn btn-amber btn-sm';
+  }
+
+  // Cargar inscritos
+  try {
+    DASH_REGS = await dbGet('event_registrations',
+      `event_id=eq.${DASH_POST.id}&order=created_at.desc&select=*`) || [];
+
+    // Enriquecer con perfiles
+    if (DASH_REGS.length) {
+      const uids = [...new Set(DASH_REGS.filter(r => r.user_id).map(r => r.user_id))];
+      if (uids.length) {
+        const profiles = await dbGet('users', `id=in.(${uids.join(',')})&select=id,username,club_name`) || [];
+        const pm = {};
+        profiles.forEach(p => { pm[p.id] = p; });
+        DASH_REGS = DASH_REGS.map(r => ({ ...r, _profile: pm[r.user_id] || null }));
+      }
+    }
+  } catch(e) { DASH_REGS = []; }
+
+  const count = DASH_REGS.length;
+  countEl.innerHTML = `<strong style="font-size:16px;color:#fff">${count}</strong> <span style="color:var(--ink4)">/ ${cap} inscritos</span>`;
+
+  if (!count) {
+    listEl.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--ink4);font-size:12px">Sin inscripciones todavía</div>';
+    return;
+  }
+
+  listEl.innerHTML = DASH_REGS.map((r, i) => {
+    const uname = r._profile?.username || r.name || '—';
+    const lvl   = r.player_level;
+    const lvlHtml = lvl === 'pro'
+      ? `<span class="reg-lvl-pro">PRO</span>`
+      : lvl === 'semi'
+        ? `<span class="reg-lvl-semi">SEMI</span>`
+        : `<span class="reg-lvl-none">Sin nivel</span>`;
+    const time = new Date(r.created_at).toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+    const date = new Date(r.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short' });
+    return `<div class="reg-item">
+      <span style="font-size:11px;color:var(--ink4);min-width:18px">${i+1}</span>
+      <div style="flex:1;min-width:0">
+        <div class="reg-item-name">@${uname}</div>
+        <div class="reg-item-meta">${date} · ${time}</div>
+      </div>
+      ${lvlHtml}
+      <button class="btn btn-xs" style="background:rgba(184,64,64,0.1);color:#e05555;border:1px solid rgba(184,64,64,0.2);padding:2px 7px"
+        onclick="dashRemoveRegistration('${r.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+async function dashToggleRegistration() {
+  if (!DASH_POST) return;
+  const current = DASH_POST.inscription_status || 'open';
+  const next    = current === 'open' ? 'closed' : 'open';
+  try {
+    await dbUpdate('posts', `id=eq.${DASH_POST.id}`, {
+      inscription_status: next,
+      registration_open:  next === 'open'
+    });
+    DASH_POST.inscription_status = next;
+    DASH_POST.registration_open  = next === 'open';
+    toast(next === 'open' ? '✓ Inscripción abierta' : '✓ Inscripción cerrada', 'green');
+    loadDashRegistrations();
+  } catch(e) { toast('Error al cambiar estado', 'red'); }
+}
+
+async function dashRemoveRegistration(regId) {
+  if (!confirm('¿Eliminar esta inscripción?')) return;
+  try {
+    await dbDelete('event_registrations', `id=eq.${regId}`);
+    toast('Inscripción eliminada', 'red');
+    loadDashRegistrations();
+  } catch(e) { toast('Error al eliminar', 'red'); }
+}
+
+async function dashStartTournament() {
+  if (!DASH_REGS.length) { toast('No hay inscritos — espera a que se inscriban jugadores', 'red'); return; }
+
+  const noLevel = DASH_REGS.filter(r => !r.player_level);
+  if (noLevel.length) {
+    const names = noLevel.slice(0,3).map(r => '@' + (r._profile?.username || r.name)).join(', ');
+    const more  = noLevel.length > 3 ? ` y ${noLevel.length - 3} más` : '';
+    if (!confirm(`⚠️ ${noLevel.length} jugador(es) sin nivel PRO/SEMI:\n${names}${more}\n\nSe añadirán como PRO por defecto. ¿Iniciar torneo?`)) return;
+  }
+
+  // Cerrar inscripción en el post + marcar torneo como active
+  try {
+    if (DASH_POST) {
+      await dbUpdate('posts', `id=eq.${DASH_POST.id}`, {
+        inscription_status: 'started',
+        registration_open: false
+      });
+    }
+    if (ADMIN.__tid) {
+      await dbUpdate('tournaments', `id=eq.${ADMIN.__tid}`, {
+        status: 'active',
+        updated_at: new Date().toISOString()
+      });
+    }
+  } catch(e) { console.warn('[dashStart]', e.message); }
+
+  // Importar jugadores a grupos PRO / SEMI
+  ADMIN.pro  = defGroup();
+  ADMIN.semi = defGroup();
+  ADMIN.__status = 'active';
+
+  DASH_REGS.forEach(r => {
+    const lvl    = r.player_level || 'pro';
+    const player = {
+      id:       uid(),
+      name:     r._profile?.username || r.name || 'Jugador',
+      user_id:  r.user_id || null,
+      username: r._profile?.username || null,
+      level:    lvl,
+    };
+    if (lvl === 'semi') ADMIN.semi.players.push(player);
+    else                ADMIN.pro.players.push(player);
+  });
+
+  DASH_POST = null;
+  DASH_REGS = [];
+  save();
+  renderAll();
+  showPage('qualify');
+  toast(`✓ ${ADMIN.pro.players.length + ADMIN.semi.players.length} jugadores importados — torneo iniciado`, 'green');
+}
+
 function renderDashGroup(players, containerId, groupKey) {
   const el = document.getElementById(containerId);
   if (!el) return;
@@ -5221,9 +5379,17 @@ function renderDash() {
     initiation: {
       cls: 'qualify', icon: '📋',
       title: 'Inscripciones abiertas',
-      desc: `Torneo "<strong>${ADMIN.tName || '—'}</strong>" publicado. Los jugadores pueden inscribirse. Cuando estés listo, inicia el torneo desde el panel de inscritos en Publicaciones.`,
-      actions: `<button class="btn btn-amber" onclick="showPage('posts')">👥 Ver inscritos</button>
-                <button class="btn btn-ghost btn-sm" onclick="newTournament()">Cambiar datos</button>`
+      desc: `Torneo "<strong>${ADMIN.tName || '—'}</strong>" publicado y visible para tus seguidores.`,
+      actions: `
+        <div id="dash-reg-panel" style="width:100%;margin-top:4px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+            <span style="font-size:13px;color:var(--ink3)" id="dash-reg-count">Cargando inscritos...</span>
+            <button class="btn btn-ghost btn-sm" id="dash-toggle-reg-btn" onclick="dashToggleRegistration()">⏳</button>
+            <button class="btn btn-red btn-sm" onclick="dashStartTournament()">🏆 Iniciar torneo</button>
+            <button class="btn btn-ghost btn-sm" onclick="newTournament()" style="margin-left:auto">Cambiar datos</button>
+          </div>
+          <div id="dash-reg-list" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:5px"></div>
+        </div>`
     },
     add_players: {
       cls: 'qualify', icon: '👥',
@@ -5331,6 +5497,10 @@ function renderDash() {
   }
   } catch(e) {
     console.error('[renderDash] error:', e);
+  }
+  // Cargar inscritos en el panel del dashboard si estamos en fase initiation
+  if (document.getElementById('dash-reg-panel')) {
+    loadDashRegistrations();
   }
 }
 // ─────────────────────────────────
