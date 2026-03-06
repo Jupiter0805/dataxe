@@ -2461,41 +2461,41 @@ async function renderStats() {
         <div class="profile-info">
           <div class="profile-name">${PROFILE?.club_name || PROFILE?.username || '—'}</div>
           <div class="profile-username">@${PROFILE?.username || '—'}</div>
-          <div class="profile-since">Miembro desde ${since}</div>
-          <div class="profile-upload-hint">📷 Haz clic en la foto para cambiarla</div>
+          <div class="profile-since">${t_('jug_member_since','Miembro desde')} ${since}</div>
+          <div class="profile-upload-hint">📷 ${t_('jug_click_photo','Haz clic en la foto para cambiarla')}</div>
         </div>
         <div class="profile-stats">
           <div class="profile-stat">
             <div class="profile-stat-n">${totT}</div>
-            <div class="profile-stat-l">Torneos</div>
+            <div class="profile-stat-l">${t_('jug_sidebar_tournaments','Torneos')}</div>
           </div>
           <div class="profile-stat">
             <div class="profile-stat-n g">${totW}</div>
-            <div class="profile-stat-l">Victorias</div>
+            <div class="profile-stat-l">${t_('jug_sidebar_wins','Victorias')}</div>
           </div>
           <div class="profile-stat">
             <div class="profile-stat-n" style="color:var(--red)">${totL}</div>
-            <div class="profile-stat-l">Derrotas</div>
+            <div class="profile-stat-l">${t_('jug_losses','Derrotas')}</div>
           </div>
           <div class="profile-stat">
             <div class="profile-stat-n s">${wlPct}%</div>
-            <div class="profile-stat-l">Win rate</div>
+            <div class="profile-stat-l">${t_('jug_win_rate','Win rate')}</div>
           </div>
           <div class="profile-stat">
             <div class="profile-stat-n" style="color:#c084fc">${totKS}</div>
-            <div class="profile-stat-l">Killshots</div>
+            <div class="profile-stat-l">${t_('jug_killshots','Killshots')}</div>
           </div>
           <div class="profile-stat">
             <div class="profile-stat-n" style="color:#60a5fa">${totBS}</div>
-            <div class="profile-stat-l">Bull's eye</div>
+            <div class="profile-stat-l">${t_('jug_bulls_eye',"Bull's eye")}</div>
           </div>
           <div class="profile-stat">
             <div class="profile-stat-n">${qPrecPct}%</div>
-            <div class="profile-stat-l">Precisión centros</div>
+            <div class="profile-stat-l">${t_('jug_precision','Precisión centros')}</div>
           </div>
           <div class="profile-stat">
             <div class="profile-stat-n" style="color:#60a5fa">${bullPct}%</div>
-            <div class="profile-stat-l">% Bull duelo</div>
+            <div class="profile-stat-l">${t_('jug_bull_duel','% Bull duelo')}</div>
           </div>
         </div>
       </div>
@@ -2563,8 +2563,8 @@ async function renderStats() {
       ` : `
         <div class="empty" style="padding:3rem">
           <div class="empty-icon">🎯</div>
-          <div class="empty-title" style="color:#ffffff;font-size:15px">Sin estadísticas aún</div>
-          <p style="font-size:13px;margin-top:6px;color:rgba(255,255,255,0.5)">Tus stats aparecerán aquí cuando los organizadores vinculen tu nombre de jugador a tu cuenta</p>
+          <div class="empty-title" style="color:#ffffff;font-size:15px">${t_('jug_no_stats','Sin estadísticas aún')}</div>
+          <p style="font-size:13px;margin-top:6px;color:rgba(255,255,255,0.5)">${t_('jug_no_stats_sub','Tus stats aparecerán aquí cuando los organizadores vinculen tu nombre de jugador a tu cuenta')}</p>
         </div>`}
     </div>
   `;
