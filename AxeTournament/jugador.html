@@ -1093,7 +1093,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
       <div class="err-msg" id="err-reg"></div>
       <div class="field">
         <label class="f-label"><span data-i18n="contact_name">Nombre</span></label>
-        <input class="f-input" type="text" id="r-name" placeholder="Tu nombre completo">
+        <input class="f-input" type="text" id="r-name" placeholder="Tu nombre completo" data-i18n-placeholder="jug_ph_fullname">
       </div>
       <div class="field">
         <label class="f-label"><span data-i18n="jug_username">Usuario</span></label>
@@ -1180,7 +1180,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
         <!-- Main feed -->
         <div class="feed-main">
           <div class="pg-eyebrow"><span data-i18n="jug_upcoming">Próximos torneos</span></div>
-          <h1 class="pg-title">Tu <em><span data-i18n="jug_feed_title">feed.</span></em></h1>
+          <h1 class="pg-title"><span data-i18n="jug_your">Tu</span> <em><span data-i18n="jug_feed_title">feed.</span></em></h1>
           <p class="pg-sub"><span data-i18n="jug_feed_sub">Torneos de los organizadores que sigues</span></p>
 
           <div class="feed-filters">
@@ -1272,7 +1272,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
           <div class="settings-card-title"><span data-i18n="jug_personal_info">Información personal</span></div>
           <div class="settings-field">
             <label class="f-label"><span data-i18n="jug_full_name">Nombre completo</span></label>
-            <input class="f-input" type="text" id="settings-fullname" placeholder="Tu nombre">
+            <input class="f-input" type="text" id="settings-fullname" placeholder="Tu nombre" data-i18n-placeholder="jug_ph_name">
           </div>
           <div class="settings-field">
             <label class="f-label"><span data-i18n="jug_username_label">Nombre de usuario</span></label>
@@ -1915,8 +1915,8 @@ function renderFeedList() {
   if (!merged.length) {
     container.innerHTML = '<div class="empty" style="min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center">'
       + '<div class="empty-icon">📭</div>'
-      + '<div class="empty-title">Sin resultados</div>'
-      + '<p>No hay contenido para este filtro</p>'
+      + '<div class="empty-title">'+t_('jug_no_results','Sin resultados')+'</div>'
+      + '<p>'+t_('jug_no_results_sub','No hay contenido para este filtro')+'</p>'
       + '</div>';
     return;
   }
