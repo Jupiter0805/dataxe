@@ -1201,13 +1201,13 @@ document.addEventListener('DOMContentLoaded', initI18n);
     <!-- ── ORGANIZADORES ── -->
     <div class="page" id="pg-orgs">
       <div class="pg-eyebrow"><span data-i18n="jug_discover">Descubrir</span></div>
-      <h1 class="pg-title">Clubs &amp; <em>Organizadores.</em></h1>
+      <h1 class="pg-title"><span data-i18n="jug_clubs_title">Clubs &amp;</span> <em><span data-i18n="jug_organizers_title">Organizadores.</span></em></h1>
       <p class="pg-sub"><span data-i18n="jug_discover_sub">Sigue a los organizadores para ver sus torneos en tu feed</span></p>
 
       <div class="orgs-search-bar">
         <span class="orgs-search-icon">🔍</span>
         <input class="orgs-search-input" type="text" id="org-search"
-          placeholder="Buscar por nombre de club, ciudad..."
+          placeholder="Buscar por nombre de club, ciudad..." data-i18n-placeholder="jug_search_placeholder"
           oninput="filterOrgs(this.value)">
       </div>
 
@@ -2364,21 +2364,21 @@ function orgCard(o) {
     <div class="org-stats">
       <div class="org-stat">
         <div class="org-stat-n">${o.event_count}</div>
-        <div class="org-stat-l">Torneos</div>
+        <div class="org-stat-l">${t_('jug_sidebar_tournaments','Torneos')}</div>
       </div>
       <div class="org-stat">
         <div class="org-stat-n" style="color:var(--sand)">${o.follower_count}</div>
-        <div class="org-stat-l">Seguidores</div>
+        <div class="org-stat-l">${t_('jug_followers','Seguidores')}</div>
       </div>
       <div class="org-stat">
         <div class="org-stat-n" style="color:${isFollowing ? 'var(--green)' : 'rgba(255,255,255,0.2)'}">${isFollowing ? '✓' : '—'}</div>
-        <div class="org-stat-l">Siguiendo</div>
+        <div class="org-stat-l">${t_('jug_following_label','Siguiendo')}</div>
       </div>
     </div>
     <div style="padding:0.875rem 1.25rem;border-top:1px solid rgba(255,255,255,0.06)">
       <button class="follow-btn ${isFollowing ? 'following' : 'not-following'}"
         onclick="toggleFollow('${followId}', this)" style="width:100%">
-        ${isFollowing ? '✓ Siguiendo' : '+ Seguir'}
+        ${isFollowing ? '✓ '+t_('jug_following_btn','Siguiendo') : '+ '+t_('jug_follow_btn','Seguir')}
       </button>
     </div>
   </div>`;
@@ -2392,7 +2392,7 @@ async function toggleFollow(orgId, btn) {
     await dbDelete('follows', `follower_id=eq.${CUR_USER.id}&following_id=eq.${orgId}`);
     FOLLOWS.delete(orgId);
     btn.className = 'follow-btn not-following';
-    btn.textContent = '+ Seguir';
+    btn.textContent = '+ '+t_('jug_follow_btn','Seguir');
     // Update "Siguiendo" indicator
     const followEl = document.querySelector(`#org-${orgId} .org-stat-n:last-of-type`);
     if (followEl) { followEl.textContent = '—'; followEl.style.color = 'rgba(255,255,255,0.2)'; }
