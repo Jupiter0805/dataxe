@@ -303,5 +303,10 @@
   "hist_th_tournament": "Tournament",
   "jug_ph_min_chars": "Minimum 8 characters",
   "jug_ph_repeat_pw": "Repeat password",
-  "jug_role_player": "Player"
+  "jug_role_player": "Player",
+  "jug_your": "Your",
+  "jug_no_results": "No results",
+  "jug_no_results_sub": "No content for this filter",
+  "jug_ph_fullname": "Your full name",
+  "jug_ph_name": "Your name"
 }
