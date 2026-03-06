@@ -302,5 +302,6 @@
   "jug_no_history_sub": "Register for tournaments from your feed to see them here",
   "hist_th_tournament": "Tournament",
   "jug_ph_min_chars": "Minimum 8 characters",
-  "jug_ph_repeat_pw": "Repeat password"
+  "jug_ph_repeat_pw": "Repeat password",
+  "jug_role_player": "Player"
 }
