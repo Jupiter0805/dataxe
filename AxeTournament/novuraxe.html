@@ -2014,8 +2014,8 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     <!-- ──── SETTINGS ──── -->
     <div class="page" id="pg-settings">
       <div class="pg-title">Confi<em>g</em></div>
-      <div class="pg-sub">Personalización del administrador</div>
-      <div class="g2">
+      <div class="pg-sub">Perfil del local</div>
+      <div style="max-width:480px">
         <div class="card">
           <div class="card-title">Perfil del local</div>
           <div class="f-group"><label class="f-label">Nombre del local / club</label><input class="f-input" type="text" id="cfg-club" placeholder="Axe House Madrid"></div>
@@ -2028,14 +2028,6 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
             </div>
           </div>
           <button class="btn btn-red" onclick="saveSettings()">Guardar</button>
-        </div>
-        <div class="card">
-          <div class="card-title">Torneo activo</div>
-          <div class="f-group"><label class="f-label">Nombre del torneo</label><input class="f-input" type="text" id="cfg-tname" placeholder="Torneo Enero 2025"></div>
-          <div class="f-group"><label class="f-label">Fecha</label><input class="f-input" type="date" id="cfg-tdate"></div>
-          <div style="margin-top:1rem">
-            <button class="btn btn-red" onclick="saveSettings()">Guardar</button>
-          </div>
         </div>
       </div>
     </div>
@@ -2367,7 +2359,7 @@ let DUEL_PICK = null;   // { r, p(0|1), t }
 let VIEW_HIST = null;
 
 function gk()  { return 'novuraxe_' + CUR_USER; }
-function G()   { return ADMIN[CUR_GROUP]; }
+function G()   { return ADMIN[CUR_GROUP] || defGroup(); }
 
 // ─────────────────────────────────
 // SUPABASE CONFIG
@@ -2441,12 +2433,13 @@ function defGroup() {
 function defAdmin() {
   return {
     club: '', logo: null,
-    tName: 'Torneo 2025',
-    tDate: new Date().toISOString().split('T')[0],
+    tName: null,
+    tDate: null,
+    __tid: null,
     history: [],
     global: {},
-    pro: defGroup(),
-    semi: defGroup(),
+    pro: null,
+    semi: null,
   };
 }
 
@@ -2808,7 +2801,8 @@ async function doRegister() {
   CUR_USER   = u;
   ADMIN      = defAdmin();
   ADMIN.club = club;
-  save();
+  // No save() here — el organizador creará el primer torneo desde el dashboard
+  localStorage.setItem(gk(), JSON.stringify(ADMIN));
   launchApp();
 }
 
@@ -4772,7 +4766,7 @@ function confirmDeleteActiveTournament() {
       }
     } catch(e) { console.warn('[delete]', e.message); }
 
-    // Resetear estado local completamente
+    // Resetear estado local — preservar perfil, historial y stats
     const preserved = { club: ADMIN.club, logo: ADMIN.logo, history: ADMIN.history, global: ADMIN.global };
     ADMIN = { ...defAdmin(), ...preserved };
     localStorage.setItem(gk(), JSON.stringify(ADMIN));
@@ -5393,29 +5387,20 @@ function expHistPDFById(id) {
 // SETTINGS
 // ─────────────────────────────────
 function renderSettings() {
-  document.getElementById('cfg-club').value  = ADMIN.club  || '';
-  document.getElementById('cfg-tname').value = ADMIN.tName || '';
-  document.getElementById('cfg-tdate').value = ADMIN.tDate || '';
+  document.getElementById('cfg-club').value = ADMIN.club || '';
   if (ADMIN.logo) {
-    document.getElementById('logo-img').src     = ADMIN.logo;
-    document.getElementById('logo-img').style.display = 'block';
+    document.getElementById('logo-img').src          = ADMIN.logo;
+    document.getElementById('logo-img').style.display  = 'block';
     document.getElementById('logo-hint').style.display = 'none';
   }
 }
 
 function saveSettings() {
-  const newClub  = document.getElementById('cfg-club').value.trim();
-  const newTName = document.getElementById('cfg-tname').value.trim();
-  const newTDate = document.getElementById('cfg-tdate').value;
-
-  ADMIN.club  = newClub  || ADMIN.club;
-  ADMIN.tName = newTName || ADMIN.tName;
-  ADMIN.tDate = newTDate || ADMIN.tDate;
-
+  const newClub = document.getElementById('cfg-club').value.trim();
+  ADMIN.club    = newClub || ADMIN.club;
   document.getElementById('t-club-name').textContent = ADMIN.club || CUR_USER;
   localStorage.setItem(gk(), JSON.stringify(ADMIN));
   syncToSupabase().catch(e => console.warn('sync error', e));
-  renderDash();
   toast('Configuración guardada ✓', 'green');
 }
 
