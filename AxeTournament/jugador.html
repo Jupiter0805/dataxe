@@ -1230,7 +1230,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
     <!-- ── HISTORIAL ── -->
     <div class="page" id="pg-history">
       <div class="pg-eyebrow"><span data-i18n="jug_history">Historial</span></div>
-      <h1 class="pg-title">Torneos <em><span data-i18n="jug_played">jugados.</span></em></h1>
+      <h1 class="pg-title"><span data-i18n="jug_tournaments_word">Torneos</span> <em><span data-i18n="jug_played">jugados.</span></em></h1>
       <p class="pg-sub"><span data-i18n="jug_history_sub">Torneos en los que apareces registrado</span></p>
 
       <div id="history-list">
@@ -2530,7 +2530,7 @@ async function renderStats() {
           <div style="overflow-x:auto">
             <table class="stats-table" style="min-width:600px">
               <thead><tr>
-                <th>Torneo</th>
+                <th>${t_('hist_th_tournament','Torneo')}</th>
                 <th>T</th>
                 <th style="color:var(--green)">V</th>
                 <th style="color:var(--red)">D</th>
@@ -2640,8 +2640,8 @@ async function renderHistory() {
     container.innerHTML = `
       <div class="empty">
         <div class="empty-icon">📁</div>
-        <div class="empty-title">Sin torneos registrados</div>
-        <p>Inscríbete en torneos desde tu feed para verlos aquí</p>
+        <div class="empty-title">${t_('jug_no_history','Sin torneos registrados')}</div>
+        <p>${t_('jug_no_history_sub','Inscríbete en torneos desde tu feed para verlos aquí')}</p>
       </div>`;
     return;
   }
@@ -2650,7 +2650,7 @@ async function renderHistory() {
     <div class="card">
       <table class="hist-table">
         <thead><tr>
-          <th>Torneo</th>
+          <th>${t_('hist_th_tournament','Torneo')}</th>
           <th>Club</th>
           <th>Fecha</th>
           <th>Estado</th>
