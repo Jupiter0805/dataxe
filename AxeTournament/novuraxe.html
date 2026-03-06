@@ -1450,52 +1450,30 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 /* ── POSTS FEED ── */
 /* ── REGISTRATIONS ── */
 .reg-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: flex; align-items: center; gap: 10px;
   padding: 10px 12px;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.07);
   border-radius: 8px;
 }
-.reg-item-name  { font-size:13px; font-weight:600; color:#fff; flex:1; min-width:0; }
-.reg-item-meta  { font-size:11px; color:var(--ink4); }
-.reg-item-level { font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border-radius:4px; }
-.reg-lvl-pro    { background:rgba(196,135,58,0.15); color:var(--accent); }
-.reg-lvl-semi   { background:rgba(124,184,82,0.12); color:#7cb852; }
-.reg-lvl-none   { background:rgba(255,255,255,0.07); color:var(--ink3); }
+.reg-item-name { font-size:13px; font-weight:600; color:#fff; flex:1; min-width:0; }
+.reg-item-meta { font-size:11px; color:var(--ink4); }
+.reg-lvl-pro  { font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:rgba(196,135,58,0.15);color:var(--accent); }
+.reg-lvl-semi { font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:rgba(124,184,82,0.12);color:#7cb852; }
+.reg-lvl-none { font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,0.07);color:var(--ink3); }
 .post-reg-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  padding: 8px 10px;
+  display: flex; align-items: center; gap: 10px;
+  margin-top: 12px; padding: 10px 14px;
   background: rgba(196,135,58,0.06);
-  border: 1px solid rgba(196,135,58,0.15);
-  border-radius: 6px;
-  cursor: pointer;
+  border: 1px solid rgba(196,135,58,0.18);
+  border-radius: 8px; cursor: pointer;
+  transition: background 0.15s;
 }
-.post-reg-bar:hover { background: rgba(196,135,58,0.1); }
-.post-reg-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--accent);
-}
-.post-reg-status {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 4px;
-}
-.reg-open   { background: rgba(76,217,138,0.12); color: #4cd98a; }
-.reg-closed { background: rgba(255,255,255,0.07); color: var(--ink3); }
-.reg-full   { background: rgba(239,68,68,0.12);  color: #e05555; }
-.reg-started { background: rgba(59,130,246,0.12); color: #60a5fa; }
+.post-reg-bar:hover { background: rgba(196,135,58,0.12); }
+.reg-pill-open    { font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px;background:rgba(76,217,138,0.12);color:#4cd98a;border:1px solid rgba(76,217,138,0.2); }
+.reg-pill-closed  { font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--ink3);border:1px solid rgba(255,255,255,0.1); }
+.reg-pill-full    { font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px;background:rgba(239,68,68,0.1);color:#e05555;border:1px solid rgba(239,68,68,0.2); }
+.reg-pill-started { font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px;background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid rgba(59,130,246,0.2); }
 .posts-toolbar {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;
@@ -2387,40 +2365,6 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   </div>
 </div>
 
-<!-- ══ MODAL INSCRITOS ══ -->
-<div class="modal-bg" id="m-registrations">
-  <div class="modal" style="max-width:560px">
-    <div class="modal-title">👥 Inscritos al torneo</div>
-    <div id="reg-post-info" style="font-size:12px;color:var(--ink4);margin-bottom:1rem"></div>
-
-    <!-- Capacity bar -->
-    <div style="margin-bottom:1.25rem">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span style="font-size:12px;color:var(--ink3);font-weight:600">Aforo</span>
-        <span style="font-size:12px;color:var(--ink3)" id="reg-capacity-label">0 / 40</span>
-      </div>
-      <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden">
-        <div id="reg-capacity-bar" style="height:100%;background:var(--accent);border-radius:3px;transition:width 0.3s;width:0%"></div>
-      </div>
-    </div>
-
-    <!-- Controls -->
-    <div style="display:flex;gap:8px;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
-      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--ink4);text-transform:uppercase;margin-right:auto" id="reg-status-label">Inscripción abierta</div>
-      <button class="btn btn-ghost btn-sm" id="reg-toggle-btn" onclick="toggleRegistration()">Cerrar inscripción</button>
-      <button class="btn btn-red btn-sm" id="reg-start-btn" onclick="startTournamentFromRegistrations()">🏆 Iniciar torneo</button>
-    </div>
-
-    <div id="reg-list" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:6px">
-      <div style="text-align:center;padding:2rem;color:var(--ink4)">Cargando...</div>
-    </div>
-
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="closeModal('m-registrations')">Cerrar</button>
-    </div>
-  </div>
-</div>
-
 <!-- ═══ MODALS ═══ -->
 
 <!-- Add player -->
@@ -2494,9 +2438,9 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 <!-- ══ MODAL NUEVO TORNEO ══ -->
 <div class="modal-bg" id="m-new-tournament">
   <div class="modal" style="max-width:480px">
-    <div class="modal-title" id="nt-modal-title">🏆 Iniciar torneo</div>
+    <div class="modal-title" id="nt-modal-title">🏆 Nuevo torneo</div>
     <p id="nt-modal-desc" style="font-size:13px;color:var(--ink3);margin-bottom:1.25rem;line-height:1.6">
-      Configura el torneo. Se publicará automáticamente para que los jugadores puedan inscribirse.
+      Crea el torneo y publícalo para que los jugadores se inscriban. Tú decides cuándo iniciarlo.
     </p>
     <div class="f-group">
       <label class="f-label">Nombre del torneo *</label>
@@ -2514,23 +2458,53 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
     </div>
     <div class="f-group">
       <label class="f-label">Lugar</label>
-      <input class="f-input" type="text" id="nt-location" placeholder="Axe House Madrid, Calle...">
+      <input class="f-input" type="text" id="nt-location" placeholder="Axe House Madrid...">
     </div>
     <div class="f-group">
       <label class="f-label">Aforo máximo</label>
       <div style="display:flex;align-items:center;gap:10px">
-        <input class="f-input" type="number" id="nt-capacity" value="40" min="2" max="200" style="max-width:100px">
-        <span style="font-size:12px;color:var(--ink4)">plazas (mínimo 2)</span>
+        <input class="f-input" type="number" id="nt-capacity" value="40" min="2" max="200" style="max-width:90px">
+        <span style="font-size:12px;color:var(--ink4)">plazas</span>
       </div>
     </div>
     <div class="f-group">
       <label class="f-label">Descripción <span style="color:var(--ink4);font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></label>
-      <textarea class="f-input" id="nt-desc" rows="2" placeholder="Información sobre el torneo, normas, etc."></textarea>
+      <textarea class="f-input" id="nt-desc" rows="2" placeholder="Información, normas, etc."></textarea>
     </div>
     <div class="err-msg" id="nt-err"></div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('m-new-tournament')">Cancelar</button>
       <button class="btn btn-red" onclick="confirmNewTournament()">🏆 Crear y publicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL INSCRITOS ══ -->
+<div class="modal-bg" id="m-registrations">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title">👥 Inscritos al torneo</div>
+    <div id="reg-post-info" style="font-size:12px;color:var(--ink4);margin-bottom:1rem"></div>
+    <!-- Capacity bar -->
+    <div style="margin-bottom:1.25rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--ink3);font-weight:600">Aforo</span>
+        <span style="font-size:12px;color:var(--ink3)" id="reg-capacity-label">0 / 40</span>
+      </div>
+      <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden">
+        <div id="reg-capacity-bar" style="height:100%;background:var(--accent);border-radius:3px;transition:width 0.3s;width:0%"></div>
+      </div>
+    </div>
+    <!-- Controls -->
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:1rem;flex-wrap:wrap">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--ink4);text-transform:uppercase;flex:1" id="reg-status-label">Inscripción abierta</div>
+      <button class="btn btn-ghost btn-sm" id="reg-toggle-btn" onclick="toggleRegistration()">Cerrar inscripción</button>
+      <button class="btn btn-red btn-sm" id="reg-start-btn" onclick="startTournamentFromRegistrations()">🏆 Iniciar torneo</button>
+    </div>
+    <div id="reg-list" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:6px">
+      <div style="text-align:center;padding:2rem;color:var(--ink4)">Cargando...</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('m-registrations')">Cerrar</button>
     </div>
   </div>
 </div>
@@ -3786,18 +3760,7 @@ function renderQEntryList() {
     renderDash(); return;
   }
 
-  // Warning: players without a level assigned
-  const noLevel = g.players.filter(p => !p.level || p.level === '');
-  const warnHtml = noLevel.length ? `
-    <div style="background:rgba(212,151,90,0.1);border:1px solid rgba(212,151,90,0.3);border-radius:8px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:var(--accent);display:flex;align-items:flex-start;gap:8px">
-      <span style="font-size:1rem;flex-shrink:0">⚠️</span>
-      <div>
-        <strong>${noLevel.length} jugador${noLevel.length > 1 ? 'es' : ''} sin nivel asignado</strong>
-        — haz clic en la etiqueta PRO/SEMI de cada jugador para cambiarlo.
-      </div>
-    </div>` : '';
-
-  c.innerHTML = warnHtml + g.players.map(pl => {
+  c.innerHTML = g.players.map(pl => {
     const total  = qTotal(pl.id);
     const isDQ   = !!pl.disqualified;
     const lvl    = pl.level || 'pro';
@@ -5095,20 +5058,24 @@ function renderDash() {
   const proPhase  = proG.phase  || 'qualify';
   const semiPhase = semiG.phase || 'qualify';
 
+  // 3 tournament states: null → idle, initiation → waiting for manual start, active/etc → running
+  const tStatus       = ADMIN.__status || (ADMIN.__tid ? 'active' : null);
   const hasTournament = !!(ADMIN.__tid || ADMIN.tName);
+  const isInitiation  = hasTournament && tStatus === 'initiation' && !ADMIN.pro;
   const hasPlayers    = totalPlayers > 0;
   const hasScores     = hasPlayers && [...proPlayers, ...semiPlayers].some(p => qTotal(p.id) > 0);
   const hasBracket    = (proG.rounds?.length || 0) + (semiG.rounds?.length || 0) > 0;
   const isDone        = (proPhase === 'done' || !proPlayers.length) && (semiPhase === 'done' || !semiPlayers.length);
 
-  // ── Determine current phase ──
+  // ── Determine phase ──
   let phase = 'idle';
-  if (!hasTournament) phase = 'idle';
-  else if (!hasPlayers) phase = 'add_players';
-  else if (!hasScores)  phase = 'score';
-  else if (!hasBracket) phase = 'bracket';
-  else if (!isDone)     phase = 'duels';
-  else                  phase = 'done';
+  if (!hasTournament)  phase = 'idle';
+  else if (isInitiation) phase = 'initiation'; // nuevo: inscripciones abiertas, no iniciado
+  else if (!hasPlayers)  phase = 'add_players';
+  else if (!hasScores)   phase = 'score';
+  else if (!hasBracket)  phase = 'bracket';
+  else if (!isDone)      phase = 'duels';
+  else                   phase = 'done';
 
   document.getElementById('ds-sub').textContent = hasTournament
     ? ADMIN.tName || 'Torneo activo'
@@ -5117,32 +5084,36 @@ function renderDash() {
   // ── Step pills ──
   const steps = [
     { id: 'idle',        label: 'Crear' },
+    { id: 'initiation',  label: 'Inscripciones' },
     { id: 'add_players', label: 'Jugadores' },
     { id: 'score',       label: 'Clasificación' },
     { id: 'bracket',     label: 'Bracket' },
     { id: 'duels',       label: 'Duelos' },
     { id: 'done',        label: 'Finalizado' },
   ];
-  const phaseOrder = ['idle','add_players','score','bracket','duels','done'];
+  const phaseOrder = ['idle','initiation','add_players','score','bracket','duels','done'];
   const curIdx = phaseOrder.indexOf(phase);
 
   const stepsHtml = steps.map((s, i) => {
-    const cls = i < curIdx ? 'done' : i === curIdx ? 'active' : '';
+    const cls  = i < curIdx ? 'done' : i === curIdx ? 'active' : '';
     const icon = i < curIdx ? '✓ ' : '';
     const arrow = i < steps.length - 1 ? '<span class="ds-step-arrow">›</span>' : '';
     return `<span class="ds-step ${cls}">${icon}${s.label}</span>${arrow}`;
   }).join('');
 
-  // ── Next action card content ──
-  const na = document.getElementById('ds-next-action');
-  const statsRow  = document.getElementById('ds-stats-row');
-  const groupsRow = document.getElementById('ds-groups-row');
+  // ── Next action card ──
+  const na         = document.getElementById('ds-next-action');
+  const statsRow   = document.getElementById('ds-stats-row');
+  const groupsRow  = document.getElementById('ds-groups-row');
   const recentWrap = document.getElementById('ds-recent-wrap');
 
-  const showDetails = phase !== 'idle';
+  const showDetails = phase !== 'idle' && phase !== 'initiation';
   statsRow.style.display   = showDetails ? '' : 'none';
   groupsRow.style.display  = showDetails ? '' : 'none';
   recentWrap.style.display = showDetails ? '' : 'none';
+
+  // Count registrations for initiation card
+  const regCount = ADMIN.__post_id ? '?' : 0; // will be shown live in postCard
 
   const cards = {
     idle: {
@@ -5151,10 +5122,17 @@ function renderDash() {
       desc: 'Crea un nuevo torneo para empezar a registrar jugadores, puntuaciones y bracket.',
       actions: `<button class="btn-start-tournament" onclick="newTournament()">🏆 &nbsp;INICIAR TORNEO</button>`
     },
+    initiation: {
+      cls: 'qualify', icon: '📋',
+      title: 'Inscripciones abiertas',
+      desc: `Torneo "<strong>${ADMIN.tName || '—'}</strong>" publicado. Los jugadores pueden inscribirse. Cuando estés listo, inicia el torneo desde el panel de inscritos en Publicaciones.`,
+      actions: `<button class="btn btn-amber" onclick="showPage('posts')">👥 Ver inscritos</button>
+                <button class="btn btn-ghost btn-sm" onclick="newTournament()">Cambiar datos</button>`
+    },
     add_players: {
       cls: 'qualify', icon: '👥',
       title: 'Añade los jugadores',
-      desc: `Torneo "<strong>${ADMIN.tName || '—'}</strong>" creado. Ve a Clasificación para añadir jugadores PRO y SEMI PRO antes de empezar.`,
+      desc: `Torneo "<strong>${ADMIN.tName || '—'}</strong>" iniciado. Ve a Clasificación para añadir jugadores PRO y SEMI PRO.`,
       actions: `<button class="btn btn-red" onclick="showPage('qualify')">→ Ir a Clasificación</button>
                 <button class="btn btn-ghost btn-sm" onclick="newTournament()">Cambiar nombre / fecha</button>`
     },
@@ -5187,16 +5165,14 @@ function renderDash() {
     }
   };
 
-  // Botón borrar — se muestra en todas las fases activas (no idle)
   const deleteBtn = phase !== 'idle'
     ? `<button onclick="confirmDeleteActiveTournament()" style="
-        margin-left:auto;
-        background:none;border:none;cursor:pointer;
+        margin-left:auto;background:none;border:none;cursor:pointer;
         font-size:11px;font-weight:600;letter-spacing:0.5px;
         color:rgba(255,255,255,0.2);padding:4px 8px;border-radius:6px;
-        transition:color 0.15s,background 0.15s;
-      " onmouseover="this.style.color='#e05555';this.style.background='rgba(184,64,64,0.1)'"
-         onmouseout="this.style.color='rgba(255,255,255,0.2)';this.style.background='none'">
+        transition:color 0.15s,background 0.15s;"
+       onmouseover="this.style.color='#e05555';this.style.background='rgba(184,64,64,0.1)'"
+       onmouseout="this.style.color='rgba(255,255,255,0.2)';this.style.background='none'">
         🗑 Borrar torneo
       </button>`
     : '';
@@ -5754,7 +5730,7 @@ async function handleLogo(evt) {
 function newTournament() {
   const today = new Date().toISOString().split('T')[0];
   const isFirstTime = !ADMIN.__tid && !(ADMIN.pro?.players?.length) && !(ADMIN.semi?.players?.length);
-  document.getElementById('nt-name').value     = ADMIN.tName && !isFirstTime ? '' : 'Torneo ' + new Date().getFullYear();
+  document.getElementById('nt-name').value     = isFirstTime ? 'Torneo ' + new Date().getFullYear() : '';
   document.getElementById('nt-date').value     = today;
   document.getElementById('nt-time').value     = '';
   document.getElementById('nt-location').value = '';
@@ -5763,8 +5739,8 @@ function newTournament() {
   document.getElementById('nt-err').textContent = '';
   document.getElementById('nt-modal-title').textContent = isFirstTime ? '🏆 Nuevo torneo' : '🆕 Nuevo torneo';
   document.getElementById('nt-modal-desc').textContent = isFirstTime
-    ? 'Configura el torneo. Se publicará automáticamente para que los jugadores puedan inscribirse.'
-    : 'El torneo activo quedará archivado. Se creará uno nuevo y se publicará para inscripciones.';
+    ? 'Crea el torneo y publícalo. Tú decides cuándo iniciarlo desde el panel de inscritos.'
+    : 'El torneo activo quedará archivado. Se creará uno nuevo en estado "inscripciones abiertas".';
   openModal('m-new-tournament');
 }
 
@@ -5779,34 +5755,41 @@ async function confirmNewTournament() {
   closeModal('m-new-tournament');
 
   (async () => {
-    // 1. Archivar torneo activo
+    // 1. Archivar torneo activo anterior
     try {
       const tid = ADMIN.__tid
-        || (await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=eq.active&select=id`))?.[0]?.id;
+        || (await dbGet('tournaments', `user_id=eq.${DB_USER_ID}&status=in.(active,initiation)&select=id`))?.[0]?.id;
       if (tid) await dbUpdate('tournaments', `id=eq.${tid}`, { status: 'archived', updated_at: new Date().toISOString() });
     } catch(e) { console.warn('[newTournament] archive error:', e.message); }
 
-    // 2. Resetear local
-    ADMIN.pro   = defGroup();
-    ADMIN.semi  = defGroup();
-    ADMIN.tName = name;
-    ADMIN.tDate = date;
-    ADMIN.__tid = null;
-    ADMIN.__post_id = null;
-    ADMIN.__savedAt = Date.now();
+    // 2. Resetear local — estado "initiation" hasta que se inicie manualmente
+    ADMIN.pro        = null; // sin grupos hasta que se inicie de verdad
+    ADMIN.semi       = null;
+    ADMIN.tName      = name;
+    ADMIN.tDate      = date;
+    ADMIN.__tid      = null;
+    ADMIN.__post_id  = null;
+    ADMIN.__status   = 'initiation'; // nuevo estado
+    ADMIN.__savedAt  = Date.now();
     localStorage.setItem(gk(), JSON.stringify(ADMIN));
 
-    // 3. Insertar nueva fila en tournaments
+    // 3. Insertar tournament con status 'initiation'
+    let newTid = null;
     try {
       const t = await dbInsert('tournaments', {
-        user_id: DB_USER_ID, name, date, status: 'active',
+        user_id: DB_USER_ID, name, date,
+        status: 'initiation',
         updated_at: new Date().toISOString(),
         state_json: JSON.stringify(ADMIN)
       });
-      if (t?.[0]?.id) { ADMIN.__tid = t[0].id; localStorage.setItem(gk(), JSON.stringify(ADMIN)); }
+      if (t?.[0]?.id) {
+        newTid = t[0].id;
+        ADMIN.__tid = newTid;
+        localStorage.setItem(gk(), JSON.stringify(ADMIN));
+      }
     } catch(e) { console.warn('[newTournament] insert error:', e.message); }
 
-    // 4. Crear publicación automática del torneo con inscripción abierta
+    // 4. Crear publicación automática con inscripción abierta
     try {
       const post = await dbInsert('posts', {
         user_id:            DB_USER_ID,
@@ -5819,7 +5802,7 @@ async function confirmNewTournament() {
         inscription_status: 'open',
         registration_open:  true,
         capacity:           capacity,
-        tournament_id:      ADMIN.__tid || null,
+        tournament_id:      newTid,
       });
       if (post?.[0]?.id) {
         ADMIN.__post_id = post[0].id;
@@ -5828,14 +5811,14 @@ async function confirmNewTournament() {
     } catch(e) { console.warn('[newTournament] post error:', e.message); }
 
     document.getElementById('champ-bar').classList.remove('on');
-    renderAll();
+    renderDash();
     showPage('dashboard');
-    toast('🏆 Torneo "' + name + '" creado y publicado — inscripción abierta', 'green');
+    toast('🏆 Torneo "' + name + '" publicado — inscripción abierta', 'green');
   })();
 }
 
 // ─────────────────────────────────
-// REGISTRATIONS MANAGEMENT
+// REGISTRATIONS MANAGEMENT (Organizador)
 // ─────────────────────────────────
 let ACTIVE_REG_POST = null;
 let ACTIVE_REGS     = [];
@@ -5844,8 +5827,8 @@ async function openRegistrations(postId) {
   ACTIVE_REG_POST = POSTS_DATA.find(p => p.id === postId);
   if (!ACTIVE_REG_POST) return;
 
-  const cap    = ACTIVE_REG_POST.capacity || 40;
   const status = ACTIVE_REG_POST.inscription_status || 'open';
+  const cap    = ACTIVE_REG_POST.capacity || 40;
 
   document.getElementById('reg-post-info').textContent = ACTIVE_REG_POST.title;
   document.getElementById('reg-capacity-label').textContent = '… / ' + cap;
@@ -5858,15 +5841,15 @@ async function openRegistrations(postId) {
   toggleBtn.textContent = status === 'open' ? 'Cerrar inscripción' : 'Abrir inscripción';
   toggleBtn.className   = status === 'open' ? 'btn btn-ghost btn-sm' : 'btn btn-amber btn-sm';
 
-  const startBtn = document.getElementById('reg-start-btn');
-  startBtn.style.display = (status === 'started') ? 'none' : '';
+  document.getElementById('reg-start-btn').style.display = (status === 'started') ? 'none' : '';
 
   openModal('m-registrations');
   await loadRegistrations();
 }
 
 async function loadRegistrations() {
-  const cap = ACTIVE_REG_POST?.capacity || 40;
+  if (!ACTIVE_REG_POST) return;
+  const cap = ACTIVE_REG_POST.capacity || 40;
   document.getElementById('reg-list').innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--ink4)">Cargando...</div>';
 
   try {
@@ -5879,7 +5862,7 @@ async function loadRegistrations() {
   document.getElementById('reg-capacity-label').textContent = count + ' / ' + cap;
   document.getElementById('reg-capacity-bar').style.width   = pct + '%';
   document.getElementById('reg-capacity-bar').style.background =
-    pct >= 100 ? 'var(--red)' : pct >= 80 ? 'var(--amber)' : 'var(--accent)';
+    pct >= 100 ? '#e05555' : pct >= 75 ? 'var(--amber)' : 'var(--accent)';
 
   if (!ACTIVE_REGS.length) {
     document.getElementById('reg-list').innerHTML =
@@ -5888,23 +5871,23 @@ async function loadRegistrations() {
   }
 
   document.getElementById('reg-list').innerHTML = ACTIVE_REGS.map((r, i) => {
-    const uname  = r.users?.username || r.name || '—';
-    const club   = r.users?.club_name || '';
-    const lvl    = r.player_level;
+    const uname = r.users?.username || r.name || '—';
+    const club  = r.users?.club_name || '';
+    const lvl   = r.player_level;
     const lvlHtml = lvl === 'pro'
-      ? `<span class="reg-item-level reg-lvl-pro">PRO</span>`
+      ? `<span class="reg-lvl-pro">PRO</span>`
       : lvl === 'semi'
-        ? `<span class="reg-item-level reg-lvl-semi">SEMI</span>`
-        : `<span class="reg-item-level reg-lvl-none">Sin nivel</span>`;
+        ? `<span class="reg-lvl-semi">SEMI</span>`
+        : `<span class="reg-lvl-none">Sin nivel</span>`;
     const date = new Date(r.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short' });
     return `<div class="reg-item">
-      <span style="font-size:12px;color:var(--ink4);min-width:20px">${i+1}</span>
+      <span style="font-size:12px;color:var(--ink4);min-width:22px;text-align:right">${i+1}</span>
       <div style="flex:1;min-width:0">
         <div class="reg-item-name">@${uname}${club ? ' · ' + club : ''}</div>
         <div class="reg-item-meta">Inscrito el ${date}</div>
       </div>
       ${lvlHtml}
-      <button class="btn btn-xs" style="background:rgba(184,64,64,0.1);color:#e05555;border:1px solid rgba(184,64,64,0.2)"
+      <button class="btn btn-xs" style="background:rgba(184,64,64,0.1);color:#e05555;border:1px solid rgba(184,64,64,0.2);padding:3px 8px"
         onclick="removeRegistration('${r.id}')">✕</button>
     </div>`;
   }).join('');
@@ -5915,6 +5898,7 @@ async function removeRegistration(regId) {
   try {
     await dbDelete('event_registrations', `id=eq.${regId}`);
     await loadRegistrations();
+    renderPosts();
     toast('Inscripción eliminada', 'red');
   } catch(e) { toast('Error al eliminar', 'red'); }
 }
@@ -5922,7 +5906,8 @@ async function removeRegistration(regId) {
 async function toggleRegistration() {
   if (!ACTIVE_REG_POST) return;
   const current = ACTIVE_REG_POST.inscription_status || 'open';
-  const next    = current === 'open' ? 'closed' : 'open';
+  if (current === 'started') { toast('El torneo ya ha iniciado', 'red'); return; }
+  const next = current === 'open' ? 'closed' : 'open';
   try {
     await dbUpdate('posts', `id=eq.${ACTIVE_REG_POST.id}`, {
       inscription_status: next,
@@ -5935,35 +5920,40 @@ async function toggleRegistration() {
     const btn = document.getElementById('reg-toggle-btn');
     btn.textContent = next === 'open' ? 'Cerrar inscripción' : 'Abrir inscripción';
     btn.className   = next === 'open' ? 'btn btn-ghost btn-sm' : 'btn btn-amber btn-sm';
-    toast(next === 'open' ? 'Inscripción abierta' : 'Inscripción cerrada', 'green');
+    toast(next === 'open' ? '✓ Inscripción abierta' : '✓ Inscripción cerrada', 'green');
     renderPosts();
   } catch(e) { toast('Error al cambiar estado', 'red'); }
 }
 
 async function startTournamentFromRegistrations() {
-  if (!ACTIVE_REG_POST || !ACTIVE_REGS.length) {
-    toast('No hay inscritos para iniciar el torneo', 'red'); return;
-  }
+  if (!ACTIVE_REG_POST) return;
+  if (!ACTIVE_REGS.length) { toast('No hay inscritos — añade jugadores primero', 'red'); return; }
 
-  // Check for players without level
   const noLevel = ACTIVE_REGS.filter(r => !r.player_level);
   if (noLevel.length) {
     const names = noLevel.slice(0,3).map(r => '@' + (r.users?.username || r.name)).join(', ');
     const more  = noLevel.length > 3 ? ` y ${noLevel.length - 3} más` : '';
-    if (!confirm(`⚠️ ${noLevel.length} jugador(es) sin nivel PRO/SEMI asignado:\n${names}${more}\n\nSe añadirán como PRO por defecto. ¿Continuar?`)) return;
+    if (!confirm(`⚠️ ${noLevel.length} jugador(es) sin nivel PRO/SEMI:\n${names}${more}\n\nSe añadirán como PRO por defecto. ¿Iniciar torneo?`)) return;
   }
 
-  // Close registration on the post
+  // Marcar post y tournament como 'active' (started)
   try {
     await dbUpdate('posts', `id=eq.${ACTIVE_REG_POST.id}`, {
       inscription_status: 'started',
       registration_open: false
     });
-  } catch(e) { console.warn('[startTournament] post update:', e.message); }
+    if (ADMIN.__tid) {
+      await dbUpdate('tournaments', `id=eq.${ADMIN.__tid}`, {
+        status: 'active',
+        updated_at: new Date().toISOString()
+      });
+    }
+  } catch(e) { console.warn('[startTournament] update error:', e.message); }
 
-  // Import players into ADMIN groups
+  // Importar jugadores a grupos PRO / SEMI
   ADMIN.pro  = defGroup();
   ADMIN.semi = defGroup();
+  ADMIN.__status = 'active';
 
   ACTIVE_REGS.forEach(r => {
     const lvl    = r.player_level || 'pro';
@@ -5973,7 +5963,6 @@ async function startTournamentFromRegistrations() {
       user_id:  r.user_id || null,
       username: r.users?.username || null,
       level:    lvl,
-      reg_id:   r.id,
     };
     if (lvl === 'semi') ADMIN.semi.players.push(player);
     else                ADMIN.pro.players.push(player);
@@ -5983,7 +5972,7 @@ async function startTournamentFromRegistrations() {
   closeModal('m-registrations');
   renderAll();
   showPage('qualify');
-  toast(`✓ ${ACTIVE_REGS.length} jugadores importados — inscripción cerrada`, 'green');
+  toast(`✓ ${ACTIVE_REGS.length} jugadores importados — torneo activo`, 'green');
 }
 
 // ─────────────────────────────────
@@ -6414,20 +6403,19 @@ async function renderPosts() {
   const countEl   = document.getElementById('posts-count');
   container.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--ink4)"><div style="font-size:1.5rem;margin-bottom:0.5rem">⏳</div>Cargando...</div>';
 
-  // Load followers count in parallel
   loadFollowersBanner();
 
   POSTS_DATA = await dbGet('posts', `user_id=eq.${DB_USER_ID}&order=created_at.desc&select=*`) || [];
 
   // Enrich tournament posts with registration counts
-  const tourneyIds = POSTS_DATA.filter(p => (p.post_type || 'torneo') === 'torneo').map(p => p.id);
+  const tourneyIds = POSTS_DATA.filter(p => (p.post_type||'torneo') === 'torneo').map(p => p.id);
   if (tourneyIds.length) {
     try {
-      const regCounts = await dbGet('event_registrations', `event_id=in.(${tourneyIds.join(',')})&select=event_id`) || [];
+      const regRows = await dbGet('event_registrations', `event_id=in.(${tourneyIds.join(',')})&select=event_id`) || [];
       const countMap = {};
-      regCounts.forEach(r => { countMap[r.event_id] = (countMap[r.event_id] || 0) + 1; });
+      regRows.forEach(r => { countMap[r.event_id] = (countMap[r.event_id] || 0) + 1; });
       POSTS_DATA = POSTS_DATA.map(p => ({ ...p, registration_count: countMap[p.id] || 0 }));
-    } catch(e) { console.warn('[renderPosts] reg counts:', e.message); }
+    } catch(e) { console.warn('[renderPosts] reg count:', e.message); }
   }
 
   countEl.textContent = POSTS_DATA.length + ' publicación' + (POSTS_DATA.length !== 1 ? 'es' : '');
@@ -6446,31 +6434,40 @@ async function renderPosts() {
 }
 
 function postCard(p) {
-  const dateLabel = p.date
-    ? new Date(p.date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })
-    : null;
+  const dateLabel    = p.date ? new Date(p.date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' }) : null;
   const createdLabel = new Date(p.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' });
-  const avatarHtml = ADMIN.logo
-    ? `<img src="${ADMIN.logo}" alt="">`
-    : `<span>🏟</span>`;
+  const avatarHtml   = ADMIN.logo ? `<img src="${ADMIN.logo}" alt="">` : `<span>🏟</span>`;
+  const isTorneo     = (p.post_type || 'torneo') === 'torneo';
 
-  // Registration bar for tournament posts
+  // Registration bar
   const regBar = (() => {
-    if ((p.post_type || 'torneo') !== 'torneo') return '';
-    const cap      = p.capacity || 40;
-    const regCount = p.registration_count || 0;
-    const status   = p.inscription_status || 'open';
-    const statusMap = {
-      open:    { cls: 'reg-open',    label: 'Inscripción abierta' },
-      closed:  { cls: 'reg-closed',  label: 'Inscripción cerrada' },
-      full:    { cls: 'reg-full',    label: 'Lleno' },
-      started: { cls: 'reg-started', label: 'Torneo iniciado' },
+    if (!isTorneo) return '';
+    const cap    = p.capacity || 40;
+    const count  = p.registration_count || 0;
+    const status = p.inscription_status || 'open';
+    const pct    = Math.min(100, Math.round(count / cap * 100));
+    const barColor = pct >= 100 ? '#e05555' : pct >= 75 ? '#d4975a' : 'var(--accent)';
+
+    const pillMap = {
+      open:    `<span class="reg-pill-open">Inscripción abierta</span>`,
+      closed:  `<span class="reg-pill-closed">Inscripción cerrada</span>`,
+      full:    `<span class="reg-pill-full">Aforo completo</span>`,
+      started: `<span class="reg-pill-started">Torneo iniciado</span>`,
     };
-    const s = statusMap[status] || statusMap.open;
-    return `<div class="post-reg-bar" onclick="openRegistrations(${p.id})">
-      <span class="post-reg-pill">👥 ${regCount} / ${cap}</span>
-      <span class="post-reg-status ${s.cls}">${s.label}</span>
-      <span style="margin-left:auto;font-size:11px;color:var(--ink4)">Ver inscritos →</span>
+    const pill = pct >= 100 ? pillMap.full : (pillMap[status] || pillMap.open);
+
+    return `<div class="post-reg-bar" onclick="event.stopPropagation();openRegistrations(${p.id})">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:13px;font-weight:700;color:#fff">👥 ${count}</span>
+          <span style="font-size:12px;color:var(--ink4)">/ ${cap} plazas</span>
+          ${pill}
+        </div>
+        <div style="height:5px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width 0.3s"></div>
+        </div>
+      </div>
+      <span style="font-size:11px;color:var(--ink4);margin-left:8px;flex-shrink:0">Gestionar →</span>
     </div>`;
   })();
 
@@ -6493,7 +6490,7 @@ function postCard(p) {
       <div class="post-title">${p.title}</div>
       ${p.description ? `<div class="post-desc">${p.description}</div>` : ''}
       ${(() => {
-        if ((p.post_type || 'torneo') !== 'torneo') return '';
+        if (!isTorneo) return '';
         const prizes = p.prizes ? (typeof p.prizes === 'string' ? JSON.parse(p.prizes) : p.prizes) : [];
         if (!prizes.length) return '';
         const medals = ['🥇','🥈','🥉'];
@@ -6504,10 +6501,7 @@ function postCard(p) {
       })()}
       ${regBar}
     </div>
-    ${p.image_url ? `
-    <div class="post-img-wrap">
-      <img src="${p.image_url}" alt="${p.title}" loading="lazy">
-    </div>` : ''}
+    ${p.image_url ? `<div class="post-img-wrap"><img src="${p.image_url}" alt="${p.title}" loading="lazy"></div>` : ''}
     ${(dateLabel || p.location) ? `
     <div class="post-tags">
       ${dateLabel ? `<span class="post-tag">📅 ${dateLabel}${p.time ? ' · ' + p.time.slice(0,5) : ''}</span>` : ''}
