@@ -917,23 +917,24 @@ input, textarea, select { font-family: inherit; }
 }
 .post-prize-medal { font-size: 14px; }
 
-/* ── REGISTRATION PILLS ── */
-.reg-status-pill {
-  display: inline-flex; align-items: center;
-  font-size: 10px; font-weight: 700; letter-spacing: 1px;
-  text-transform: uppercase; padding: 3px 9px; border-radius: 20px;
+/* ── FEED REGISTRATION PILLS ── */
+.feed-reg-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700;
+  padding: 4px 10px; border-radius: 20px;
   border: 1px solid transparent;
 }
-.pill-open       { background: rgba(76,217,138,0.12); color: #4cd98a; border-color: rgba(76,217,138,0.2); }
+.pill-open       { background: rgba(76,217,138,0.12); color: #4cd98a; border-color: rgba(76,217,138,0.25); }
 .pill-closed     { background: rgba(255,255,255,0.06); color: var(--ink3); border-color: rgba(255,255,255,0.1); }
 .pill-full       { background: rgba(239,68,68,0.1);   color: #e05555;  border-color: rgba(239,68,68,0.2); }
-.pill-registered { background: rgba(196,135,58,0.12); color: var(--accent); border-color: rgba(196,135,58,0.2); }
+.pill-registered { background: rgba(196,135,58,0.12); color: var(--accent); border-color: rgba(196,135,58,0.25); }
 .pill-started    { background: rgba(59,130,246,0.1);  color: #60a5fa;  border-color: rgba(59,130,246,0.2); }
-.reg-info-box {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 14px; border-radius: 8px;
+.reg-action-box {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 14px; padding: 12px 14px;
   background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
 }
 
 /* ── SETTINGS ── */
@@ -1361,9 +1362,9 @@ let ALL_EVENTS = [];
 let ALL_ORGS   = [];
 let FOLLOWS    = new Set();
 let FILTER     = 'all';
-let ACTIVE_EVENT = null;
-let ACTIVE_POST  = null;
-let MY_REGISTRATIONS = new Map(); // postId -> registrationId
+let ACTIVE_EVENT     = null;
+let ACTIVE_POST      = null;
+let MY_REGISTRATIONS = new Map(); // postId → registrationId
 
 // ══════════════════════════════
 //  HELPERS
@@ -1787,24 +1788,21 @@ function renderFeedList() {
 }
 
 async function loadPosts() {
-  // Load posts with organizer info
+  // Load posts newest first
   const posts = await dbGet('posts?select=*,organizers(username,club_name,logo_url)&order=created_at.desc&limit=50') || [];
 
-  // Enrich tournament posts with registration counts
-  const tourneyIds = posts.filter(p => (p.post_type || 'torneo') === 'torneo').map(p => p.id);
+  // Enrich tournament posts with registration counts + user's own registrations
+  const tourneyIds = posts.filter(p => (p.post_type||'torneo') === 'torneo').map(p => p.id);
   if (tourneyIds.length && CUR_USER) {
     try {
-      // Count total registrations per post
-      const regCounts = await dbGet(`event_registrations?event_id=in.(${tourneyIds.join(',')})&select=event_id`) || [];
+      const allRegs  = await dbGet(`event_registrations?event_id=in.(${tourneyIds.join(',')})&select=id,event_id,user_id`) || [];
       const countMap = {};
-      regCounts.forEach(r => { countMap[r.event_id] = (countMap[r.event_id] || 0) + 1; });
-
-      // Load current user's registrations
-      const myRegs = await dbGet(`event_registrations?event_id=in.(${tourneyIds.join(',')})&user_id=eq.${CUR_USER.id}&select=id,event_id`) || [];
-      MY_REGISTRATIONS = new Map(myRegs.map(r => [r.event_id, r.id]));
-
+      allRegs.forEach(r => { countMap[r.event_id] = (countMap[r.event_id] || 0) + 1; });
+      MY_REGISTRATIONS = new Map(
+        allRegs.filter(r => r.user_id === CUR_USER.id).map(r => [r.event_id, r.id])
+      );
       return posts.map(p => ({ ...p, registration_count: countMap[p.id] || 0 }));
-    } catch(e) { console.warn('[loadPosts] enrichment:', e.message); }
+    } catch(e) { console.warn('[loadPosts] enrich:', e.message); }
   }
   return posts;
 }
@@ -1813,51 +1811,56 @@ function feedPostCard(p) {
   const org        = p.organizers || {};
   const club       = org.club_name || org.username || 'Organizador';
   const logoUrl    = org.logo_url  || '';
-  const dateLabel  = p.date
-    ? new Date(p.date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })
-    : null;
+  const dateLabel  = p.date ? new Date(p.date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' }) : null;
   const createdLabel = new Date(p.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' });
-
-  const avatarHtml = logoUrl
-    ? `<img src="${logoUrl}" alt="">`
-    : `<span>🏟</span>`;
+  const avatarHtml = logoUrl ? `<img src="${logoUrl}" alt="">` : `<span>🏟</span>`;
+  const typeLabels = { torneo: '🏆 TORNEO', aviso: '⚠️ AVISO', info: 'ℹ️ INFORMACIÓN' };
+  const t = p.post_type || 'torneo';
+  const isTorneo = t === 'torneo';
 
   const prizes = (() => {
-    if ((p.post_type || 'torneo') !== 'torneo') return [];
+    if (!isTorneo) return [];
     try { return p.prizes ? (typeof p.prizes === 'string' ? JSON.parse(p.prizes) : p.prizes) : []; }
     catch { return []; }
   })();
   const medals = ['🥇','🥈','🥉'];
 
-  const typeLabels = { torneo: '🏆 TORNEO', aviso: '⚠️ AVISO', info: 'ℹ️ INFORMACIÓN' };
-  const t = p.post_type || 'torneo';
+  // Registration status strip — highly visible
+  const regStrip = (() => {
+    if (!isTorneo) return '';
+    const cap      = p.capacity || 40;
+    const count    = p.registration_count || 0;
+    const status   = p.inscription_status || (p.registration_open ? 'open' : 'closed');
+    const isReg    = MY_REGISTRATIONS.has(p.id);
+    const isFull   = count >= cap;
+    const isClosed = status === 'closed' || status === 'started' || isFull;
+    const pct      = Math.min(100, Math.round(count / cap * 100));
+    const spotsLeft = Math.max(0, cap - count);
+    const barColor = pct >= 100 ? '#e05555' : pct >= 75 ? '#d4975a' : '#4cd98a';
 
-  // Registration status bar for tournament posts
-  const regBar = (() => {
-    if (t !== 'torneo' || !p.registration_open && !p.inscription_status) return '';
-    const cap    = p.capacity || 40;
-    const status = p.inscription_status || 'open';
-    const isReg  = MY_REGISTRATIONS.has(p.id);
-    const isClosed = status === 'closed' || status === 'started';
-    const isFull   = (p.registration_count || 0) >= cap;
+    let statusHtml = '';
+    if (status === 'started')    statusHtml = `<span class="feed-reg-pill pill-started">🏆 Torneo iniciado</span>`;
+    else if (isFull)             statusHtml = `<span class="feed-reg-pill pill-full">🔴 Aforo completo</span>`;
+    else if (status === 'closed') statusHtml = `<span class="feed-reg-pill pill-closed">🔒 Inscripción cerrada</span>`;
+    else if (isReg)              statusHtml = `<span class="feed-reg-pill pill-registered">✅ Estás inscrito</span>`;
+    else                         statusHtml = `<span class="feed-reg-pill pill-open">🟢 Inscripción abierta</span>`;
 
-    let badge = '';
-    if (status === 'started')     badge = `<span class="reg-status-pill pill-started">Torneo iniciado</span>`;
-    else if (status === 'closed') badge = `<span class="reg-status-pill pill-closed">Inscripción cerrada</span>`;
-    else if (isFull)              badge = `<span class="reg-status-pill pill-full">Aforo completo</span>`;
-    else if (isReg)               badge = `<span class="reg-status-pill pill-registered">✓ Inscrito</span>`;
-    else                          badge = `<span class="reg-status-pill pill-open">Inscripción abierta</span>`;
+    const spotsHtml = !isClosed && !isFull
+      ? `<span style="font-size:11px;color:var(--ink4)">${spotsLeft} plaza${spotsLeft !== 1 ? 's' : ''} disponible${spotsLeft !== 1 ? 's' : ''}</span>`
+      : `<span style="font-size:11px;color:var(--ink4)">${count} / ${cap} inscritos</span>`;
 
-    const spotsLeft = cap - (p.registration_count || 0);
-    const spotsHtml = !isClosed ? `<span style="font-size:11px;color:var(--ink4)">${Math.max(0,spotsLeft)} plazas libres</span>` : '';
-
-    return `<div style="display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap">
-      ${badge}${spotsHtml}
+    return `<div style="margin-top:12px;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+        ${statusHtml}
+        ${spotsHtml}
+      </div>
+      <div style="height:5px;background:rgba(255,255,255,0.07);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px"></div>
+      </div>
     </div>`;
   })();
 
   const safeP = JSON.stringify(p).replace(/"/g,'&quot;');
-
   return `
   <div class="post-card" onclick="openPostDetail(${p.id}, ${safeP})">
     <div class="post-header">
@@ -1877,12 +1880,9 @@ function feedPostCard(p) {
         <div class="post-prizes-title">Premios</div>
         ${prizes.slice(0,3).map((pr,i) => `<div class="post-prize-row"><span class="post-prize-medal">${medals[i]||'🏅'}</span>${pr}</div>`).join('')}
       </div>` : ''}
-      ${regBar}
+      ${regStrip}
     </div>
-    ${p.image_url ? `
-    <div class="post-img-wrap">
-      <img src="${p.image_url}" alt="${p.title}" loading="lazy">
-    </div>` : ''}
+    ${p.image_url ? `<div class="post-img-wrap"><img src="${p.image_url}" alt="${p.title}" loading="lazy"></div>` : ''}
     ${(dateLabel || p.location) ? `
     <div class="post-tags">
       ${dateLabel ? `<span class="post-tag">📅 ${dateLabel}${p.time ? ' · ' + p.time.slice(0,5) : ''}</span>` : ''}
@@ -1893,126 +1893,112 @@ function feedPostCard(p) {
 
 async function openPostDetail(id, p) {
   ACTIVE_POST = p;
-  const org        = p.organizers || {};
-  const club       = org.club_name || org.username || 'Organizador';
-  const logoUrl    = org.logo_url  || '';
-  const createdAt  = p.created_at
-    ? new Date(p.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })
-    : '';
-  const dateLabel  = p.date
-    ? new Date(p.date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' })
-    : null;
-
-  const avatarHtml = logoUrl
-    ? `<img src="${logoUrl}" alt="">`
-    : `<span>🏟</span>`;
-
+  const org       = p.organizers || {};
+  const club      = org.club_name || org.username || 'Organizador';
+  const logoUrl   = org.logo_url  || '';
+  const createdAt = p.created_at ? new Date(p.created_at).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' }) : '';
+  const dateLabel = p.date ? new Date(p.date).toLocaleDateString('es-ES', { day:'numeric', month:'short', year:'numeric' }) : null;
+  const avatarHtml = logoUrl ? `<img src="${logoUrl}" alt="">` : `<span>🏟</span>`;
   const t = p.post_type || 'torneo';
   const typeLabels = { torneo: '🏆 TORNEO', aviso: '⚠️ AVISO', info: 'ℹ️ INFORMACIÓN' };
-
+  const isTorneo = t === 'torneo';
   const prizes = (() => {
-    if (t !== 'torneo') return [];
+    if (!isTorneo) return [];
     try { return p.prizes ? (typeof p.prizes === 'string' ? JSON.parse(p.prizes) : p.prizes) : []; }
     catch { return []; }
   })();
   const medals = ['🥇','🥈','🥉'];
 
-  // Registration info for tournament posts
-  const regSection = (() => {
-    if (t !== 'torneo') return '';
+  // Registration action box
+  const regBox = (() => {
+    if (!isTorneo) return '';
     const cap      = p.capacity || 40;
+    const count    = p.registration_count || 0;
     const status   = p.inscription_status || (p.registration_open ? 'open' : 'closed');
     const isReg    = MY_REGISTRATIONS.has(p.id);
-    const isClosed = status === 'closed' || status === 'started';
-    const isFull   = (p.registration_count || 0) >= cap;
-    const spotsLeft = Math.max(0, cap - (p.registration_count || 0));
+    const isFull   = count >= cap;
+    const spotsLeft = Math.max(0, cap - count);
 
-    let actionHtml = '';
     if (status === 'started') {
-      actionHtml = `<div class="reg-info-box" style="background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.2)">
-        <span style="font-size:1.1rem">🏆</span>
-        <span style="font-size:13px;color:var(--ink3)">El torneo ya ha comenzado</span>
-      </div>`;
-    } else if (isClosed) {
-      actionHtml = `<div class="reg-info-box">
-        <span style="font-size:1.1rem">🔒</span>
-        <span style="font-size:13px;color:var(--ink3)">Inscripción cerrada</span>
-      </div>`;
-    } else if (isReg) {
-      actionHtml = `<div class="reg-info-box" style="background:rgba(76,217,138,0.07);border-color:rgba(76,217,138,0.2)">
-        <span style="font-size:1.1rem">✅</span>
-        <span style="font-size:13px;color:var(--ink3)">Estás inscrito en este torneo</span>
-        <button class="btn btn-sm" id="unreg-btn" style="margin-left:auto;background:rgba(184,64,64,0.1);color:#e05555;border:1px solid rgba(184,64,64,0.2)"
-          onclick="unregisterFromPost()">Darme de baja</button>
-      </div>`;
-    } else if (isFull) {
-      actionHtml = `<div class="reg-info-box" style="background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.2)">
-        <span style="font-size:1.1rem">🔴</span>
-        <span style="font-size:13px;color:var(--ink3)">Aforo completo — ${cap} plazas ocupadas</span>
-      </div>`;
-    } else {
-      actionHtml = `<div class="reg-info-box">
-        <span style="font-size:1.1rem">🎯</span>
-        <div style="flex:1">
-          <div style="font-size:13px;color:var(--ink2);font-weight:600">¿Quieres participar?</div>
-          <div style="font-size:11px;color:var(--ink4);margin-top:2px">${spotsLeft} plazas disponibles de ${cap}</div>
-        </div>
-        <button class="btn btn-accent btn-sm" id="reg-btn" onclick="registerFromPost()">Inscribirme</button>
+      return `<div class="reg-action-box" style="background:rgba(59,130,246,0.07);border-color:rgba(59,130,246,0.2)">
+        <span style="font-size:1.2rem">🏆</span>
+        <div><div style="font-size:13px;font-weight:600;color:var(--ink2)">El torneo ya ha comenzado</div>
+        <div style="font-size:11px;color:var(--ink4);margin-top:2px">${count} participantes</div></div>
       </div>`;
     }
-
-    return `<div style="margin-top:1rem">${actionHtml}</div>`;
+    if (status === 'closed' && !isReg) {
+      return `<div class="reg-action-box">
+        <span style="font-size:1.2rem">🔒</span>
+        <div><div style="font-size:13px;font-weight:600;color:var(--ink2)">Inscripción cerrada</div>
+        <div style="font-size:11px;color:var(--ink4);margin-top:2px">${count} / ${cap} inscritos</div></div>
+      </div>`;
+    }
+    if (isFull && !isReg) {
+      return `<div class="reg-action-box" style="background:rgba(239,68,68,0.06);border-color:rgba(239,68,68,0.2)">
+        <span style="font-size:1.2rem">🔴</span>
+        <div><div style="font-size:13px;font-weight:600;color:var(--ink2)">Aforo completo</div>
+        <div style="font-size:11px;color:var(--ink4);margin-top:2px">${cap} / ${cap} plazas ocupadas</div></div>
+      </div>`;
+    }
+    if (isReg) {
+      return `<div class="reg-action-box" style="background:rgba(76,217,138,0.06);border-color:rgba(76,217,138,0.2)">
+        <span style="font-size:1.2rem">✅</span>
+        <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ink2)">Estás inscrito</div>
+        <div style="font-size:11px;color:var(--ink4);margin-top:2px">${count} inscritos · ${spotsLeft} plazas libres</div></div>
+        ${status !== 'started' ? `<button class="btn btn-sm" style="background:rgba(184,64,64,0.1);color:#e05555;border:1px solid rgba(184,64,64,0.2)"
+          onclick="event.stopPropagation();unregisterFromPost()">Darme de baja</button>` : ''}
+      </div>`;
+    }
+    return `<div class="reg-action-box" style="background:rgba(196,135,58,0.06);border-color:rgba(196,135,58,0.2)">
+      <span style="font-size:1.2rem">🎯</span>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--ink2)">¿Quieres participar?</div>
+      <div style="font-size:11px;color:var(--ink4);margin-top:2px">${spotsLeft} plazas disponibles de ${cap}</div></div>
+      <button class="btn btn-accent btn-sm" id="post-reg-btn" onclick="event.stopPropagation();registerFromPost()">Inscribirme</button>
+    </div>`;
   })();
 
   document.getElementById('m-post-detail-body').innerHTML = `
     <div class="post-header">
       <div class="post-avatar">${avatarHtml}</div>
-      <div>
-        <div class="post-author-name">${club}</div>
-        <div class="post-author-date">${createdAt}</div>
-      </div>
+      <div><div class="post-author-name">${club}</div><div class="post-author-date">${createdAt}</div></div>
     </div>
     <div class="post-body">
       <div class="post-type-badge badge-${t}">${typeLabels[t] || t}</div>
       <div class="post-title">${p.title}</div>
       ${p.description ? `<div class="post-desc">${p.description}</div>` : ''}
-      ${prizes.length ? `
-      <div class="post-prizes">
-        <div class="post-prizes-title">Premios</div>
+      ${prizes.length ? `<div class="post-prizes"><div class="post-prizes-title">Premios</div>
         ${prizes.slice(0,3).map((pr,i) => `<div class="post-prize-row"><span class="post-prize-medal">${medals[i]||'🏅'}</span>${pr}</div>`).join('')}
       </div>` : ''}
-      ${regSection}
+      ${regBox}
     </div>
-    ${p.image_url ? `
-    <div class="post-img-wrap" style="margin:10px 16px">
+    ${p.image_url ? `<div class="post-img-wrap" style="margin:10px 16px">
       <img src="${p.image_url}" alt="${p.title}" loading="lazy" style="width:100%;height:auto;max-height:600px;object-fit:contain;display:block">
     </div>` : ''}
-    ${(dateLabel || p.location) ? `
-    <div class="post-tags">
+    ${(dateLabel || p.location) ? `<div class="post-tags">
       ${dateLabel ? `<span class="post-tag">📅 ${dateLabel}${p.time ? ' · ' + p.time.slice(0,5) : ''}</span>` : ''}
       ${p.location ? `<span class="post-tag">📍 ${p.location}</span>` : ''}
-    </div>` : ''}
-  `;
+    </div>` : ''}`;
 
   openModal('m-post-detail');
 }
 
 async function registerFromPost() {
   if (!ACTIVE_POST || !CUR_USER) return;
-  const btn = document.getElementById('reg-btn');
+  const btn = document.getElementById('post-reg-btn');
   if (btn) { btn.textContent = 'Enviando...'; btn.disabled = true; }
   try {
-    await dbPost('event_registrations', {
+    const res = await dbPost('event_registrations', {
       event_id:     ACTIVE_POST.id,
       user_id:      CUR_USER.id,
-      name:         PROFILE.username || PROFILE.full_name || '',
+      name:         PROFILE?.username || PROFILE?.full_name || '',
       email:        CUR_USER.email,
-      player_level: PROFILE.level || null,
+      player_level: PROFILE?.level || null,
       status:       'confirmed',
     });
+    if (!res.ok) throw new Error('Error de servidor');
     MY_REGISTRATIONS.set(ACTIVE_POST.id, true);
     ACTIVE_POST.registration_count = (ACTIVE_POST.registration_count || 0) + 1;
-    toast('✓ Inscripción confirmada', 'green');
+    toast('✅ Inscripción confirmada', 'green');
     closeModal('m-post-detail');
     renderFeedList();
   } catch(e) {
@@ -2023,12 +2009,12 @@ async function registerFromPost() {
 
 async function unregisterFromPost() {
   if (!ACTIVE_POST || !CUR_USER) return;
-  if (!confirm('¿Quieres darte de baja de este torneo?')) return;
+  if (!confirm('¿Confirmas que quieres darte de baja de este torneo?')) return;
   try {
     await dbDelete('event_registrations', `event_id=eq.${ACTIVE_POST.id}&user_id=eq.${CUR_USER.id}`);
     MY_REGISTRATIONS.delete(ACTIVE_POST.id);
     ACTIVE_POST.registration_count = Math.max(0, (ACTIVE_POST.registration_count || 1) - 1);
-    toast('Te has dado de baja del torneo', 'green');
+    toast('✓ Baja confirmada', 'green');
     closeModal('m-post-detail');
     renderFeedList();
   } catch(e) {
