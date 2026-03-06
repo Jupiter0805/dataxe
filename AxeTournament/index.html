@@ -1253,11 +1253,12 @@ footer {
 </head>
 <script>
 // ── i18n — detección automática de idioma ──
-(async function initI18n() {
-  const lang = (navigator.language || 'es').startsWith('es') ? 'es' : 'en';
+async function initI18n() {
+  const urlLang = new URLSearchParams(window.location.search).get('lang');
+  const lang = urlLang || ((navigator.language || 'es').startsWith('es') ? 'es' : 'en');
   document.documentElement.lang = lang;
   window._lang = lang;
-  if (lang === 'es') return; // español es el default, no hace falta cargar JSON
+  if (lang === 'es') return;
 
   try {
     const T = await fetch(`locales/en.json`).then(r => r.json());
@@ -1290,7 +1291,9 @@ footer {
   } catch(e) {
     console.warn('[i18n] failed to load en.json:', e.message);
   }
-})();
+}
+
+document.addEventListener('DOMContentLoaded', initI18n);
 </script>
 <body>
 
