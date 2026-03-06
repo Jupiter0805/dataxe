@@ -1106,7 +1106,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
       <div class="field">
         <label class="f-label"><span data-i18n="jug_password">Contraseña</span></label>
         <div class="pass-wrap">
-          <input class="f-input" type="password" id="r-pass" placeholder="Mínimo 6 caracteres">
+          <input class="f-input" type="password" id="r-pass" placeholder="Mínimo 8 caracteres" data-i18n-placeholder="jug_ph_min_chars">
           <button class="pass-eye" onclick="togglePass('r-pass',this)">👁</button>
         </div>
         <!-- TÉRMINOS — añadir antes del botón de crear cuenta -->
@@ -1287,18 +1287,18 @@ document.addEventListener('DOMContentLoaded', initI18n);
 
         <!-- CONTRASEÑA -->
         <div class="settings-card">
-          <div class="settings-card-title">Contraseña</div>
+          <div class="settings-card-title"><span data-i18n="jug_password">Contraseña</span></div>
           <div class="settings-field">
             <label class="f-label"><span data-i18n="jug_new_password">Nueva contraseña</span></label>
             <div class="pass-wrap">
-              <input class="f-input" type="password" id="settings-pass" placeholder="Mínimo 6 caracteres">
+              <input class="f-input" type="password" id="settings-pass" placeholder="Mínimo 8 caracteres" data-i18n-placeholder="jug_ph_min_chars">
               <button class="pass-eye" type="button" onclick="togglePassVis('settings-pass', this)">👁</button>
             </div>
           </div>
           <div class="settings-field">
             <label class="f-label"><span data-i18n="jug_confirm_password">Confirmar contraseña</span></label>
             <div class="pass-wrap">
-              <input class="f-input" type="password" id="settings-pass2" placeholder="Repite la contraseña">
+              <input class="f-input" type="password" id="settings-pass2" placeholder="Repite la contraseña" data-i18n-placeholder="jug_ph_repeat_pw">
               <button class="pass-eye" type="button" onclick="togglePassVis('settings-pass2', this)">👁</button>
             </div>
           </div>
@@ -1377,7 +1377,7 @@ document.addEventListener('DOMContentLoaded', initI18n);
     <div class="modal-title"><span data-i18n="jug_new_password">Nueva contraseña</span></div>
     <div class="field">
       <label class="f-label"><span data-i18n="jug_new_pw_label">Contraseña nueva</span></label>
-      <input class="f-input" type="password" id="new-pass" placeholder="Mínimo 6 caracteres">
+      <input class="f-input" type="password" id="new-pass" placeholder="Mínimo 8 caracteres" data-i18n-placeholder="jug_ph_min_chars">
     </div>
     <button class="btn-full" onclick="confirmReset()"><span data-i18n="jug_save_password">Guardar contraseña</span></button>
   </div>
@@ -1543,7 +1543,7 @@ async function doRegister() {
   const email = document.getElementById('r-email').value.trim();
   const pass  = document.getElementById('r-pass').value;
   if (!name || !user || !email || !pass) return showErr('err-reg', 'Rellena todos los campos');
-  if (pass.length < 6) return showErr('err-reg', t_('jug_pw_min_chars','La contraseña debe tener al menos 6 caracteres'));
+  if (pass.length < 8) return showErr('err-reg', t_('jug_pw_min_chars','La contraseña debe tener al menos 8 caracteres'));
   if (!/^[a-z0-9_]+$/i.test(user)) return showErr('err-reg', 'Usuario solo puede contener letras, números y _');
 
   const { data, error } = await sb.auth.signUp({
@@ -1585,7 +1585,7 @@ async function doForgot() {
 
 async function confirmReset() {
   const pass = document.getElementById('new-pass').value;
-  if (pass.length < 6) return toast('Mínimo 6 caracteres');
+  if (pass.length < 8) return toast(t_('jug_pw_min_chars','Mínimo 8 caracteres'));
   const { error } = await sb.auth.updateUser({ password: pass });
   if (error) return toast('Error: ' + error.message);
   document.getElementById('m-reset').classList.remove('on');
@@ -2742,7 +2742,7 @@ async function saveSettingsPassword() {
   okEl.style.display  = 'none';
 
   if (!p1) { errEl.textContent = t_('jug_write_pw','Escribe una contraseña nueva'); errEl.style.display = 'block'; return; }
-  if (p1.length < 6) { errEl.textContent = t_('jug_pw_min_chars','La contraseña debe tener al menos 6 caracteres'); errEl.style.display = 'block'; return; }
+  if (p1.length < 8) { errEl.textContent = t_('jug_pw_min_chars','La contraseña debe tener al menos 8 caracteres'); errEl.style.display = 'block'; return; }
   if (p1 !== p2) { errEl.textContent = t_('jug_pw_mismatch','Las contraseñas no coinciden'); errEl.style.display = 'block'; return; }
 
   const { error } = await sb.auth.updateUser({ password: p1 });
