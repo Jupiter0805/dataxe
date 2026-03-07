@@ -1805,8 +1805,16 @@ function showFeedToast(msg) {
   el._t = setTimeout(() => { el.style.opacity = '0'; }, 3000);
 }
 
-// Restore session — with role check
+// ── Route check: are we on /player/:username? ──
+const _pubProfileMatch = (function() {
+  const parts = window.location.pathname.split('/');
+  return parts[1] === 'player' && parts[2] ? parts[2] : null;
+})();
+
+// Restore session — with role check (skip if public profile route)
 (async function restoreSession() {
+  if (_pubProfileMatch) return; // handled by checkPublicProfile below
+
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return;
 
@@ -2977,15 +2985,15 @@ async function loadPublicProfile(username) {
 
 // Check if we're on a /player/:username route
 (async function checkPublicProfile() {
-  const parts = window.location.pathname.split('/');
-  // /player/username → parts = ['', 'player', 'username']
-  if (parts[1] === 'player' && parts[2]) {
-    const username = parts[2];
-    // Hide login screen, show profile screen
-    document.getElementById('scr-login').classList.remove('on');
-    document.getElementById('scr-profile').classList.add('on');
-    await loadPublicProfile(username);
-  }
+  if (!_pubProfileMatch) return;
+
+  const username = _pubProfileMatch;
+
+  // Hide login immediately, show profile screen
+  document.getElementById('scr-login').classList.remove('on');
+  document.getElementById('scr-profile').classList.add('on');
+
+  await loadPublicProfile(username);
 })();
 </script>
 </body>
