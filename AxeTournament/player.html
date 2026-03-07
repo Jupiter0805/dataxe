@@ -223,7 +223,7 @@ async function loadProfile(username) {
   }
 
   // Fetch player
-  const rows = await get(`users?username=eq.${encodeURIComponent(username)}&select=id,username,club_name,avatar_url,created_at`);
+  const rows = await get(`users?username=ilike.${encodeURIComponent(username)}&select=id,username,club_name,avatar_url,created_at`);
   if (!rows.length) {
     content.innerHTML = `
       <div class="state">
