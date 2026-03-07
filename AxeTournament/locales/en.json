@@ -308,5 +308,13 @@
   "jug_no_results": "No results",
   "jug_no_results_sub": "No content for this filter",
   "jug_ph_fullname": "Your full name",
-  "jug_ph_name": "Your name"
+  "jug_ph_name": "Your name",
+  "user_my_portal": "← My portal",
+  "user_publications": "Publications",
+  "post_type_aviso": "Notice",
+  "post_type_info": "Info",
+  "user_login_required": "Sign in to view player profiles.",
+  "user_restricted": "Restricted access",
+  "user_restricted_desc": "Only registered players can view profiles.",
+  "user_login_link": "Sign in"
 }
