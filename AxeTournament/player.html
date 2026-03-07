@@ -347,8 +347,8 @@ async function renderOrgProfile(user, content) {
   const tournRows = await get(`tournaments?user_id=eq.${user.id}&select=id`);
   const tournCount = tournRows.length;
 
-  // Posts
-  const posts = await get(`posts?user_id=eq.${user.id}&select=id,title,body,post_type,created_at,media_url&order=created_at.desc&limit=20`);
+  // Posts — filter by organizer.id (which equals user.id in organizers table)
+  const posts = await get(`posts?organizer_id=eq.${org.id}&select=id,title,body,post_type,created_at,media_url&order=created_at.desc&limit=20`);
 
   const typeLabels = { torneo: '🏆 Torneo', aviso: '⚠️ Aviso', info: 'ℹ️ Info' };
   const postsHtml = posts.length ? `
