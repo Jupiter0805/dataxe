@@ -298,7 +298,7 @@ async function loadProfile(username) {
 }
 
 // Read username from URL: /perfil/jupiter
-const username = window.location.pathname.split('/')[2];
+const username = new URLSearchParams(window.location.search).get('u');
 if (username) {
   loadProfile(username);
 } else {
