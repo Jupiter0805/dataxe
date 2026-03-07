@@ -244,21 +244,6 @@ function fmtDate(d) {
 async function loadProfile(username) {
   const content = document.getElementById('content');
 
-  // Check session
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) {
-    content.innerHTML = `
-      <div class="login-bar">
-        <a href="/jugador">Inicia sesión</a> para ver perfiles de jugadores.
-      </div>
-      <div class="state">
-        <div class="icon">🔒</div>
-        <h2>Acceso restringido</h2>
-        <p>Solo los jugadores registrados pueden ver perfiles.</p>
-      </div>`;
-    return;
-  }
-
   // Fetch player
   const rows = await get(`users?username=ilike.${encodeURIComponent(username)}&select=id,username,club_name,avatar_url,created_at,role`);
   if (!rows.length) {
