@@ -260,21 +260,28 @@ async function loadProfile(username) {
   }
 
   // Fetch player
-  const rows = await get(`users?username=ilike.${encodeURIComponent(username)}&select=id,username,club_name,avatar_url,created_at`);
+  const rows = await get(`users?username=ilike.${encodeURIComponent(username)}&select=id,username,club_name,avatar_url,created_at,role`);
   if (!rows.length) {
     content.innerHTML = `
       <div class="state">
         <div class="icon">🎯</div>
-        <h2>Jugador no encontrado</h2>
+        <h2>Usuario no encontrado</h2>
         <p>@${username} no existe en Novuraxe.</p>
       </div>`;
     return;
   }
 
-  const player = rows[0];
-  document.title = `${player.club_name || player.username} — NOVURAXE`;
+  const user = rows[0];
+  document.title = `${user.club_name || user.username} — NOVURAXE`;
 
-  // Fetch stats
+  if (user.role === 'organizer') {
+    await renderOrgProfile(user, content);
+  } else {
+    await renderPlayerProfile(user, content);
+  }
+}
+
+async function renderPlayerProfile(player, content) {
   const statsRows = await get(`global_stats?user_id=eq.${player.id}&select=tournaments,wins,total_qpts`);
   let tournaments = 0, wins = 0, points = 0;
   statsRows.forEach(s => {
@@ -283,7 +290,6 @@ async function loadProfile(username) {
     points      += s.total_qpts   || 0;
   });
 
-  // Fetch followed orgs
   const followRows = await get(`follows?follower_id=eq.${player.id}&select=following_id`);
   const orgIds = followRows.map(f => f.following_id);
   let orgsHtml = '';
@@ -304,7 +310,6 @@ async function loadProfile(username) {
   }
 
   const since = fmtDate(player.created_at);
-
   content.innerHTML = `
     <div class="card">
       <div class="card-cover"></div>
@@ -316,22 +321,82 @@ async function loadProfile(username) {
         <div class="player-username">@${player.username}</div>
         ${since ? `<div class="player-since">Miembro desde ${since}</div>` : ''}
         <div class="stats-grid">
-          <div class="stat">
-            <div class="stat-n">${tournaments}</div>
-            <div class="stat-l">Torneos</div>
-          </div>
-          <div class="stat">
-            <div class="stat-n g">${wins}</div>
-            <div class="stat-l">Victorias</div>
-          </div>
-          <div class="stat">
-            <div class="stat-n s">${points}</div>
-            <div class="stat-l">Puntos</div>
-          </div>
+          <div class="stat"><div class="stat-n">${tournaments}</div><div class="stat-l">Torneos</div></div>
+          <div class="stat"><div class="stat-n g">${wins}</div><div class="stat-l">Victorias</div></div>
+          <div class="stat"><div class="stat-n s">${points}</div><div class="stat-l">Puntos</div></div>
         </div>
       </div>
     </div>
     ${orgsHtml}`;
+}
+
+async function renderOrgProfile(user, content) {
+  // Fetch organizer data
+  const orgRows = await get(`organizers?user_id=eq.${user.id}&select=id,club_name,username,logo_url`);
+  const org = orgRows[0];
+  if (!org) {
+    content.innerHTML = `<div class="state"><div class="icon">🏟</div><h2>Organizador no encontrado</h2></div>`;
+    return;
+  }
+
+  // Followers count
+  const followRows = await get(`follows?following_id=eq.${user.id}&select=id`);
+  const followers = followRows.length;
+
+  // Tournaments count
+  const tournRows = await get(`tournaments?user_id=eq.${user.id}&select=id`);
+  const tournCount = tournRows.length;
+
+  // Posts
+  const posts = await get(`posts?user_id=eq.${user.id}&select=id,title,body,post_type,created_at,media_url&order=created_at.desc&limit=20`);
+
+  const typeLabels = { torneo: '🏆 Torneo', aviso: '⚠️ Aviso', info: 'ℹ️ Info' };
+  const postsHtml = posts.length ? `
+    <div class="section-title">Publicaciones</div>
+    ${posts.map(p => {
+      const type = p.post_type || 'torneo';
+      const label = typeLabels[type] || type;
+      const date = p.created_at ? new Date(p.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+      return `
+        <div class="card" style="margin-bottom:0.75rem">
+          <div class="card-body" style="padding:1rem 1.25rem">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.6rem">
+              <div class="org-mini" style="width:28px;height:28px;font-size:0.8rem">
+                ${org.logo_url ? `<img src="${org.logo_url}" alt="">` : '🏟'}
+              </div>
+              <span style="font-size:12px;font-weight:700;color:var(--ink2)">${org.club_name || org.username}</span>
+              <span style="font-size:11px;color:var(--ink4);margin-left:auto">${date}</span>
+            </div>
+            <div style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.5px;padding:3px 8px;border-radius:20px;margin-bottom:0.5rem;
+              background:${type==='info'?'rgba(96,165,250,0.1)':type==='aviso'?'rgba(239,68,68,0.1)':'rgba(196,135,58,0.1)'};
+              color:${type==='info'?'#60a5fa':type==='aviso'?'#f87171':'var(--accent)'};
+              border:1px solid ${type==='info'?'rgba(96,165,250,0.25)':type==='aviso'?'rgba(239,68,68,0.25)':'rgba(196,135,58,0.25)'}">${label}</div>
+            ${p.title ? `<div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:0.4rem">${p.title}</div>` : ''}
+            ${p.body ? `<div style="font-size:13px;color:var(--ink3);line-height:1.5">${p.body}</div>` : ''}
+            ${p.media_url ? `<img src="${p.media_url}" alt="" style="width:100%;border-radius:8px;margin-top:0.75rem;object-fit:cover;max-height:200px">` : ''}
+          </div>
+        </div>`;
+    }).join('')}` : '';
+
+  const since = fmtDate(user.created_at);
+  content.innerHTML = `
+    <div class="card">
+      <div class="card-cover" style="${org.logo_url ? '' : ''}"></div>
+      <div class="card-body">
+        <div class="avatar-wrap">
+          ${org.logo_url ? `<img src="${org.logo_url}" alt="">` : '🏟'}
+        </div>
+        <div class="player-name">${org.club_name || org.username}</div>
+        <div class="player-username">@${org.username}</div>
+        ${since ? `<div class="player-since">En Novuraxe desde ${since}</div>` : ''}
+        <div class="stats-grid">
+          <div class="stat"><div class="stat-n">${tournCount}</div><div class="stat-l">Torneos</div></div>
+          <div class="stat"><div class="stat-n g">${followers}</div><div class="stat-l">Seguidores</div></div>
+          <div class="stat"><div class="stat-n s">${posts.length}</div><div class="stat-l">Posts</div></div>
+        </div>
+      </div>
+    </div>
+    ${postsHtml}`;
 }
 
 // Read username from URL: /perfil/jupiter
@@ -343,7 +408,7 @@ if (username) {
     <div class="state">
       <div class="icon">🎯</div>
       <h2>Sin jugador especificado</h2>
-      <p>Accede a <strong>/perfil?u=username</strong> para ver un perfil.</p>
+      <p>Accede a <strong>/user?u=username</strong> para ver un perfil.</p>
     </div>`;
 }
 </script>
