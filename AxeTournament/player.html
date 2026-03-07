@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOVURAXE — Jugador</title>
+<link rel="icon" type="image/png" href="/public/dataxe-simple.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root {
+  --bg:       #1a1410;
+  --bg2:      #2c2418;
+  --bg3:      #3e3025;
+  --ink:      #fdfaf7;
+  --ink2:     #f0ebe3;
+  --ink3:     #b5a898;
+  --ink4:     #6b5d4e;
+  --line:     rgba(255,255,255,0.08);
+  --line2:    rgba(255,255,255,0.14);
+  --accent:   #c4873a;
+  --accent2:  #d4975a;
+  --green:    #6ab187;
+  --sand:     #c4a96a;
+  --red:      #d4635a;
+  --r:  8px;
+  --r2: 12px;
+  --sh2: 0 8px 32px rgba(0,0,0,0.5);
+  --f: 'Segoe UI', system-ui, sans-serif;
+  --f-display: 'Bebas Neue', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--f);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem 4rem;
+}
+
+.wrap { width: 100%; max-width: 480px; }
+
+/* Logo bar */
+.top-logo {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 2rem; text-decoration: none;
+}
+.top-logo img { height: 28px; }
+.top-logo span {
+  font-family: var(--f-display); font-size: 1.3rem;
+  letter-spacing: 2px; color: var(--accent);
+}
+
+/* Card */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: var(--r2);
+  overflow: hidden;
+  box-shadow: var(--sh2);
+  margin-bottom: 1rem;
+}
+.card-cover {
+  height: 80px;
+  background: linear-gradient(135deg, var(--bg3) 0%, #2a1f0f 100%);
+}
+.card-body { padding: 0 1.25rem 1.25rem; }
+
+.avatar-wrap {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  border: 3px solid var(--bg2);
+  overflow: hidden;
+  margin-top: -36px;
+  margin-bottom: 0.75rem;
+  background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2rem;
+}
+.avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
+
+.player-name {
+  font-family: var(--f-display); font-size: 1.4rem;
+  letter-spacing: 0.5px; color: #fff; line-height: 1.1;
+}
+.player-username { font-size: 12px; color: var(--ink4); margin-top: 3px; }
+.player-since { font-size: 11px; color: var(--ink4); margin-top: 6px; }
+
+/* Stats */
+.stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  border-top: 1px solid var(--line);
+  margin-top: 1rem;
+}
+.stat {
+  padding: 1rem 0.5rem; text-align: center;
+  border-right: 1px solid var(--line);
+}
+.stat:last-child { border-right: none; }
+.stat-n { font-size: 1.4rem; font-weight: 800; color: var(--accent); line-height: 1; }
+.stat-n.g { color: var(--green); }
+.stat-n.s { color: var(--sand); }
+.stat-l { font-size: 9px; color: rgba(255,255,255,0.35); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+
+/* Section */
+.section-title {
+  font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 0.75rem; margin-top: 1.5rem;
+}
+
+/* Org rows */
+.org-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0.7rem 1rem;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  margin-bottom: 6px;
+}
+.org-mini {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--bg3); overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; flex-shrink: 0;
+}
+.org-mini img { width: 100%; height: 100%; object-fit: cover; }
+.org-name { font-weight: 700; font-size: 13px; color: var(--ink); }
+.org-handle { font-size: 11px; color: var(--ink4); }
+
+/* States */
+.state {
+  text-align: center; padding: 3rem 2rem;
+  color: var(--ink4);
+}
+.state .icon { font-size: 3rem; margin-bottom: 1rem; }
+.state h2 { font-size: 1.1rem; color: var(--ink3); margin-bottom: 0.5rem; }
+.state p { font-size: 13px; }
+
+.login-bar {
+  text-align: center; padding: 1rem;
+  background: var(--bg2); border: 1px solid var(--line);
+  border-radius: var(--r); margin-bottom: 1.5rem;
+  font-size: 13px; color: var(--ink3);
+}
+.login-bar a { color: var(--accent); text-decoration: none; font-weight: 700; }
+
+/* Loading spinner */
+.spinner {
+  width: 28px; height: 28px;
+  border: 3px solid rgba(196,135,58,0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto 1rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="top-logo" href="/">
+    <img src="/public/dataxe-simple.png" alt="Novuraxe">
+    <span>NOVURAXE</span>
+  </a>
+  <div id="content">
+    <div class="state">
+      <div class="spinner"></div>
+      <p>Cargando perfil...</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = 'https://ofdxzysrjswalekwjazl.supabase.co';
+const SUPA_KEY = 'sb_publishable_ec6m8rEqcPSZyMvf7SMYag_-8GMIAc3';
+const sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+async function get(path) {
+  const session = (await sb.auth.getSession()).data.session;
+  const token = session?.access_token || SUPA_KEY;
+  const res = await fetch(`${SUPA_URL}/rest/v1/${path}`, {
+    headers: {
+      'apikey': SUPA_KEY,
+      'Authorization': `Bearer ${token}`,
+    }
+  });
+  if (!res.ok) return [];
+  return res.json();
+}
+
+function fmtDate(d) {
+  if (!d) return null;
+  return new Date(d).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+}
+
+async function loadProfile(username) {
+  const content = document.getElementById('content');
+
+  // Check session
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    content.innerHTML = `
+      <div class="login-bar">
+        <a href="/jugador">Inicia sesión</a> para ver perfiles de jugadores.
+      </div>
+      <div class="state">
+        <div class="icon">🔒</div>
+        <h2>Acceso restringido</h2>
+        <p>Solo los jugadores registrados pueden ver perfiles.</p>
+      </div>`;
+    return;
+  }
+
+  // Fetch player
+  const rows = await get(`users?username=eq.${encodeURIComponent(username)}&select=id,username,club_name,avatar_url,created_at`);
+  if (!rows.length) {
+    content.innerHTML = `
+      <div class="state">
+        <div class="icon">🎯</div>
+        <h2>Jugador no encontrado</h2>
+        <p>@${username} no existe en Novuraxe.</p>
+      </div>`;
+    return;
+  }
+
+  const player = rows[0];
+  document.title = `${player.club_name || player.username} — NOVURAXE`;
+
+  // Fetch stats
+  const statsRows = await get(`global_stats?user_id=eq.${player.id}&select=tournaments,wins,total_qpts`);
+  let tournaments = 0, wins = 0, points = 0;
+  statsRows.forEach(s => {
+    tournaments += s.tournaments  || 0;
+    wins        += s.wins         || 0;
+    points      += s.total_qpts   || 0;
+  });
+
+  // Fetch followed orgs
+  const followRows = await get(`follows?follower_id=eq.${player.id}&select=following_id`);
+  const orgIds = followRows.map(f => f.following_id);
+  let orgsHtml = '';
+  if (orgIds.length) {
+    const orgs = await get(`organizers?id=in.(${orgIds.join(',')})&select=id,club_name,username,logo_url`);
+    orgsHtml = `
+      <div class="section-title">Clubs &amp; Organizadores</div>
+      ${orgs.map(o => `
+        <div class="org-row">
+          <div class="org-mini">
+            ${o.logo_url ? `<img src="${o.logo_url}" alt="">` : '🏟'}
+          </div>
+          <div>
+            <div class="org-name">${o.club_name || o.username}</div>
+            <div class="org-handle">@${o.username}</div>
+          </div>
+        </div>`).join('')}`;
+  }
+
+  const since = fmtDate(player.created_at);
+
+  content.innerHTML = `
+    <div class="card">
+      <div class="card-cover"></div>
+      <div class="card-body">
+        <div class="avatar-wrap">
+          ${player.avatar_url ? `<img src="${player.avatar_url}" alt="">` : '🎯'}
+        </div>
+        <div class="player-name">${player.club_name || player.username}</div>
+        <div class="player-username">@${player.username}</div>
+        ${since ? `<div class="player-since">Miembro desde ${since}</div>` : ''}
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-n">${tournaments}</div>
+            <div class="stat-l">Torneos</div>
+          </div>
+          <div class="stat">
+            <div class="stat-n g">${wins}</div>
+            <div class="stat-l">Victorias</div>
+          </div>
+          <div class="stat">
+            <div class="stat-n s">${points}</div>
+            <div class="stat-l">Puntos</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${orgsHtml}`;
+}
+
+// Read username from URL: /player/jupiter
+const username = window.location.pathname.split('/')[2];
+if (username) {
+  loadProfile(username);
+} else {
+  document.getElementById('content').innerHTML = `
+    <div class="state">
+      <div class="icon">🎯</div>
+      <h2>Sin jugador especificado</h2>
+      <p>Accede a <strong>/player/username</strong> para ver un perfil.</p>
+    </div>`;
+}
+</script>
+</body>
+</html>
