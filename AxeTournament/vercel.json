@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/player/:username",
-      "destination": "/jugador.html"
+      "destination": "/player.html"
     }
   ]
 }
