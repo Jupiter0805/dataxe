@@ -42,23 +42,46 @@ body {
   line-height: 1.5;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
+}
+
+/* TOPBAR */
+.topbar {
+  position: sticky; top: 0; z-index: 200;
+  height: 72px;
+  background: rgba(26,20,16,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(196,135,58,0.15);
+  display: flex; align-items: center;
+  padding: 0 1.5rem; gap: 1rem;
+  box-shadow: 0 1px 20px rgba(0,0,0,0.4);
+}
+.t-logo img { height: 30px; width: auto; filter: brightness(0) invert(1); }
+.t-sep { width: 1px; height: 22px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
+.t-role-badge {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--accent);
+  border: 1px solid rgba(196,135,58,0.3);
+  padding: 3px 10px; border-radius: 20px;
+}
+.t-nav-link {
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6);
+  text-decoration: none; padding: 6px 12px;
+  border-radius: 8px; transition: all 0.15s;
+}
+.t-nav-link:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.t-right { margin-left: auto; }
+.t-back-btn {
+  font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px; padding: 6px 14px; cursor: pointer;
+  text-decoration: none; transition: all 0.15s;
+}
+.t-back-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+.wrap {
+  width: 100%; max-width: 480px;
+  margin: 0 auto;
   padding: 2rem 1rem 4rem;
-}
-
-.wrap { width: 100%; max-width: 480px; }
-
-/* Logo bar */
-.top-logo {
-  display: flex; align-items: center; gap: 10px;
-  margin-bottom: 2rem; text-decoration: none;
-}
-.top-logo img { height: 28px; }
-.top-logo span {
-  font-family: var(--f-display); font-size: 1.3rem;
-  letter-spacing: 2px; color: var(--accent);
 }
 
 /* Card */
@@ -168,11 +191,25 @@ body {
 </style>
 </head>
 <body>
+<div class="topbar">
+  <div class="t-logo">
+    <a href="/"><img src="/public/novuraxe-logo.png" alt="NOVURAXE"></a>
+  </div>
+  <div class="t-sep"></div>
+  <div class="t-role-badge">Jugador</div>
+  <div class="t-sep"></div>
+  <nav style="display:flex;gap:2px">
+    <a class="t-nav-link" href="/jugador">Feed</a>
+    <a class="t-nav-link" href="/jugador">Organizadores</a>
+    <a class="t-nav-link" href="/jugador">Mis stats</a>
+    <a class="t-nav-link" href="/jugador">Historial</a>
+  </nav>
+  <div class="t-right">
+    <a class="t-back-btn" href="/jugador">← Mi portal</a>
+  </div>
+</div>
+
 <div class="wrap">
-  <a class="top-logo" href="/">
-    <img src="/public/dataxe-simple.png" alt="Novuraxe">
-    <span>NOVURAXE</span>
-  </a>
   <div id="content">
     <div class="state">
       <div class="spinner"></div>
