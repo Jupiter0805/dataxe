@@ -16,6 +16,10 @@
     {
       "source": "/terms",
       "destination": "/terms.html"
+    },
+    {
+      "source": "/player/:username",
+      "destination": "/jugador.html"
     }
   ]
 }
