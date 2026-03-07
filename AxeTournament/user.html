@@ -196,16 +196,16 @@ body {
     <a href="/"><img src="/public/novuraxe-logo.png" alt="NOVURAXE"></a>
   </div>
   <div class="t-sep"></div>
-  <div class="t-role-badge">Jugador</div>
+  <div class="t-role-badge" data-i18n="jug_role_player">Jugador</div>
   <div class="t-sep"></div>
   <nav style="display:flex;gap:2px">
-    <a class="t-nav-link" href="/jugador">Feed</a>
-    <a class="t-nav-link" href="/jugador">Organizadores</a>
-    <a class="t-nav-link" href="/jugador">Mis stats</a>
-    <a class="t-nav-link" href="/jugador">Historial</a>
+    <a class="t-nav-link" href="/jugador" data-i18n="jug_feed">Feed</a>
+    <a class="t-nav-link" href="/jugador" data-i18n="jug_organizers">Organizadores</a>
+    <a class="t-nav-link" href="/jugador" data-i18n="jug_my_stats">Mis stats</a>
+    <a class="t-nav-link" href="/jugador" data-i18n="jug_history">Historial</a>
   </nav>
   <div class="t-right">
-    <a class="t-back-btn" href="/jugador">← Mi portal</a>
+    <a class="t-back-btn" href="/jugador" data-i18n="user_my_portal">← Mi portal</a>
   </div>
 </div>
 
@@ -296,7 +296,7 @@ async function renderPlayerProfile(player, content) {
   if (orgIds.length) {
     const orgs = await get(`organizers?id=in.(${orgIds.join(',')})&select=id,club_name,username,logo_url`);
     orgsHtml = `
-      <div class="section-title">Clubs &amp; Organizadores</div>
+      <div class="section-title">${t_('jug_discover_title','Clubs &amp; Organizadores')}</div>
       ${orgs.map(o => `
         <div class="org-row">
           <div class="org-mini">
@@ -344,14 +344,14 @@ async function renderOrgProfile(user, content) {
   const followers = followRows.length;
 
   // Tournaments count
-  const tournRows = await get(`tournaments?user_id=eq.${user.id}&select=id`);
+  const tournRows = await get(`posts?user_id=eq.${user.id}&post_type=eq.torneo&select=id`);
   const tournCount = tournRows.length;
 
   const posts = await get(`posts?user_id=eq.${user.id}&select=id,title,description,post_type,created_at,image_url&order=created_at.desc&limit=20`);
 
-  const typeLabels = { torneo: '🏆 Torneo', aviso: '⚠️ Aviso', info: 'ℹ️ Info' };
+  const typeLabels = { torneo: `🏆 ${t_('live_badge_done','Torneo')}`, aviso: `⚠️ ${t_('post_type_aviso','Aviso')}`, info: `ℹ️ ${t_('post_type_info','Info')}` };
   const postsHtml = posts.length ? `
-    <div class="section-title">Publicaciones</div>
+    <div class="section-title">${t_('user_publications','Publicaciones')}</div>
     ${posts.map(p => {
       const type = p.post_type || 'torneo';
       const label = typeLabels[type] || type;
@@ -371,7 +371,7 @@ async function renderOrgProfile(user, content) {
               color:${type==='info'?'#60a5fa':type==='aviso'?'#f87171':'var(--accent)'};
               border:1px solid ${type==='info'?'rgba(96,165,250,0.25)':type==='aviso'?'rgba(239,68,68,0.25)':'rgba(196,135,58,0.25)'}">${label}</div>
             ${p.title ? `<div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:0.4rem">${p.title}</div>` : ''}
-            ${p.description ? `<div style="font-size:13px;color:var(--ink3);line-height:1.5">${p.description}</div>` : ''}
+            ${p.description ? `<div style="font-size:13px;color:var(--ink3);line-height:1.5">${renderMd(p.description)}</div>` : ''}
             ${p.image_url ? `<img src="${p.image_url}" alt="" style="width:100%;border-radius:8px;margin-top:0.75rem;object-fit:cover;max-height:200px">` : ''}
           </div>
         </div>`;
@@ -398,8 +398,34 @@ async function renderOrgProfile(user, content) {
     ${postsHtml}`;
 }
 
-// Read username from URL: /perfil/jupiter
+// Simple markdown renderer
+function renderMd(text) {
+  if (!text) return '';
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>');
+}
+
+// i18n
+let _i18n = {};
+async function loadI18n() {
+  try {
+    const lang = navigator.language?.startsWith('en') ? 'en' : null;
+    if (!lang) return;
+    const res = await fetch('/locales/en.json');
+    if (res.ok) _i18n = await res.json();
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const k = el.getAttribute('data-i18n');
+      if (_i18n[k]) el.textContent = _i18n[k];
+    });
+  } catch(e) {}
+}
+function t_(key, fallback) { return _i18n[key] || fallback; }
+
+// Read username from URL: /user?u=username
 const username = new URLSearchParams(window.location.search).get('u');
+loadI18n();
 if (username) {
   loadProfile(username);
 } else {
