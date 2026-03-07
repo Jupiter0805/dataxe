@@ -1,10 +1,10 @@
 {
   "outputDirectory": ".",
   "cleanUrls": true,
-  "rewrites": [
+  "routes": [
     {
-      "source": "/perfil/:username",
-      "destination": "/player.html"
+      "src": "/perfil/(?<username>[^/]+)",
+      "dest": "/player.html"
     }
   ]
 }
