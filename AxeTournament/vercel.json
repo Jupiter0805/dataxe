@@ -1,10 +1,5 @@
 {
   "outputDirectory": ".",
-  "cleanUrls": true,
-  "routes": [
-    {
-      "src": "/perfil/(?<username>[^/]+)",
-      "dest": "/player.html"
-    }
-  ]
+  "cleanUrls": true
+
 }
