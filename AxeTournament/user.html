@@ -325,7 +325,7 @@ async function renderOrgProfile(user, content) {
   }
 
   // Followers count
-  const followRows = await get(`follows?following_id=eq.${user.id}&select=id`);
+  const followRows = await get(`follows?following_id=eq.${org.id}&select=id`);
   const followers = followRows.length;
 
   // Tournaments count
