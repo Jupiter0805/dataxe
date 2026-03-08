@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NOVURAXE</title>
-<link rel="icon" type="image/png" href="/dataxe-simple.png">
-<link rel="apple-touch-icon" href="/dataxe-simple.png">
+<link rel="icon" type="image/png" href="public/dataxe-simple.png">
+<link rel="apple-touch-icon" href="public/dataxe-simple.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ─── TOKENS ─── */
@@ -104,7 +104,7 @@ input, textarea, select { font-family: inherit; }
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url('/dataxe-simple.png');
+  background-image: url('public/dataxe-simple.png');
   background-repeat: no-repeat;
   background-position: center;
   background-size: 70%;
@@ -1668,7 +1668,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   <div class="login-box">
     <!-- Logo dentro del box -->
     <div class="login-header">
-      <img src="/novuraxe-logo.png" alt="DATAXE" class="login-logo-img">
+      <img src="public/novuraxe-logo.png" alt="DATAXE" class="login-logo-img">
       <div class="login-logo-sub">Gestión de Torneos</div>
     </div>
     <div class="l-tabs">
@@ -1705,7 +1705,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       <!-- TÉRMINOS — añadir antes del botón de crear cuenta -->
       <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:0.875rem 1rem;margin-bottom:1rem;font-size:12px;color:rgba(255,255,255,0.45);line-height:1.6;text-align:center">
         Al crear una cuenta aceptas automáticamente nuestros
-        <a href="/terms" target="_blank" style="color:#C4873A;text-decoration:underline;text-underline-offset:3px">Términos de Uso y Política de Privacidad</a>.
+        <a href="terms.html" target="_blank" style="color:#C4873A;text-decoration:underline;text-underline-offset:3px">Términos de Uso y Política de Privacidad</a>.
         Novuraxe no se hace responsable de daños derivados de la práctica del lanzamiento de hacha.
       </div>
       <div class="err-msg" id="r-err"></div>
@@ -1720,7 +1720,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
   <!-- TOPBAR -->
   <div class="topbar">
     <div class="t-logo">
-      <a href="/"><img src="/novuraxe-logo.png" alt="NOVURAXE" style="height:32px;width:auto;object-fit:contain;filter:brightness(0) invert(1);"></a>
+      <a href="index.html"><img src="public/novuraxe-logo.png" alt="NOVURAXE" style="height:32px;width:auto;object-fit:contain;filter:brightness(0) invert(1);"></a>
     </div>
     <div class="t-sep"></div>
     <div class="t-nav">
@@ -1743,7 +1743,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
       <script>
           async function logoutAndRedirect() {
             await doLogout();
-            window.location.href = "/";
+            window.location.href = "index.html";
         }
       </script>
     </div>
@@ -2198,7 +2198,7 @@ textarea.f-input { resize: vertical; min-height: 90px; line-height: 1.6; }
               <div class="settings-row-label">Términos y condiciones</div>
               <div class="settings-row-sub">Consulta los términos de uso de la plataforma</div>
             </div>
-            <a href="/terms" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">Leer →</a>
+            <a href="terms.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none">Leer →</a>
           </div>
         </div>
 
@@ -5203,20 +5203,11 @@ async function loadDashRegistrations() {
   const toggleEl = document.getElementById('dash-toggle-reg-btn');
   if (!countEl || !listEl) return;
 
-  // Guard: sin torneo activo no hay nada que cargar
-  if (!ADMIN.__tid && !ADMIN.__post_id) {
-    countEl.textContent = 'Sin torneo activo';
-    return;
-  }
-
   // Cargar post asociado al torneo
   if (!DASH_POST || DASH_POST.tournament_id !== ADMIN.__tid) {
     try {
-      if (!ADMIN.__tid) { DASH_POST = null; }
-      else {
-        const rows = await dbGet('posts', `tournament_id=eq.${ADMIN.__tid}&select=*&limit=1`);
-        DASH_POST = rows?.[0] || null;
-      }
+      const rows = await dbGet('posts', `tournament_id=eq.${ADMIN.__tid}&select=*&limit=1`);
+      DASH_POST = rows?.[0] || null;
     } catch(e) { DASH_POST = null; }
   }
 
@@ -5520,7 +5511,7 @@ function renderDash() {
       title: 'Bracket en curso',
       desc: `El bracket eliminatorio está activo. Haz clic en cada duelo para registrar los lanzamientos.`,
       actions: `<button class="btn btn-red" onclick="showPage('bracket')">→ Ir al Bracket</button>
-                <a href="/live" target="_blank" class="btn btn-ghost btn-sm">👁 Ver Live</a>`
+                <a href="live.html" target="_blank" class="btn btn-ghost btn-sm">👁 Ver Live</a>`
     },
     done: {
       cls: 'done', icon: '🏆',
@@ -5528,7 +5519,7 @@ function renderDash() {
       desc: `El torneo ha concluido. Guárdalo en el historial y crea el siguiente cuando quieras.`,
       actions: `<button class="btn btn-amber" onclick="saveTournament()">💾 Guardar en historial</button>
                 <button class="btn btn-red" onclick="newTournament()">🆕 Nuevo torneo</button>
-                <a href="/live" target="_blank" class="btn btn-ghost btn-sm">👁 Ver resultado final</a>`
+                <a href="live.html" target="_blank" class="btn btn-ghost btn-sm">👁 Ver resultado final</a>`
     }
   };
 
